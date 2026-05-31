@@ -1,0 +1,13 @@
+{
+  "name": "astro-app",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Living astrological chart — web MVP (monorepo)",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm --filter @astro/web dev",
+    "build": "pnpm --filter @astro/engine build && pnpm --filter @astro/web build",
+    "test": "pnpm --filter @astro/engine test",
+    "lint": "pnpm -r lint"
+  }
+}

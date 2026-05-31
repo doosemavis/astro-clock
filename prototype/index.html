@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Astro Clock — living chart</title>
+<style>
+  :root{
+    --bg:#0c0e26; --bg-edge:#05060f; --panel:#0a0b22; --border:#272a52;
+    --text:#e9eaf6; --text-dim:#9a9cc0; --seclabel:#6f72a0;
+    --line:#aeb2e0; --sign:#ccd0ef; --natal:#7a7da8; --live:#f2e7c2;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;color:var(--text);font-family:Georgia,'Times New Roman',serif;overflow:hidden;}
+  body{display:flex;background:radial-gradient(circle at 50% 34%, var(--bg), var(--bg-edge));}
+
+  #starfield{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+  #panel{position:relative;z-index:1;width:340px;flex:0 0 340px;height:100vh;overflow-y:auto;
+    background:var(--panel);border-right:1px solid var(--border);padding:24px 22px 22px;}
+  .identity{margin-bottom:20px;}
+  .identity .you{font-size:25px;letter-spacing:.05em;}
+  .identity .handle{font-size:12px;color:var(--text-dim);margin-top:2px;}
+  .identity .sig{font-size:12.5px;color:var(--text-dim);letter-spacing:.08em;margin-top:9px;}
+  .block{margin-bottom:20px;}
+  .seclabel{font-size:10px;color:var(--seclabel);letter-spacing:.22em;text-transform:uppercase;margin-bottom:9px;}
+  .readout-date{font-size:18px;letter-spacing:.02em;}
+  .readout-sub{font-size:12px;color:var(--text-dim);margin-top:4px;letter-spacing:.06em;}
+  .legend{font-size:11px;color:var(--text-dim);display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+  .legend .dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;margin-right:7px;}
+  .legend .dot.natal{background:var(--natal);} .legend .dot.live{background:var(--live);}
+
+  .segmented{display:flex;border:1px solid var(--border);border-radius:3px;overflow:hidden;}
+  .segmented button{flex:1;border:none;border-right:1px solid var(--border);border-radius:0;padding:9px 0;}
+  .segmented button:last-child{border-right:none;}
+
+  button{background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:inherit;
+    font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:7px 12px;cursor:pointer;border-radius:3px;
+    transition:background .15s,color .15s,border-color .15s;}
+  button:hover{color:var(--text);border-color:var(--text-dim);}
+  button.active{color:var(--bg);background:var(--text);border-color:var(--text);}
+  .row{display:flex;gap:8px;flex-wrap:wrap;}
+  #paceRow{gap:6px;} #paceRow button{padding:6px 9px;letter-spacing:.05em;font-size:10px;}
+
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+  .field span{font-size:10px;color:var(--text-dim);letter-spacing:.16em;text-transform:uppercase;}
+  .field input,.field select{background:var(--bg);border:1px solid var(--border);color:var(--text);
+    font-family:inherit;font-size:13px;padding:7px 8px;border-radius:3px;width:100%;}
+  .editbtn{width:100%;margin-top:2px;}
+  #birthForm{margin-top:12px;padding:14px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.025);}
+  .bf-note{font-size:10.5px;color:var(--text-dim);margin-top:10px;line-height:1.55;letter-spacing:.03em;}
+  .bf-note.err{color:#ff7a7a;} .bf-note.ok{color:#7ad19a;}
+
+  /* custom date+time picker */
+  .dtp-hidden{display:none !important;}
+  .dtp-field{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+    background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;
+    letter-spacing:.02em;text-transform:none;padding:10px 12px;border-radius:10px;cursor:pointer;
+    transition:border-color .15s,background .15s;}
+  .dtp-field:hover{border-color:var(--text-dim);background:rgba(255,255,255,.02);}
+  .dtp-field .dtp-ico{opacity:.55;flex:0 0 auto;}
+  .dtp-val{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dtp-pop{position:fixed;z-index:60;width:288px;left:-9999px;top:0;background:var(--panel);border:1px solid var(--border);
+    border-radius:16px;box-shadow:0 20px 56px rgba(0,0,0,.55);padding:16px;opacity:0;
+    transform:translateY(-6px) scale(.985);transition:opacity .17s ease,transform .17s ease;pointer-events:none;}
+  .dtp-pop.open{opacity:1;transform:none;pointer-events:auto;}
+  .dtp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .dtp-title{flex:1;text-align:center;font-size:14px;letter-spacing:.05em;color:var(--text);background:transparent;
+    border:1px solid transparent;border-radius:8px;padding:5px 8px;cursor:pointer;text-transform:none;}
+  .dtp-title:hover{background:rgba(255,255,255,.07);}
+  .dtp-caret{font-size:9px;opacity:.55;margin-left:5px;}
+  .dtp-nav{width:30px;min-width:30px;height:30px;padding:0;border-radius:50%;border:1px solid transparent;background:transparent;
+    color:var(--text-dim);font-size:17px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .dtp-nav:hover{background:rgba(255,255,255,.07);color:var(--text);}
+  .dtp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+  .dtp-years{grid-template-columns:repeat(3,1fr);gap:6px;}
+  .dtp-wd{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--seclabel);text-align:center;padding:2px 0 6px;}
+  .dtp-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:12.5px;border-radius:50%;
+    cursor:pointer;color:var(--text);background:transparent;border:1px solid transparent;padding:0;text-transform:none;
+    letter-spacing:0;transition:background .12s,color .12s;}
+  .dtp-day:hover{background:rgba(255,255,255,.09);color:var(--text);}
+  .dtp-day.out{color:var(--seclabel);opacity:.4;}
+  .dtp-day.today{border-color:var(--text-dim);}
+  .dtp-day.sel,.dtp-day.sel:hover{background:var(--live);color:var(--bg);border-color:var(--live);}
+  .dtp-year{padding:12px 0;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:9px;
+    cursor:pointer;color:var(--text);background:transparent;border:1px solid transparent;text-transform:none;
+    letter-spacing:.02em;transition:background .12s,color .12s;}
+  .dtp-year:hover{background:rgba(255,255,255,.09);}
+  .dtp-year.sel,.dtp-year.sel:hover{background:var(--live);color:var(--bg);border-color:var(--live);}
+  .dtp-time{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+  .dtp-sp{display:flex;flex-direction:column;align-items:center;gap:1px;}
+  .dtp-sp button{width:36px;height:22px;min-width:0;padding:0;border:none;background:transparent;color:var(--text-dim);
+    font-size:11px;line-height:1;cursor:pointer;border-radius:6px;text-transform:none;letter-spacing:0;}
+  .dtp-sp button:hover{background:rgba(255,255,255,.08);color:var(--text);}
+  .dtp-num{font-size:21px;letter-spacing:.02em;color:var(--text);min-width:36px;text-align:center;font-variant-numeric:tabular-nums;}
+  .dtp-colon{font-size:21px;color:var(--text-dim);padding-bottom:2px;}
+  .dtp-ampm{margin-left:6px;padding:8px 12px;border-radius:9px;border:1px solid var(--border);background:transparent;
+    color:var(--text);font-family:inherit;font-size:12px;letter-spacing:.08em;cursor:pointer;text-transform:none;}
+  .dtp-ampm:hover{border-color:var(--text-dim);}
+  .dtp-done{width:100%;margin-top:14px;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--text);
+    color:var(--bg);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;}
+  .dtp-done:hover{opacity:.92;}
+
+  /* glyph visibility grid */
+  #visPanel{margin-top:12px;padding:14px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.025);}
+  .visgrid{display:grid;grid-template-columns:1fr auto auto;gap:6px 10px;align-items:center;}
+  .visgrid .vh{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--seclabel);text-align:center;}
+  .visgrid .vname{font-size:12px;color:var(--text);letter-spacing:.02em;display:flex;align-items:center;gap:8px;text-transform:none;}
+  .visgrid .vname .g{font-size:15px;width:18px;text-align:center;color:var(--text-dim);}
+  .visgrid .vall{color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;font-size:10px;}
+  .visdiv{grid-column:1/4;height:1px;background:var(--border);margin:3px 0;opacity:.7;}
+  .vchip{width:34px;height:22px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;padding:0;transition:background .12s,border-color .12s;}
+  .vchip .dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);transition:background .12s;}
+  .vchip.on{border-color:transparent;}
+  .vchip.on.layer-natal{background:var(--natal);} .vchip.on.layer-live{background:var(--live);}
+  .vchip.on .dot{background:var(--bg);}
+
+  #stage{position:relative;z-index:1;flex:1;min-width:0;display:flex;align-items:center;justify-content:center;padding:16px 0;}
+  #chart{height:calc(100vh - 32px);width:auto;max-width:100%;aspect-ratio:1/1;}
+
+  .s-ring{stroke:var(--line);fill:none;} .s-tick{stroke:var(--line);} .s-bound{stroke:var(--line);}
+  .s-sign{fill:var(--sign);} .s-natal{fill:var(--natal);} .s-ntick{stroke:var(--natal);} .s-live{fill:var(--live);}
+  .s-ntoken{fill:var(--bg);stroke:var(--natal);}
+
+  #tooltip{position:fixed;z-index:50;pointer-events:none;display:none;background:var(--panel);border:1px solid var(--border);
+    color:var(--text);font-family:Georgia,serif;font-size:13px;letter-spacing:.03em;padding:7px 11px;border-radius:6px;
+    box-shadow:0 6px 22px rgba(0,0,0,.45);white-space:nowrap;}
+  #tooltip .tip-glyph{font-size:15px;margin-right:6px;} #tooltip .tip-deg{color:var(--text-dim);margin-left:8px;}
+
+  #err{position:fixed;inset:0;background:#1a0000;color:#ff8a8a;font-family:monospace;font-size:13px;padding:28px;white-space:pre-wrap;display:none;z-index:99;}
+</style>
+</head>
+<body>
+  <svg id="starfield" preserveAspectRatio="none" viewBox="0 0 100 100"></svg>
+
+  <div id="panel">
+    <div class="identity">
+      <div class="you" id="idName">You</div>
+      <div class="handle" id="idHandle">@doosemavis</div>
+      <div class="sig" id="idSig">&mdash;</div>
+    </div>
+
+    <div class="block">
+      <button class="editbtn" id="editToggle">&#9998; Edit birth details</button>
+      <div id="birthForm" style="display:none;">
+        <label class="field"><span>Name</span><input type="text" id="bfName" placeholder="You"></label>
+        <label class="field"><span>Birth date</span><input type="date" id="bfDate"></label>
+        <label class="field"><span>Birth time</span><input type="time" id="bfTime"></label>
+        <label class="field"><span>Time zone (standard)</span><select id="bfOffset"></select></label>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px;">
+          <input type="checkbox" id="bfDST" style="width:auto;"><span style="letter-spacing:.06em;">Born during daylight saving (+1 hr)</span></label>
+        <label class="field"><span>Place</span><input type="text" id="bfPlace" list="cityList" placeholder="Type a city…"></label>
+        <datalist id="cityList"></datalist>
+        <div class="row">
+          <label class="field" style="flex:1;min-width:0;"><span>Latitude</span><input type="number" step="0.0001" id="bfLat"></label>
+          <label class="field" style="flex:1;min-width:0;"><span>Longitude</span><input type="number" step="0.0001" id="bfLon"></label>
+        </div>
+        <div class="row"><button id="bfApply">Apply</button><button id="bfCancel">Cancel</button></div>
+        <div class="bf-note" id="bfNote"></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="readout-date" id="roDate">&mdash;</div>
+      <div class="readout-sub" id="roSub">&mdash;</div>
+    </div>
+
+    <div class="block">
+      <div class="seclabel">View</div>
+      <div class="segmented" id="modeSeg">
+        <button data-mode="birth">Birth</button>
+        <button data-mode="now">Now</button>
+        <button data-mode="moment">Date</button>
+        <button data-mode="range">Range</button>
+      </div>
+    </div>
+
+    <div class="block" id="momentBlock" style="display:none;">
+      <div class="seclabel">Pick a date &amp; time</div>
+      <div class="field"><span>Moment</span>
+        <input type="datetime-local" id="momentInput" class="dtp-hidden">
+        <button type="button" class="dtp-field" id="momentBtn"></button>
+      </div>
+      <div class="bf-note">The moveable glyphs jump to this exact moment, held still — so you can compare them against your fixed birth chart.</div>
+    </div>
+
+    <div class="block" id="rangeBlock" style="display:none;">
+      <div class="seclabel">Time range</div>
+      <div class="field"><span>From</span>
+        <input type="datetime-local" id="startTime" class="dtp-hidden">
+        <button type="button" class="dtp-field" id="startTimeBtn"></button>
+      </div>
+      <div class="field"><span>To</span>
+        <input type="datetime-local" id="endTime" class="dtp-hidden">
+        <button type="button" class="dtp-field" id="endTimeBtn"></button>
+      </div>
+      <div class="row" style="margin-top:4px;"><button id="playBtn">&#9654; Play</button><button id="loopBtn">Loop</button><button id="resetBtn">&#8634; Restart</button></div>
+      <div class="seclabel" style="margin-top:16px;">Speed</div>
+      <div class="row" id="paceRow"></div>
+      <div id="paceNote" style="font-size:11px;color:var(--text-dim);margin-top:8px;letter-spacing:.08em;">&mdash;</div>
+    </div>
+
+    <div class="block">
+      <div class="seclabel">Aspects</div>
+      <div class="row">
+        <button id="tMajor" class="active">Major</button>
+        <button id="tMinor">Minor</button>
+      </div>
+      <div class="seclabel" style="margin-top:14px;">Glyphs</div>
+      <div class="row">
+        <button id="tGlyphs">Show / hide &#9662;</button>
+      </div>
+      <div id="visPanel" style="display:none;"><div class="visgrid" id="visGrid"></div></div>
+    </div>
+
+    <div class="block">
+      <div class="seclabel">Theme</div>
+      <div class="segmented" id="themeSeg">
+        <button data-theme="light">Light</button>
+        <button data-theme="dark">Dark</button>
+        <button data-theme="auto">Auto</button>
+      </div>
+      <div id="themeNote" style="font-size:11px;color:var(--text-dim);margin-top:8px;letter-spacing:.06em;">&mdash;</div>
+    </div>
+
+    <div class="block">
+      <div class="legend">
+        <div><span class="dot natal"></span> Birth positions (fixed)</div>
+        <div><span class="dot live"></span> Selected time</div>
+      </div>
+      <div style="font-size:9.5px;color:var(--seclabel);letter-spacing:.14em;text-transform:uppercase;opacity:.8;">Positions via live ephemeris</div>
+    </div>
+  </div>
+
+  <div id="stage">
+    <svg id="chart" viewBox="0 0 1000 1000" aria-label="living astrological chart">
+      <g id="dial"></g><g id="natal"></g><g id="aspects"></g><g id="live"></g>
+    </svg>
+  </div>
+  <div id="tooltip"></div>
+  <div id="err"></div>
+
+<script src="ephemeris.js"></script>
+<script>
+(function(){
+  "use strict";
+  function showError(msg){ var e=document.getElementById('err'); e.style.display='block';
+    e.textContent='Something broke while rendering:\n\n'+msg+'\n\nCopy this to me and I’ll fix it.'; }
+  window.addEventListener('error',function(ev){ showError(ev.message+'  (line '+ev.lineno+')'); });
+
+  try {
+  if(!window.Ephemeris){ throw new Error("ephemeris.js did not load — keep it next to index.html"); }
+
+  // ---------- geometry ----------
+  var SVGNS="http://www.w3.org/2000/svg", XLINK="http://www.w3.org/1999/xlink", CX=500, CY=500, DEG=Math.PI/180;
+  var R={ outer:472, signInner:404, signLabel:438, natalGlyph:373, natalTick:394, liveRing:330, liveGlyph:330, aspect:314 };
+  function P(r,lon){ var a=(lon-45)*DEG; return [CX+r*Math.cos(a), CY-r*Math.sin(a)]; }
+  function rev(x){ return ((x%360)+360)%360; }
+  function el(tag,attrs){ var e=document.createElementNS(SVGNS,tag);
+    for(var k in attrs){ if(attrs.hasOwnProperty(k)) e.setAttribute(k,attrs[k]); } return e; }
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+  var SIGNS=["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+  function signName(lon){ return SIGNS[Math.floor(rev(lon)/30)]; }
+  function degInSign(lon){ return rev(lon)%30; }
+  function fmtDMS(lon){ var t=Math.round(rev(lon)*60), s=Math.floor(t/1800)%12, w=t-Math.floor(t/1800)*1800;
+    return Math.floor(w/60)+'° '+SIGNS[s]+' '+pad(w%60)+"'"; }
+  var GLYPH={sun:"☉",moon:"☽"}, GMAP={};
+
+  var PLANETS=[
+    {key:"sun",glyph:"☉"},{key:"moon",glyph:"☽"},{key:"mercury",glyph:"☿"},{key:"venus",glyph:"♀"},
+    {key:"mars",glyph:"♂"},{key:"jupiter",glyph:"♃"},{key:"saturn",glyph:"♄"},{key:"uranus",glyph:"♅"},
+    {key:"neptune",glyph:"♆"},{key:"pluto",glyph:"♇"}
+  ];
+  PLANETS.forEach(function(p){ GMAP[p.key]=p.glyph; });
+
+  // Each aspect: `dark` reads on Celestial Midnight, `light` is the same hue but a deeper,
+  // more-saturated shade that reads on the light-blue theme. Blended live by themeT.
+  var ASPECTS=[
+    // major (Ptolemaic) — solid, bold
+    {ang:60, orb:4, tier:'major', dark:"#7aa6ff", light:"#1f4fc4", dash:"11 7", op:0.92, w:3},
+    {ang:90, orb:6, tier:'major', dark:"#ff5d66", light:"#c01e28", dash:"",     op:0.92, w:3},
+    {ang:120,orb:6, tier:'major', dark:"#26d196", light:"#0a7a52", dash:"",     op:0.92, w:3},
+    {ang:180,orb:7, tier:'major', dark:"#ff5d66", light:"#c01e28", dash:"",     op:0.92, w:3},
+    // minor — thin & dotted
+    {ang:30, orb:2, tier:'minor', dark:"#2bd4a8", light:"#08906e", dash:"2 5", op:0.92, w:2},
+    {ang:45, orb:2, tier:'minor', dark:"#ff9d4d", light:"#c25e0e", dash:"2 5", op:0.92, w:2},
+    {ang:72, orb:2, tier:'minor', dark:"#b98cff", light:"#5a2cc0", dash:"2 5", op:0.92, w:2},
+    {ang:135,orb:2, tier:'minor', dark:"#ff9d4d", light:"#c25e0e", dash:"2 5", op:0.92, w:2},
+    {ang:150,orb:3, tier:'minor', dark:"#ff6fae", light:"#c41f6e", dash:"2 5", op:0.92, w:2}
+  ];
+  function aspectColor(asp){ return mixColor(asp.dark, asp.light, themeT); }
+  function aspectBetween(a,b){ var d=Math.abs(rev(a)-rev(b))%360; if(d>180) d=360-d;
+    for(var i=0;i<ASPECTS.length;i++){ if(Math.abs(d-ASPECTS[i].ang)<=ASPECTS[i].orb) return ASPECTS[i]; } return null; }
+  function declutter(map){
+    var arr=PLANETS.map(function(p){ return {key:p.key,lon:rev(map[p.key])}; }).sort(function(a,b){ return a.lon-b.lon; });
+    var gap=8, out={}, i=0, k;
+    while(i<arr.length){
+      var j=i; while(j+1<arr.length && arr[j+1].lon-arr[j].lon<gap) j++;
+      var n=j-i+1;
+      if(n===1){ out[arr[i].key]=arr[i].lon; }
+      else { var mean=0; for(k=i;k<=j;k++) mean+=arr[k].lon; mean/=n; var start=mean-gap*(n-1)/2;
+        for(k=i;k<=j;k++) out[arr[k].key]=rev(start+gap*(k-i)); }
+      i=j+1;
+    }
+    return out;
+  }
+
+  var CITIES={
+    'Jonesboro, AR':{lat:35.8423,lon:-90.7043,off:-6},'New York, NY':{lat:40.7128,lon:-74.0060,off:-5},
+    'Los Angeles, CA':{lat:34.0522,lon:-118.2437,off:-8},'Chicago, IL':{lat:41.8781,lon:-87.6298,off:-6},
+    'Houston, TX':{lat:29.7604,lon:-95.3698,off:-6},'Denver, CO':{lat:39.7392,lon:-104.9903,off:-7},
+    'Atlanta, GA':{lat:33.7490,lon:-84.3880,off:-5},'Miami, FL':{lat:25.7617,lon:-80.1918,off:-5},
+    'Seattle, WA':{lat:47.6062,lon:-122.3321,off:-8},'Toronto, ON':{lat:43.6532,lon:-79.3832,off:-5},
+    'Mexico City, MX':{lat:19.4326,lon:-99.1332,off:-6},'London, UK':{lat:51.5074,lon:-0.1278,off:0},
+    'Paris, FR':{lat:48.8566,lon:2.3522,off:1},'Berlin, DE':{lat:52.5200,lon:13.4050,off:1},
+    'Madrid, ES':{lat:40.4168,lon:-3.7038,off:1},'Rome, IT':{lat:41.9028,lon:12.4964,off:1},
+    'Moscow, RU':{lat:55.7558,lon:37.6173,off:3},'Dubai, AE':{lat:25.2048,lon:55.2708,off:4},
+    'Mumbai, IN':{lat:19.0760,lon:72.8777,off:5.5},'Singapore':{lat:1.3521,lon:103.8198,off:8},
+    'Hong Kong':{lat:22.3193,lon:114.1694,off:8},'Tokyo, JP':{lat:35.6762,lon:139.6503,off:9},
+    'Sydney, AU':{lat:-33.8688,lon:151.2093,off:10},'Auckland, NZ':{lat:-36.8485,lon:174.7633,off:12},
+    'São Paulo, BR':{lat:-23.5505,lon:-46.6333,off:-3},'Buenos Aires, AR':{lat:-34.6037,lon:-58.3816,off:-3},
+    'Lagos, NG':{lat:6.5244,lon:3.3792,off:1},'Cairo, EG':{lat:30.0444,lon:31.2357,off:2},
+    'Johannesburg, ZA':{lat:-26.2041,lon:28.0473,off:2}
+  };
+  var OFFSET_CITY={'-12':'Baker Island','-11':'Pago Pago','-10':'Honolulu','-9.5':'Marquesas','-9':'Anchorage',
+    '-8':'Los Angeles','-7':'Denver','-6':'Chicago','-5':'New York','-4':'Halifax','-3.5':'Newfoundland',
+    '-3':'São Paulo','-2':'Fernando de Noronha','-1':'Azores','0':'London','1':'Paris','2':'Cairo','3':'Moscow',
+    '3.5':'Tehran','4':'Dubai','4.5':'Kabul','5':'Karachi','5.5':'Mumbai','6':'Dhaka','6.5':'Yangon','7':'Bangkok',
+    '8':'Singapore','9':'Tokyo','9.5':'Adelaide','10':'Sydney','10.5':'Lord Howe','11':'Honiara','12':'Auckland',
+    '13':'Nukuʻalofa','14':'Kiritimati'};
+  var TZ_STD={'-10':'HST','-9':'AKST','-8':'PST','-7':'MST','-6':'CST','-5':'EST','-4':'AST','-3.5':'NST','-3':'ART',
+    '0':'GMT','1':'CET','2':'EET','3':'MSK','3.5':'IRST','4':'GST','5':'PKT','5.5':'IST','6':'BST','7':'ICT','8':'CST',
+    '9':'JST','9.5':'ACST','10':'AEST','12':'NZST'};
+  var TZ_DAY={'-9':'AKDT','-8':'PDT','-7':'MDT','-6':'CDT','-5':'EDT','-4':'ADT','0':'BST','1':'CEST','2':'EEST','10':'AEDT','12':'NZDT'};
+
+  // ---------- theme ----------
+  var NIGHT={bg:'#0c0e26',bgEdge:'#05060f',panel:'#0a0b22',border:'#272a52',text:'#e9eaf6',textDim:'#9a9cc0',
+    seclabel:'#6f72a0',line:'#aeb2e0',sign:'#ccd0ef',natal:'#7a7da8',live:'#f2e7c2'};
+  var DAY={bg:'#a9c4e8',bgEdge:'#7fa3d4',panel:'#c4d6ef',border:'#5f7bac',text:'#0d1733',textDim:'#3a4774',
+    seclabel:'#48588a',line:'#1b2a55',sign:'#111d40',natal:'#3d4f86',live:'#0c1430'};
+  var THEME_KEYS={bg:'--bg',bgEdge:'--bg-edge',panel:'--panel',border:'--border',text:'--text',textDim:'--text-dim',
+    seclabel:'--seclabel',line:'--line',sign:'--sign',natal:'--natal',live:'--live'};
+  function hexRgb(h){ h=h.replace('#',''); return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]; }
+  function mixColor(h1,h2,t){ var a=hexRgb(h1),b=hexRgb(h2),m=function(i){return Math.round(a[i]+(b[i]-a[i])*t);};
+    return 'rgb('+m(0)+','+m(1)+','+m(2)+')'; }
+  var starfield=document.getElementById('starfield');
+  var themeT=0;   // 0 = dark, 1 = light; lets aspect lines pick the matching shade
+  function applyTheme(t){ t=Math.max(0,Math.min(1,t)); themeT=t; var rs=document.documentElement.style;
+    for(var k in THEME_KEYS){ if(THEME_KEYS.hasOwnProperty(k)) rs.setProperty(THEME_KEYS[k], mixColor(NIGHT[k],DAY[k],t)); }
+    document.documentElement.style.colorScheme=(t>0.5)?'light':'dark'; starfield.style.opacity=(1-t).toFixed(3); }
+  function buildStars(){ for(var i=0;i<160;i++){ starfield.appendChild(el('circle',{cx:(Math.random()*100).toFixed(2),
+    cy:(Math.random()*100).toFixed(2),r:(0.04+Math.random()*0.13).toFixed(3),fill:'#ffffff',opacity:(0.25+Math.random()*0.7).toFixed(2)})); } }
+  function updateStarMask(){ var rect=document.getElementById('chart').getBoundingClientRect(); if(!rect.width) return;
+    var cx=rect.left+rect.width/2, cy=rect.top+rect.height/2, radius=rect.width*(R.outer/1000), feather=16;
+    var m='radial-gradient(circle at '+cx.toFixed(1)+'px '+cy.toFixed(1)+'px, rgba(0,0,0,0) '+(radius-feather).toFixed(1)+'px, rgba(0,0,0,1) '+radius.toFixed(1)+'px)';
+    starfield.style.webkitMaskImage=m; starfield.style.maskImage=m; }
+  var BIRTH_LAT=35.8423, BIRTH_LON=-90.7043;
+  function smoothstep(x){ x=Math.max(0,Math.min(1,x)); return x*x*(3-2*x); }
+  function solarT(date){ return smoothstep((Ephemeris.sunAltitude(date,BIRTH_LAT,BIRTH_LON)+9)/18); }
+
+  // ---------- DOM refs ----------
+  var dialG=document.getElementById('dial'), natalG=document.getElementById('natal'),
+      aspectsG=document.getElementById('aspects'), liveG=document.getElementById('live'),
+      roDate=document.getElementById('roDate'), roSub=document.getElementById('roSub'),
+      tipEl=document.getElementById('tooltip');
+
+  // ---------- dial with curved (textPath) sign labels ----------
+  function arcD(r,lonFrom,lonTo,sweep){ var a=P(r,lonFrom), b=P(r,lonTo);
+    return 'M'+a[0].toFixed(2)+' '+a[1].toFixed(2)+' A'+r+' '+r+' 0 0 '+sweep+' '+b[0].toFixed(2)+' '+b[1].toFixed(2); }
+  function buildDial(){
+    dialG.appendChild(el('circle',{cx:CX,cy:CY,r:R.outer,'class':'s-ring','stroke-width':1.5,opacity:0.6}));
+    dialG.appendChild(el('circle',{cx:CX,cy:CY,r:R.signInner,'class':'s-ring','stroke-width':1.5,opacity:0.6}));
+    dialG.appendChild(el('circle',{cx:CX,cy:CY,r:R.liveRing,'class':'s-ring','stroke-width':1,opacity:0.32}));
+    for(var t=0;t<360;t+=5){ if(t%30===0) continue; var p1=P(R.signInner,t), p2=P(R.signInner-8,t);
+      dialG.appendChild(el('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],'class':'s-tick','stroke-width':1,opacity:0.42})); }
+    var defs=el('defs',{}); dialG.appendChild(defs);
+    for(var s=0;s<12;s++){
+      var o=P(R.outer,s*30), ip=P(R.signInner,s*30);
+      dialG.appendChild(el('line',{x1:ip[0],y1:ip[1],x2:o[0],y2:o[1],'class':'s-bound','stroke-width':1.5,opacity:0.55}));
+      var lonC=s*30+15, lp=P(R.signLabel,lonC), top=lp[1]<CY, span=28, id='signArc'+s;
+      var d = top ? arcD(R.signLabel, lonC+span/2, lonC-span/2, 1)
+                  : arcD(R.signLabel, lonC-span/2, lonC+span/2, 0);
+      defs.appendChild(el('path',{id:id,d:d,fill:'none',stroke:'none'}));
+      var tx=el('text',{'class':'s-sign','text-anchor':'middle','dominant-baseline':'central','font-size':17,'letter-spacing':2.5});
+      var tp=document.createElementNS(SVGNS,'textPath');
+      tp.setAttribute('startOffset','50%'); tp.setAttribute('href','#'+id); tp.setAttributeNS(XLINK,'href','#'+id);
+      tp.textContent=SIGNS[s].toUpperCase();
+      tx.appendChild(tp); dialG.appendChild(tx);
+    }
+  }
+
+  // ---------- birth data ----------
+  var DEFAULT_BIRTH={ name:'You', date:'1992-07-29', time:'14:28', offset:-6, dst:true, lat:35.8423, lon:-90.7043, place:'Jonesboro, AR' };
+  var BIRTH, NATAL_POS, placeLabel, current;
+
+  // ---------- tooltips ----------
+  function moveTip(e){ var x=e.clientX+16, y=e.clientY-14;
+    if(x>window.innerWidth-180) x=e.clientX-tipEl.offsetWidth-16; if(y<8) y=8;
+    tipEl.style.left=x+'px'; tipEl.style.top=y+'px'; }
+  function hideTip(){ tipEl.style.display='none'; }
+  // fixed-glyph tooltip (static birth degree)
+  function showNatalTip(e,key){ tipEl.innerHTML='<span class="tip-glyph">'+GMAP[key]+'</span><strong>'+cap(key)+'</strong>'
+    +'<span class="tip-deg">'+fmtDMS(NATAL_POS[key])+'</span>'; tipEl.style.display='block'; moveTip(e); }
+  // moveable-glyph tooltip (live degree, refreshed each frame while hovered)
+  var hoverLiveKey=null, latestPos=null;
+  function showLiveTip(e,key){ hoverLiveKey=key; tipEl.style.display='block'; updateLiveTip(); moveTip(e); }
+  function updateLiveTip(){ if(hoverLiveKey===null || !latestPos) return;
+    tipEl.innerHTML='<span class="tip-glyph">'+GMAP[hoverLiveKey]+'</span><strong>'+cap(hoverLiveKey)+'</strong>'
+      +'<span class="tip-deg">'+fmtDMS(latestPos[hoverLiveKey])+'</span>'; }
+  function hideLiveTip(){ hoverLiveKey=null; hideTip(); }
+
+  // ---------- natal (fixed) layer ----------
+  var natalNodes={};
+  function buildNatal(){
+    while(natalG.firstChild) natalG.removeChild(natalG.firstChild); natalNodes={};
+    var disp=declutter(NATAL_POS);
+    PLANETS.forEach(function(p){
+      var g=el('g',{}), truePt=P(R.signInner,NATAL_POS[p.key]), gp=P(R.natalGlyph,disp[p.key]);
+      g.appendChild(el('line',{x1:truePt[0],y1:truePt[1],x2:gp[0],y2:gp[1],'class':'s-ntick','stroke-width':1.5,opacity:0.4}));
+      g.appendChild(el('circle',{cx:gp[0],cy:gp[1],r:16,'class':'s-ntoken','stroke-width':1.5}));
+      var tx=el('text',{x:gp[0],y:gp[1],'text-anchor':'middle','dominant-baseline':'central','class':'s-natal','font-size':22});
+      tx.textContent=p.glyph; g.appendChild(tx);
+      var hit=el('circle',{cx:gp[0],cy:gp[1],r:19,fill:'transparent','pointer-events':'all',style:'cursor:pointer'});
+      (function(key){ hit.addEventListener('mouseenter',function(e){ showNatalTip(e,key); });
+        hit.addEventListener('mousemove',moveTip); hit.addEventListener('mouseleave',hideTip); })(p.key);
+      g.appendChild(hit); natalG.appendChild(g); natalNodes[p.key]=g;
+    });
+  }
+
+  // ---------- live (moving) layer ----------
+  var liveNodes={};
+  function buildLive(){ PLANETS.forEach(function(p){
+    var tx=el('text',{x:CX,y:CY,'text-anchor':'middle','dominant-baseline':'central','class':'s-live','font-size':31});
+    tx.textContent=p.glyph; liveG.appendChild(tx);
+    var hit=el('circle',{cx:CX,cy:CY,r:19,fill:'transparent','pointer-events':'all',style:'cursor:pointer'});
+    (function(key){ hit.addEventListener('mouseenter',function(e){ showLiveTip(e,key); });
+      hit.addEventListener('mousemove',moveTip); hit.addEventListener('mouseleave',hideLiveTip); })(p.key);
+    liveG.appendChild(hit); liveNodes[p.key]={text:tx,hit:hit}; }); }
+  function updateLive(pos){ PLANETS.forEach(function(p){ var pt=P(R.liveGlyph,pos[p.key]), n=liveNodes[p.key];
+    n.text.setAttribute('x',pt[0]); n.text.setAttribute('y',pt[1]); n.hit.setAttribute('cx',pt[0]); n.hit.setAttribute('cy',pt[1]); }); }
+  function drawAspects(pos){
+    while(aspectsG.firstChild) aspectsG.removeChild(aspectsG.firstChild);
+    for(var i=0;i<PLANETS.length;i++) for(var j=i+1;j<PLANETS.length;j++){
+      if(!vis.live[PLANETS[i].key] || !vis.live[PLANETS[j].key]) continue;
+      var asp=aspectBetween(pos[PLANETS[i].key],pos[PLANETS[j].key]); if(!asp) continue;
+      if(asp.tier==='major' && !state.showMajor) continue;   // independent major/minor toggles
+      if(asp.tier==='minor' && !state.showMinor) continue;
+      var a=P(R.aspect,pos[PLANETS[i].key]), b=P(R.aspect,pos[PLANETS[j].key]);
+      aspectsG.appendChild(el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:aspectColor(asp),'stroke-width':asp.w,opacity:asp.op,'stroke-dasharray':asp.dash}));
+    }
+  }
+  function clearAspects(){ while(aspectsG.firstChild) aspectsG.removeChild(aspectsG.firstChild); }
+
+  // ---------- glyph visibility ----------
+  var vis={ natal:{}, live:{} };
+  PLANETS.forEach(function(p){ vis.natal[p.key]=true; vis.live[p.key]=true; });
+  function applyVisibility(){
+    PLANETS.forEach(function(p){
+      var g=natalNodes[p.key]; if(g) g.style.display=(state.mode!=='birth' && vis.natal[p.key])?'':'none';
+      var n=liveNodes[p.key]; if(n){ var d=vis.live[p.key]?'':'none'; n.text.style.display=d; n.hit.style.display=d; }
+    });
+  }
+  function makeChip(key,layer){ var b=document.createElement('button'); b.className='vchip layer-'+layer;
+    b.setAttribute('data-key',key); b.setAttribute('data-layer',layer);
+    b.appendChild(document.createElement('span')).className='dot';
+    b.addEventListener('click',function(){ toggleVis(key,layer); }); return b; }
+  function buildVisGrid(){
+    var g=document.getElementById('visGrid'); g.innerHTML='';
+    function cell(cls,txt){ var d=document.createElement('div'); d.className=cls; d.textContent=txt; return d; }
+    g.appendChild(cell('vh','')); g.appendChild(cell('vh','Fixed')); g.appendChild(cell('vh','Moving'));
+    var allName=document.createElement('div'); allName.className='vname vall'; allName.innerHTML='<span class="g">∗</span>All';
+    g.appendChild(allName); g.appendChild(makeChip('all','natal')); g.appendChild(makeChip('all','live'));
+    g.appendChild(cell('visdiv',''));
+    PLANETS.forEach(function(p){
+      var nm=document.createElement('div'); nm.className='vname'; nm.innerHTML='<span class="g">'+p.glyph+'</span>'+cap(p.key);
+      g.appendChild(nm); g.appendChild(makeChip(p.key,'natal')); g.appendChild(makeChip(p.key,'live'));
+    });
+    syncVisChips();
+  }
+  function toggleVis(key,layer){ var map=vis[layer];
+    if(key==='all'){ var anyOff=PLANETS.some(function(p){ return !map[p.key]; });
+      PLANETS.forEach(function(p){ map[p.key]=anyOff; }); }
+    else { map[key]=!map[key]; }
+    applyVisibility(); syncVisChips(); }
+  function syncVisChips(){ var chips=document.querySelectorAll('#visGrid .vchip');
+    for(var i=0;i<chips.length;i++){ var b=chips[i], key=b.getAttribute('data-key'), layer=b.getAttribute('data-layer');
+      var on = key==='all' ? PLANETS.every(function(p){ return vis[layer][p.key]; }) : vis[layer][key];
+      b.classList.toggle('on',on); } }
+
+  // ---------- state ----------
+  var state={ mode:'now', pos:0, playing:false, loop:false, showMajor:true, showMinor:false, rate:86400000, theme:'dark' };
+  var rangeStart=null, rangeEnd=new Date(), momentDate=new Date(), lastFrame=null;
+
+  // ---------- time helpers ----------
+  // Birth view → BIRTH location's zone (the moment as it was, where it was).
+  // Now / Date / Range → the VIEWER's local zone (the present, where you are).
+  function actualOff(o){ return o.offset + (o.dst?1:0); }
+  function offH(){ return (current && typeof current.offset==='number') ? actualOff(current) : 0; }
+  function birthShift(inst){ return new Date(inst.getTime() + offH()*3600000); }
+  function birthZoneNow(){ return state.mode==='birth'; }
+  // Date/Range pickers + readout use the viewer's local zone (native Date handles local DST).
+  function toInputValue(inst){ var d=new Date(inst.getTime());
+    return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes()); }
+  function parseInputValue(val){ if(!val) return new Date(NaN); var p=val.split('T'), dp=p[0].split('-'), tp=(p[1]||'0:0').split(':');
+    return new Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1]); }
+  function currentTime(){
+    if(state.mode==='birth') return BIRTH;
+    if(state.mode==='now') return new Date();
+    if(state.mode==='moment') return momentDate;
+    var a=rangeStart.getTime(), b=rangeEnd.getTime(); return new Date(a + state.pos*(b-a));
+  }
+  function fmtDate(d){ return birthZoneNow()
+    ? birthShift(d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})
+    : d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
+  function fmtTime(d){ return birthZoneNow()
+    ? birthShift(d).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',timeZone:'UTC'})
+    : d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }
+  function fmtOffset(v){ var s=v<0?'-':'+', a=Math.abs(v), h=Math.floor(a), m=Math.round((a-h)*60);
+    return 'UTC'+s+h+(m?(':'+pad(m)):''); }
+  function tzAbbrev(std,dst){ var k=String(std); if(dst&&TZ_DAY[k]) return TZ_DAY[k]; return TZ_STD[k] || fmtOffset(std+(dst?1:0)); }
+  function localTzAbbr(d){ try{ var s=d.toLocaleTimeString('en-US',{timeZoneName:'short'}); var m=s.match(/[A-Z]{2,5}$/);
+    if(m) return m[0]; }catch(e){} return fmtOffset(-d.getTimezoneOffset()/60); }
+  function readoutTz(d){ return birthZoneNow() ? tzAbbrev(current.offset,current.dst) : localTzAbbr(d); }
+
+  // ---------- loop ----------
+  var HR=3600*1000, DY=24*HR;
+  var PACES=[
+    {label:"Xtra-slow",  rate:1*HR, note:"≈ 1 hour / sec"},
+    {label:"Slow",       rate:6*HR, note:"≈ 6 hours / sec"},
+    {label:"Medium",     rate:1*DY, note:"≈ 1 day / sec"},
+    {label:"Medium-fast",rate:7*DY, note:"≈ 1 week / sec"},
+    {label:"Fast",       rate:30*DY,note:"≈ 1 month / sec"}
+  ];
+  function loop(t){
+    if(lastFrame===null) lastFrame=t; var dt=(t-lastFrame)/1000; lastFrame=t; if(dt>0.25) dt=0.25;
+    if(state.mode==='range' && state.playing){
+      var rangeMs=rangeEnd.getTime()-rangeStart.getTime();
+      if(rangeMs>0) state.pos += (state.rate*dt)/rangeMs;
+      if(state.pos>=1){ if(state.loop){ state.pos=0; } else { state.pos=1; state.playing=false; syncPlayBtn(); } }
+    }
+    var now=currentTime(), pos=Ephemeris.positions(now);
+    latestPos=pos; updateLive(pos);
+    if(hoverLiveKey!==null) updateLiveTip();
+    drawAspects(pos);   // internally filters by the major/minor toggles
+    if(state.theme==='auto' && state.mode==='now') applyTheme(solarT(now)); // continuous only in Now (anti-strobe)
+    roDate.textContent=fmtDate(now)+'  ·  '+fmtTime(now)+'  '+readoutTz(now);
+    roSub.textContent='☉ '+degInSign(pos.sun).toFixed(0)+'° '+signName(pos.sun)
+      +(state.mode==='now'?'   — live':state.mode==='birth'?'   — birth':state.mode==='moment'?'   — selected':'');
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- UI ----------
+  function syncPlayBtn(){ var b=document.getElementById('playBtn'); if(b) b.innerHTML=state.playing?'&#10073;&#10073; Pause':'&#9654; Play'; }
+  function applyMode(m){
+    state.mode=m; state.playing=false; syncPlayBtn();
+    document.querySelectorAll('#modeSeg button').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-mode')===m); });
+    document.getElementById('rangeBlock').style.display=(m==='range')?'block':'none';
+    document.getElementById('momentBlock').style.display=(m==='moment')?'block':'none';
+    applyVisibility(); refreshTheme();
+  }
+  function refreshTheme(){
+    var note=document.getElementById('themeNote');
+    if(state.theme==='light'){ applyTheme(1); note.textContent="Daylight"; }
+    else if(state.theme==='dark'){ applyTheme(0); note.textContent="Celestial Midnight"; }
+    else if(state.mode==='now'){ applyTheme(solarT(currentTime())); note.textContent="Following sunrise & sunset · "+placeLabel; }
+    else if(state.mode==='moment'){ applyTheme(solarT(currentTime())); note.textContent="Day/night at the selected moment · "+placeLabel; }
+    else if(state.mode==='birth'){ applyTheme(solarT(currentTime())); note.textContent="Day/night at your birth time · "+placeLabel; }
+    else { applyTheme(0); note.textContent="Sunrise/sunset blend pauses while scrubbing Range"; }
+  }
+  function applyThemeMode(name){ state.theme=name;
+    document.querySelectorAll('#themeSeg button').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-theme')===name); });
+    refreshTheme(); }
+
+  function bigThree(){ var asc=Ephemeris.ascendant(BIRTH,BIRTH_LAT,BIRTH_LON);
+    return GLYPH.sun+' '+signName(NATAL_POS.sun)+'  ·  '+GLYPH.moon+' '+signName(NATAL_POS.moon)+'  ·  ↑ '+signName(asc); }
+  function applyObj(o){
+    var dp=o.date.split('-'), tp=o.time.split(':');
+    BIRTH=new Date(Date.UTC(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1]) - actualOff(o)*3600000);
+    NATAL_POS=Ephemeris.positions(BIRTH); BIRTH_LAT=o.lat; BIRTH_LON=o.lon;
+    placeLabel=o.place || ('('+o.lat.toFixed(2)+', '+o.lon.toFixed(2)+')'); current=o;
+    document.getElementById('idName').textContent=o.name||'You';
+    document.getElementById('idSig').innerHTML=bigThree();
+    buildNatal(); applyVisibility();
+    rangeStart=BIRTH;
+    var si=document.getElementById('startTime'); if(si) si.value=toInputValue(BIRTH);
+    var ei=document.getElementById('endTime'); if(ei) ei.value=toInputValue(rangeEnd);
+    var mi=document.getElementById('momentInput'); if(mi) mi.value=toInputValue(momentDate);
+    refreshTheme(); hideTip(); refreshPickers();
+  }
+
+  // ---------- birth form ----------
+  function gv(id){ return document.getElementById(id).value; }
+  function gset(id,v){ document.getElementById(id).value=(v===undefined||v===null)?'':v; }
+  function buildOffsetOptions(){ var sel=document.getElementById('bfOffset');
+    [-12,-11,-10,-9.5,-9,-8,-7,-6,-5,-4,-3.5,-3,-2,-1,0,1,2,3,3.5,4,4.5,5,5.5,6,6.5,7,8,9,9.5,10,10.5,11,12,13,14]
+      .forEach(function(v){ var o=document.createElement('option'); o.value=v; var c=OFFSET_CITY[String(v)];
+        o.textContent=fmtOffset(v)+(c?(' · '+c):''); sel.appendChild(o); }); }
+  function buildCityDatalist(){ var dl=document.getElementById('cityList');
+    Object.keys(CITIES).forEach(function(n){ var o=document.createElement('option'); o.value=n; dl.appendChild(o); }); }
+  function fillForm(o){ gset('bfName',o.name||''); gset('bfDate',o.date); gset('bfTime',o.time);
+    gset('bfOffset',String(o.offset)); gset('bfPlace',o.place||''); gset('bfLat',o.lat); gset('bfLon',o.lon);
+    document.getElementById('bfDST').checked=!!o.dst; }
+  function applyBirthFromForm(){
+    var note=document.getElementById('bfNote');
+    function fail(m){ note.className='bf-note err'; note.textContent=m; return false; }
+    var o={ name:gv('bfName').trim(), date:gv('bfDate'), time:gv('bfTime'), offset:parseFloat(gv('bfOffset')),
+            dst:document.getElementById('bfDST').checked, lat:parseFloat(gv('bfLat')), lon:parseFloat(gv('bfLon')), place:gv('bfPlace').trim() };
+    if(!o.date||!o.time) return fail('Enter both a birth date and time.');
+    if(isNaN(o.offset)) return fail('Choose a time zone.');
+    if(isNaN(o.lat)||o.lat<-90||o.lat>90) return fail('Latitude must be between −90 and 90.');
+    if(isNaN(o.lon)||o.lon<-180||o.lon>180) return fail('Longitude must be between −180 and 180.');
+    applyObj(o);
+    if(isNaN(BIRTH.getTime())) return fail('That date or time is invalid.');
+    note.className='bf-note ok'; note.textContent='Applied ✓'; saveBirth(o);
+  }
+  function saveBirth(o){ try{ localStorage.setItem('astroBirth', JSON.stringify(o)); }catch(e){} }
+  function loadBirth(){ try{ var s=localStorage.getItem('astroBirth'); return s?JSON.parse(s):null; }catch(e){ return null; } }
+
+  // ---------- custom date+time picker (with year picker) ----------
+  var MONF=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var CAL_SVG='<svg class="dtp-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><line x1="3.5" y1="9.5" x2="20.5" y2="9.5"/><line x1="8" y1="3" x2="8" y2="6.5"/><line x1="16" y1="3" x2="16" y2="6.5"/></svg>';
+  var PICKERS=[], POP=null, POPS={}, cur={input:null,btn:null,Y:0,Mo:0,D:1,h:0,m:0,viewY:0,viewMo:0,pane:'days',yearStart:0};
+  function labelFromValue(v){ if(!v) return '—'; var p=v.split('T'), d=p[0].split('-'), t=(p[1]||'00:00').split(':');
+    var Mo=+d[1]-1, h=+t[0], h12=h%12; if(h12===0) h12=12; return MON[Mo]+' '+(+d[2])+', '+d[0]+'   '+h12+':'+pad(+t[1])+' '+(h<12?'AM':'PM'); }
+  function refreshPickers(){ for(var i=0;i<PICKERS.length;i++) PICKERS[i].refresh(); }
+  function dtpRender(){
+    var h12=cur.h%12; if(h12===0) h12=12; POPS.h.textContent=pad(h12); POPS.m.textContent=pad(cur.m); POPS.ap.textContent=cur.h<12?'AM':'PM';
+    if(cur.pane==='years'){ dtpRenderYears(); return; }
+    POPS.wds.style.display=''; POPS.days.style.display=''; POPS.years.style.display='none';
+    POPS.title.innerHTML=MONF[cur.viewMo]+' '+cur.viewY+'<span class="dtp-caret">▾</span>'; POPS.days.innerHTML='';
+    var first=new Date(cur.viewY,cur.viewMo,1).getDay(), dim=new Date(cur.viewY,cur.viewMo+1,0).getDate(), prevDim=new Date(cur.viewY,cur.viewMo,0).getDate();
+    var tn=new Date(), tY=tn.getFullYear(), tM=tn.getMonth(), tD=tn.getDate();
+    for(var i=0;i<42;i++){ var b=document.createElement('button'); b.type='button'; b.className='dtp-day';
+      var num, cy=cur.viewY, cm=cur.viewMo, out=false;
+      if(i<first){ num=prevDim-first+1+i; out=true; cm--; if(cm<0){cm=11;cy--;} }
+      else if(i>=first+dim){ num=i-first-dim+1; out=true; cm++; if(cm>11){cm=0;cy++;} }
+      else { num=i-first+1; }
+      b.textContent=num; if(out) b.classList.add('out');
+      if(cy===cur.Y && cm===cur.Mo && num===cur.D) b.classList.add('sel');
+      if(cy===tY && cm===tM && num===tD) b.classList.add('today');
+      b.setAttribute('data-day',num); b.setAttribute('data-mo',cm); b.setAttribute('data-y',cy); POPS.days.appendChild(b);
+    }
+  }
+  function dtpRenderYears(){
+    POPS.wds.style.display='none'; POPS.days.style.display='none'; POPS.years.style.display='';
+    var start=cur.yearStart; POPS.title.innerHTML=start+' – '+(start+11)+'<span class="dtp-caret">▴</span>'; POPS.years.innerHTML='';
+    for(var y=start;y<start+12;y++){ var b=document.createElement('button'); b.type='button'; b.className='dtp-year';
+      b.textContent=y; if(y===cur.Y) b.classList.add('sel'); b.setAttribute('data-year',y); POPS.years.appendChild(b); }
+  }
+  function dtpCommit(){ if(!cur.input) return;
+    cur.input.value=cur.Y+'-'+pad(cur.Mo+1)+'-'+pad(cur.D)+'T'+pad(cur.h)+':'+pad(cur.m);
+    cur.input.dispatchEvent(new Event('change')); dtpRender(); refreshPickers(); }
+  function dtpClick(e){ var b=e.target.closest('button'); if(!b) return;
+    if(b.classList.contains('dtp-title')){ if(cur.pane==='years'){ cur.pane='days'; } else { cur.pane='years'; cur.yearStart=cur.viewY-6; } dtpRender(); return; }
+    if(b.classList.contains('dtp-year')){ cur.viewY=+b.getAttribute('data-year'); cur.pane='days'; dtpRender(); return; }
+    if(b.classList.contains('dtp-day')){ cur.Y=+b.getAttribute('data-y'); cur.Mo=+b.getAttribute('data-mo'); cur.D=+b.getAttribute('data-day');
+      cur.viewY=cur.Y; cur.viewMo=cur.Mo; dtpCommit(); return; }
+    var a=b.getAttribute('data-act');
+    if(a==='prev'){ if(cur.pane==='years'){ cur.yearStart-=12; } else { cur.viewMo--; if(cur.viewMo<0){cur.viewMo=11;cur.viewY--;} } dtpRender(); }
+    else if(a==='next'){ if(cur.pane==='years'){ cur.yearStart+=12; } else { cur.viewMo++; if(cur.viewMo>11){cur.viewMo=0;cur.viewY++;} } dtpRender(); }
+    else if(a==='h+'){ cur.h=(cur.h+1)%24; dtpCommit(); } else if(a==='h-'){ cur.h=(cur.h+23)%24; dtpCommit(); }
+    else if(a==='m+'){ cur.m=(cur.m+1)%60; dtpCommit(); } else if(a==='m-'){ cur.m=(cur.m+59)%60; dtpCommit(); }
+    else if(b.classList.contains('dtp-ampm')){ cur.h=(cur.h+12)%24; dtpCommit(); }
+    else if(b.classList.contains('dtp-done')){ dtpClose(); }
+  }
+  function dtpWheel(unit){ return function(e){ e.preventDefault();
+    if(unit==='h') cur.h=(cur.h+(e.deltaY<0?1:23))%24; else cur.m=(cur.m+(e.deltaY<0?1:59))%60; dtpCommit(); }; }
+  function dtpEnsure(){ if(POP) return;
+    POP=document.createElement('div'); POP.className='dtp-pop';
+    POP.innerHTML='<div class="dtp-head"><button type="button" class="dtp-nav" data-act="prev">‹</button>'
+      +'<button type="button" class="dtp-title"></button><button type="button" class="dtp-nav" data-act="next">›</button></div>'
+      +'<div class="dtp-grid dtp-wds"></div><div class="dtp-grid dtp-days"></div><div class="dtp-grid dtp-years"></div>'
+      +'<div class="dtp-time"><div class="dtp-sp" data-unit="h"><button type="button" data-act="h+">▴</button><div class="dtp-num dtp-h">00</div><button type="button" data-act="h-">▾</button></div>'
+      +'<div class="dtp-colon">:</div><div class="dtp-sp" data-unit="m"><button type="button" data-act="m+">▴</button><div class="dtp-num dtp-m">00</div><button type="button" data-act="m-">▾</button></div>'
+      +'<button type="button" class="dtp-ampm">AM</button></div><button type="button" class="dtp-done">Done</button>';
+    document.body.appendChild(POP);
+    POPS.title=POP.querySelector('.dtp-title'); POPS.wds=POP.querySelector('.dtp-wds'); POPS.days=POP.querySelector('.dtp-days'); POPS.years=POP.querySelector('.dtp-years');
+    POPS.h=POP.querySelector('.dtp-h'); POPS.m=POP.querySelector('.dtp-m'); POPS.ap=POP.querySelector('.dtp-ampm');
+    ['S','M','T','W','T','F','S'].forEach(function(w){ var e=document.createElement('div'); e.className='dtp-wd'; e.textContent=w; POPS.wds.appendChild(e); });
+    POP.addEventListener('click',dtpClick);
+    POP.querySelector('[data-unit="h"]').addEventListener('wheel',dtpWheel('h'),{passive:false});
+    POP.querySelector('[data-unit="m"]').addEventListener('wheel',dtpWheel('m'),{passive:false});
+    window.addEventListener('resize',dtpClose);
+  }
+  function dtpOutside(e){ if(POP.contains(e.target)||(cur.btn&&cur.btn.contains(e.target))) return; dtpClose(); }
+  function dtpClose(){ if(!POP) return; POP.classList.remove('open'); cur.input=null; cur.btn=null; document.removeEventListener('mousedown',dtpOutside); }
+  function dtpOpen(input,btn){ dtpEnsure();
+    var v=input.value, d, t;
+    if(v){ var p=v.split('T'); d=p[0].split('-'); t=(p[1]||'00:00').split(':'); }
+    else { var w=new Date(); d=[w.getFullYear(),w.getMonth()+1,w.getDate()]; t=[w.getHours(),w.getMinutes()]; }
+    cur.input=input; cur.btn=btn; cur.Y=+d[0]; cur.Mo=+d[1]-1; cur.D=+d[2]; cur.h=+t[0]; cur.m=+t[1]; cur.viewY=cur.Y; cur.viewMo=cur.Mo; cur.pane='days';
+    dtpRender();
+    var r=btn.getBoundingClientRect(), pw=POP.offsetWidth||288, ph=POP.offsetHeight||360;
+    var left=Math.min(Math.max(8,r.left), window.innerWidth-8-pw), top=r.bottom+8;
+    if(top+ph>window.innerHeight-8) top=Math.max(8,r.top-8-ph);
+    POP.style.left=left+'px'; POP.style.top=top+'px'; POP.classList.add('open');
+    setTimeout(function(){ document.addEventListener('mousedown',dtpOutside); },0);
+  }
+  function attachPicker(inputId,btnId){
+    var input=document.getElementById(inputId), btn=document.getElementById(btnId);
+    function refresh(){ btn.innerHTML='<span class="dtp-val">'+labelFromValue(input.value)+'</span>'+CAL_SVG; }
+    btn.addEventListener('click',function(e){ e.stopPropagation(); if(cur.input===input) dtpClose(); else dtpOpen(input,btn); });
+    refresh(); PICKERS.push({refresh:refresh});
+  }
+
+  // ---------- bind ----------
+  function bindUI(){
+    document.querySelectorAll('#modeSeg button').forEach(function(b){ b.addEventListener('click',function(){ applyMode(b.getAttribute('data-mode')); }); });
+
+    var startInput=document.getElementById('startTime'), endInput=document.getElementById('endTime');
+    rangeEnd=new Date(); endInput.value=toInputValue(rangeEnd);
+    startInput.addEventListener('change',function(){ var d=parseInputValue(startInput.value); if(!isNaN(d)) rangeStart=d; });
+    endInput.addEventListener('change',function(){ var d=parseInputValue(endInput.value); if(!isNaN(d)) rangeEnd=d; });
+    var momentInput=document.getElementById('momentInput'); momentDate=new Date(); momentInput.value=toInputValue(momentDate);
+    momentInput.addEventListener('change',function(){ var d=parseInputValue(momentInput.value);
+      if(!isNaN(d)){ momentDate=d; if(state.theme==='auto' && state.mode==='moment') refreshTheme(); } });
+    attachPicker('startTime','startTimeBtn'); attachPicker('endTime','endTimeBtn'); attachPicker('momentInput','momentBtn');
+
+    document.getElementById('playBtn').addEventListener('click',function(){ if(state.pos>=1) state.pos=0; state.playing=!state.playing; syncPlayBtn(); });
+    var loopB=document.getElementById('loopBtn'); loopB.addEventListener('click',function(){ state.loop=!state.loop; loopB.classList.toggle('active',state.loop); });
+    document.getElementById('resetBtn').addEventListener('click',function(){ state.pos=0; state.playing=false; syncPlayBtn(); });
+
+    var paceRow=document.getElementById('paceRow'), paceNote=document.getElementById('paceNote');
+    PACES.forEach(function(p){ var b=document.createElement('button'); b.textContent=p.label;
+      if(p.rate===state.rate){ b.classList.add('active'); paceNote.textContent=p.note; }
+      b.addEventListener('click',function(){ state.rate=p.rate; paceNote.textContent=p.note;
+        paceRow.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active', x===b); }); });
+      paceRow.appendChild(b); });
+
+    var tMaj=document.getElementById('tMajor');
+    tMaj.addEventListener('click',function(){ state.showMajor=!state.showMajor; tMaj.classList.toggle('active',state.showMajor); });
+    var tMin=document.getElementById('tMinor');
+    tMin.addEventListener('click',function(){ state.showMinor=!state.showMinor; tMin.classList.toggle('active',state.showMinor); });
+    var tG=document.getElementById('tGlyphs'), vp=document.getElementById('visPanel');
+    tG.addEventListener('click',function(){ var open=(vp.style.display==='none'); vp.style.display=open?'block':'none';
+      tG.classList.toggle('active',open); tG.innerHTML=open?'Show / hide &#9652;':'Show / hide &#9662;'; });
+
+    document.querySelectorAll('#themeSeg button').forEach(function(b){ b.addEventListener('click',function(){ applyThemeMode(b.getAttribute('data-theme')); }); });
+
+    var et=document.getElementById('editToggle'), bf=document.getElementById('birthForm');
+    et.addEventListener('click',function(){ var open=(bf.style.display==='none');
+      if(open){ fillForm(current); var n=document.getElementById('bfNote'); n.className='bf-note';
+        n.textContent='Location sets your rising sign & the day/night theme. Planet signs depend on date & time. Pick a city to auto-fill coordinates & standard time zone; tick daylight saving for summer births.'; }
+      bf.style.display=open?'block':'none'; et.innerHTML=open?'Close':'&#9998; Edit birth details'; });
+    document.getElementById('bfPlace').addEventListener('input',function(){ var c=CITIES[this.value];
+      if(c){ gset('bfLat',c.lat); gset('bfLon',c.lon); gset('bfOffset',String(c.off)); } });
+    document.getElementById('bfApply').addEventListener('click',applyBirthFromForm);
+    document.getElementById('bfCancel').addEventListener('click',function(){ bf.style.display='none'; et.innerHTML='&#9998; Edit birth details'; });
+  }
+
+  // ---------- go ----------
+  buildStars(); buildDial(); buildLive(); buildVisGrid();
+  buildOffsetOptions(); buildCityDatalist(); bindUI();
+  current = loadBirth() || DEFAULT_BIRTH;
+  fillForm(current); applyObj(current);
+  applyMode('now'); applyThemeMode('dark');
+  requestAnimationFrame(updateStarMask); setTimeout(updateStarMask,120);
+  window.addEventListener('resize',updateStarMask);
+  requestAnimationFrame(loop);
+
+  } catch(err){ showError((err&&err.stack)?err.stack:String(err)); }
+})();
+</script>
+</body>
+</html>
