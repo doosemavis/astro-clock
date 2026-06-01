@@ -6,22 +6,26 @@ import { CHART } from "./palette";
 import { Dial } from "./Dial";
 import { AspectLayer } from "./AspectLayer";
 import { NatalLayer } from "./NatalLayer";
+import { LiveLayer } from "./LiveLayer";
 
 interface Props {
-  positions: Positions;
+  natalPositions: Positions;
+  livePositions: Positions;
   curvedLabels?: boolean;
 }
 
-// One square <Svg> sized to the screen. Z-order: aspect lines under the dial, glyphs on top.
-function ChartWheelBase({ positions, curvedLabels = true }: Props) {
+// One square <Svg> sized to the screen. Birth glyphs on the outer ring (fixed); the moveable
+// "now" glyphs ride the inner live ring; aspect lines connect the moveable positions.
+function ChartWheelBase({ natalPositions, livePositions, curvedLabels = true }: Props) {
   const { width, height } = useWindowDimensions();
   const size = Math.max(0, Math.min(width, height) - CHART.wheelPadding);
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size} viewBox="0 0 1000 1000">
-        <AspectLayer positions={positions} />
         <Dial curvedLabels={curvedLabels} />
-        <NatalLayer positions={positions} />
+        <NatalLayer positions={natalPositions} />
+        <AspectLayer positions={livePositions} />
+        <LiveLayer positions={livePositions} />
       </Svg>
     </View>
   );

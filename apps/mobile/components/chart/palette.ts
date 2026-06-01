@@ -27,4 +27,5 @@ export const CHART = {
   natalTokenR: 16,
   natalTickStroke: 1.5,
   natalTickOpacity: 0.4,
+  liveGlyphSize: 31,
 } as const;

@@ -1,4 +1,5 @@
 import { StatusBar } from "expo-status-bar";
+import { useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useFonts, NotoSansSymbols_400Regular } from "@expo-google-fonts/noto-sans-symbols";
 import { DEFAULT_BIRTH, birthInstant, positions, NIGHT } from "@astro/engine";
@@ -8,12 +9,18 @@ import { ChartWheel } from "./components/chart/ChartWheel";
 export default function App() {
   // Gate on the glyph font: rendering planet glyphs before it loads would flash tofu.
   const [fontsLoaded] = useFonts({ [GLYPH_FONT]: NotoSansSymbols_400Regular });
-  const np = positions(birthInstant(DEFAULT_BIRTH));
+  // Birth chart (fixed, outer ring) + a snapshot of the current sky (inner ring), frozen at
+  // launch — the continuous animation comes in a later slice.
+  const natalPos = useMemo(() => positions(birthInstant(DEFAULT_BIRTH)), []);
+  const [launchedAt] = useState(() => new Date());
+  const livePos = useMemo(() => positions(launchedAt), [launchedAt]);
 
   return (
     <View style={styles.root}>
       <Text style={styles.brand}>MoveStar</Text>
-      {fontsLoaded ? <ChartWheel positions={np} /> : <Text style={styles.note}>loading…</Text>}
+      {fontsLoaded
+        ? <ChartWheel natalPositions={natalPos} livePositions={livePos} />
+        : <Text style={styles.note}>loading…</Text>}
       <StatusBar style="light" />
     </View>
   );
