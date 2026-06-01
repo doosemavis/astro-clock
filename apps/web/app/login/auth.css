@@ -18,6 +18,15 @@
 }
 .auth-field input:focus { outline: 2px solid #8f7bff; outline-offset: 1px; border-color: #8f7bff; }
 .auth-static { font-size: 14px; color: #c7cbe6; padding: 2px 0; }
+/* Account header: title left, compact Sign out top-right. */
+.account-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.account-head .auth-title { margin: 0; }
+.account-signout {
+  flex: 0 0 auto; font-family: inherit; cursor: pointer; font-size: 12px; letter-spacing: .04em;
+  padding: 7px 14px; border-radius: 8px; border: 1px solid #2a2c52; background: transparent; color: #c7cbe6;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.account-signout:hover { border-color: #8f7bff; color: #e9eaf6; background: rgba(143, 123, 255, .08); }
 .auth-google, .auth-submit, .auth-toggle {
   font-family: inherit; cursor: pointer; border-radius: 8px; padding: 10px 12px; font-size: 13px;
 }
