@@ -19,7 +19,7 @@ function NatalLayerBase({ positions }: Props) {
     return (
       <G key={key}>
         <Line x1={tx} y1={ty} x2={gx} y2={gy} stroke={C.natal} strokeWidth={CHART.natalTickStroke} opacity={CHART.natalTickOpacity} />
-        <Circle cx={gx} cy={gy} r={CHART.natalTokenR} fill={C.bg} stroke={C.natal} strokeWidth={1.5} />
+        <Circle cx={gx} cy={gy} r={CHART.natalTokenR} fill={C.bg} stroke={C.natal} strokeWidth={CHART.tokenStroke} />
         <SvgText
           x={gx} y={gy}
           fill={C.natal}

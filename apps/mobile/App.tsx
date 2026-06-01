@@ -2,11 +2,12 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { useFonts, NotoSansSymbols_400Regular } from "@expo-google-fonts/noto-sans-symbols";
 import { DEFAULT_BIRTH, birthInstant, positions, NIGHT } from "@astro/engine";
+import { GLYPH_FONT } from "./components/chart/palette";
 import { ChartWheel } from "./components/chart/ChartWheel";
 
 export default function App() {
   // Gate on the glyph font: rendering planet glyphs before it loads would flash tofu.
-  const [fontsLoaded] = useFonts({ NotoSansSymbols_400Regular });
+  const [fontsLoaded] = useFonts({ [GLYPH_FONT]: NotoSansSymbols_400Regular });
   const np = positions(birthInstant(DEFAULT_BIRTH));
 
   return (

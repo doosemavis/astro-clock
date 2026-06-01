@@ -27,7 +27,7 @@ function DialBase({ curvedLabels = true }: Props) {
   for (let t = 0; t < 360; t += 5) {
     if (t % 30 === 0) continue; // sign boundaries drawn separately
     const [x1, y1] = polar(R.signInner, t);
-    const [x2, y2] = polar(R.signInner - 8, t);
+    const [x2, y2] = polar(R.signInner - CHART.tickLength, t);
     ticks.push(
       <Line
         key={`t${t}`}
