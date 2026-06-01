@@ -20,15 +20,43 @@
 /* ---------- panel ---------- */
 .ac-panel {
   position: relative; z-index: 1; width: 340px; flex: 0 0 340px; height: 100vh;
-  overflow-y: auto; background: var(--panel); border-right: 1px solid var(--border);
-  padding: 24px 22px 22px;
+  overflow-x: hidden; overflow-y: auto; background: var(--panel); border-right: 1px solid var(--border);
+  transition: flex-basis .28s ease, width .28s ease, border-color .28s ease, visibility 0s;
 }
+/* Fixed-width inner so content keeps its layout while the outer collapses to 0 and clips it. */
+.ac-panel-inner { width: 340px; padding: 24px 22px 22px; }
+
+/* Collapsed: width animates to 0; visibility flips to hidden only AFTER the slide settles
+   (delayed transition), which also drops the panel out of the tab order + a11y tree. */
+.ac-root.panel-collapsed .ac-panel {
+  flex-basis: 0; width: 0; border-right-color: transparent; visibility: hidden;
+  transition: flex-basis .28s ease, width .28s ease, border-color .28s ease, visibility 0s linear .28s;
+}
+
+/* Always-visible toggle. Rides the panel's right edge open -> slides to the screen edge when
+   collapsed. Sits over both the panel and the sky, so it reads in any theme. */
+.ac-panel-toggle {
+  position: fixed; top: 14px; left: 298px; z-index: 5;
+  width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: 1px solid var(--border); background: var(--panel); color: var(--text-dim);
+  font-size: 19px; line-height: 1; cursor: pointer; font-family: inherit;
+  box-shadow: 0 2px 12px rgba(0,0,0,.28);
+  transition: left .28s ease, color .15s, border-color .15s, background .15s;
+}
+.ac-panel-toggle:hover { color: var(--text); border-color: var(--text-dim); }
+.ac-panel-toggle:focus-visible { outline: 2px solid var(--live); outline-offset: 2px; }
+.ac-root.panel-collapsed .ac-panel-toggle { left: 14px; }
 .ac-panel .identity { margin-bottom: 20px; }
 .ac-panel .you { font-size: 25px; letter-spacing: .05em; }
 .ac-panel .handle { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
 .ac-panel .sig { font-size: 12.5px; color: var(--text-dim); letter-spacing: .08em; margin-top: 9px; }
 .ac-panel .block { margin-bottom: 20px; }
-.ac-panel .seclabel { font-size: 10px; color: var(--seclabel); letter-spacing: .22em; text-transform: uppercase; margin-bottom: 9px; }
+/* Section grouping: native <fieldset>/<legend> — the label notches into the top border,
+   which both reads as a group and announces the section name to screen readers. min-width:0
+   cancels the fieldset min-content default that would otherwise blow out the panel width. */
+.ac-panel fieldset.block { min-width: 0; border: 1px solid var(--border); border-radius: 10px; padding: 12px 8px 14px; margin: 0 0 16px; }
+.ac-panel fieldset.block > legend.seclabel { margin: 0; padding: 0 7px; }
+.ac-panel .seclabel { font-size: 12px; color: var(--seclabel); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 10px; }
 .ac-panel .readout-date { font-size: 18px; letter-spacing: .02em; }
 .ac-panel .readout-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; letter-spacing: .06em; }
 .ac-panel .legend { font-size: 11px; color: var(--text-dim); display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
@@ -39,8 +67,14 @@
 .ac-panel .theme-note, .ac-panel .pace-note { font-size: 11px; color: var(--text-dim); margin-top: 8px; letter-spacing: .06em; }
 
 .ac-panel .segmented { display: flex; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
-.ac-panel .segmented button { flex: 1; border: none; border-right: 1px solid var(--border); border-radius: 0; padding: 9px 0; }
+.ac-panel .segmented button { flex: 1; min-width: 0; border: none; border-right: 1px solid var(--border); border-radius: 0; padding: 9px 3px; font-size: 10px; letter-spacing: .03em; white-space: nowrap; }
 .ac-panel .segmented button:last-child { border-right: none; }
+/* View has 5 items incl. the long "Compare". Size each segment from its content plus an
+   EQUAL share of the leftover space, so every label gets the same side padding (no crush). */
+.ac-panel .segmented.segmented--auto button { flex: 1 1 auto; padding-left: 8px; padding-right: 8px; }
+/* Clock toggle: 14px text to match the date inputs; trimmed vertical padding keeps the
+   button height at 29px (consistent with the other toggles). */
+.ac-panel .segmented.segmented--lg button { font-size: 14px; padding-top: 6.5px; padding-bottom: 6.5px; }
 
 .ac-panel button {
   background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-family: inherit;
@@ -59,6 +93,13 @@
 .ac-panel button[data-hovered]:not([data-selected]) { color: var(--text); border-color: var(--text-dim); }
 .ac-panel button[data-focus-visible] { outline: 2px solid var(--live); outline-offset: 2px; }
 .ac-panel .row { display: flex; gap: 8px; flex-wrap: wrap; }
+/* Rows whose buttons should stretch to fill the group width (Aspects, Glyphs). */
+.ac-panel .row.fill button { flex: 1; }
+/* Glyphs disclosure: label left, chevron right; the chevron rotates 180° when open. */
+.ac-panel .glyph-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ac-panel .glyph-toggle .chev { flex: 0 0 auto; opacity: .6; transition: transform .2s ease, opacity .15s; }
+.ac-panel .glyph-toggle:hover .chev { opacity: 1; }
+.ac-panel .glyph-toggle[data-selected] .chev { transform: rotate(180deg); }
 .ac-panel .pace-row { gap: 6px; }
 .ac-panel .pace-row button { padding: 6px 9px; letter-spacing: .05em; font-size: 10px; }
 
@@ -81,10 +122,10 @@
 /* glyph visibility grid */
 .ac-panel .vis-panel { margin-top: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,.025); }
 .ac-panel .visgrid { display: grid; grid-template-columns: 1fr auto auto; gap: 6px 10px; align-items: center; }
-.ac-panel .visgrid .vh { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--seclabel); text-align: center; }
-.ac-panel .visgrid .vname { font-size: 12px; color: var(--text); letter-spacing: .02em; display: flex; align-items: center; gap: 8px; text-transform: none; }
-.ac-panel .visgrid .vname .g { font-size: 15px; width: 18px; text-align: center; color: var(--text-dim); }
-.ac-panel .visgrid .vall { color: var(--text-dim); letter-spacing: .1em; text-transform: uppercase; font-size: 10px; }
+.ac-panel .visgrid .vh { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--seclabel); text-align: center; }
+.ac-panel .visgrid .vname { font-size: 14px; color: var(--text); letter-spacing: .02em; display: flex; align-items: center; gap: 8px; text-transform: none; }
+.ac-panel .visgrid .vname .g { font-size: 18px; width: 20px; text-align: center; color: var(--text-dim); }
+.ac-panel .visgrid .vall { color: var(--text-dim); letter-spacing: .1em; text-transform: uppercase; font-size: 11.5px; }
 .ac-panel .visdiv { grid-column: 1 / 4; height: 1px; background: var(--border); margin: 3px 0; opacity: .7; }
 .ac-panel .vchip {
   width: 34px; height: 22px; border-radius: 7px; border: 1px solid var(--border); background: transparent; cursor: pointer;
@@ -99,6 +140,20 @@
 /* ---------- stage + chart ---------- */
 .ac-stage { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
 .ac-chart { height: calc(100vh - 32px); width: auto; max-width: 100%; aspect-ratio: 1 / 1; }
+
+/* ---------- compare: two independent wheels ---------- */
+.ac-stage.is-compare { padding: 16px 24px; }
+.ac-compare { display: flex; gap: 20px; width: 100%; height: 100%; align-items: stretch; justify-content: center; }
+.ac-compare.side { flex-direction: row; }
+.ac-compare.stacked { flex-direction: column; }
+.ac-compare-cell { flex: 1 1 0; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.ac-compare-cap { flex: 0 0 auto; text-align: center; }
+.ac-compare-cap .cap-name { display: block; font-size: 13px; letter-spacing: .2em; text-transform: uppercase; color: var(--seclabel); }
+.ac-compare-cap .cap-sub { display: block; font-size: 16px; letter-spacing: .02em; color: var(--text-dim); margin-top: 4px; }
+/* Square wheel sized to fit the cell (preserveAspectRatio letterboxes inside the flex box). */
+.ac-compare-cell .ac-chart { flex: 1 1 0; min-height: 0; width: 100%; height: auto; max-width: 100%; aspect-ratio: auto; }
+/* Responsive: side-by-side stacks when the window gets too narrow to keep both usable. */
+@media (max-width: 1100px) { .ac-compare.side { flex-direction: column; } }
 
 .ac-root .s-ring { stroke: var(--line); fill: none; }
 .ac-root .s-tick { stroke: var(--line); }
@@ -125,6 +180,13 @@
   letter-spacing: .02em; text-transform: none; padding: 10px 12px; border-radius: 10px; cursor: pointer;
   transition: border-color .15s, background .15s;
 }
+/* `.ac-panel button` (specificity 0,1,1) otherwise overrides the field's font/padding and
+   shrinks the date text to 11px. This higher-specificity rule restores a readable 14px and
+   trims padding so the input height matches the panel buttons. */
+.ac-panel .dtp-field { font-size: 14px; padding: 5.5px 12px; }
+/* The visible date text is in .dtp-val (a span). The broad `.field span` label rule was
+   shrinking it to 10px uppercase; this restores a readable 14px in normal case. */
+.ac-panel .dtp-field .dtp-val { font-size: 14px; text-transform: none; letter-spacing: .02em; }
 .dtp-field:hover { border-color: var(--text-dim); background: rgba(255,255,255,.02); }
 .dtp-field .dtp-ico { opacity: .55; flex: 0 0 auto; }
 .dtp-val { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

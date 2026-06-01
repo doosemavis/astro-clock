@@ -6,6 +6,7 @@ import {
   Dialog, DialogTrigger, ListBox, ListBoxItem, Popover, Select, SelectValue, TimeField,
 } from "react-aria-components";
 import { CalendarDate, Time } from "@internationalized/date";
+import type { TimeFormat } from "./types";
 
 // Date+time picker composed entirely from stable react-aria-components: a Calendar with
 // month + year dropdowns (CalendarMonthPicker / CalendarYearPicker) and a TimeField, in a
@@ -15,16 +16,20 @@ import { CalendarDate, Time } from "@internationalized/date";
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const pad = (n: number) => String(n).padStart(2, "0");
 
-function label(ms: number): string {
+function label(ms: number, timeFormat: TimeFormat): string {
   const d = new Date(ms);
+  const datePart = `${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  if (timeFormat === "24h")
+    return `${datePart}   ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   let h = d.getHours() % 12;
   if (h === 0) h = 12;
-  return `${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}   ${h}:${pad(d.getMinutes())} ${d.getHours() < 12 ? "AM" : "PM"}`;
+  return `${datePart}   ${pad(h)}:${pad(d.getMinutes())} ${d.getHours() < 12 ? "AM" : "PM"}`;
 }
 
 interface Props {
   valueMs: number;
   onChange: (ms: number) => void;
+  timeFormat: TimeFormat;
 }
 
 // The shared shape returned by both CalendarMonthPicker and CalendarYearPicker render props.
@@ -48,7 +53,7 @@ function HeaderSelect({ "aria-label": ariaLabel, value, onChange, items }: Picke
   );
 }
 
-function DateTimePickerBase({ valueMs, onChange }: Props) {
+function DateTimePickerBase({ valueMs, onChange, timeFormat }: Props) {
   const d = new Date(valueMs);
   const dateVal = new CalendarDate(d.getFullYear(), d.getMonth() + 1, d.getDate());
   const timeVal = new Time(d.getHours(), d.getMinutes());
@@ -65,7 +70,7 @@ function DateTimePickerBase({ valueMs, onChange }: Props) {
   return (
     <DialogTrigger>
       <Button className="dtp-field">
-        <span className="dtp-val">{label(valueMs)}</span>
+        <span className="dtp-val">{label(valueMs, timeFormat)}</span>
         <svg className="dtp-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
           <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
           <line x1="3.5" y1="9.5" x2="20.5" y2="9.5" />
@@ -92,7 +97,7 @@ function DateTimePickerBase({ valueMs, onChange }: Props) {
                 </CalendarGrid>
               </Calendar>
               <div className="acp-time">
-                <TimeField value={timeVal} onChange={setTime} hourCycle={12} aria-label="Time" className="acp-timefield">
+                <TimeField value={timeVal} onChange={setTime} hourCycle={timeFormat === "24h" ? 24 : 12} shouldForceLeadingZeros aria-label="Time" className="acp-timefield">
                   <DateInput className="acp-timeinput">{(segment) => <DateSegment segment={segment} className="acp-seg" />}</DateInput>
                 </TimeField>
               </div>

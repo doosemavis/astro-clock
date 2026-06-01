@@ -36,14 +36,19 @@ const Stars = memo(function Stars() {
  * the theme brightens. `opacity` and `maskImage` change per frame in Auto/Now, but the
  * 160 stars are memoized so only the wrapping <svg> reconciles.
  */
-export function StarLayer({ opacity, maskImage }: { opacity: number; maskImage?: string }) {
+export function StarLayer({
+  opacity, maskImage, maskComposite,
+}: { opacity: number; maskImage?: string; maskComposite?: string }) {
+  // Two Compare wheels need two mask holes -> two gradients composited with "intersect"
+  // (legacy WebKit keyword: "source-in"). Single wheel passes no composite (one layer).
+  const webkitComposite = maskComposite === "intersect" ? "source-in" : undefined;
   return (
     <svg
       className="ac-starfield"
       preserveAspectRatio="none"
       viewBox="0 0 100 100"
       aria-hidden
-      style={{ opacity, WebkitMaskImage: maskImage, maskImage }}
+      style={{ opacity, WebkitMaskImage: maskImage, maskImage, WebkitMaskComposite: webkitComposite, maskComposite }}
     >
       <Stars />
     </svg>

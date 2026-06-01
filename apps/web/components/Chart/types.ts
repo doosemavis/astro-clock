@@ -2,11 +2,18 @@
 // these only describe interactive state that lives in the React layer.
 import type { PlanetKey } from "@astro/engine";
 
-/** Which chart the moveable glyphs show. Mirrors the prototype's state.mode. */
-export type Mode = "birth" | "now" | "moment" | "range";
+/** Which chart the moveable glyphs show. Mirrors the prototype's state.mode.
+ *  "compare" renders two independent single-moment wheels side by side. */
+export type Mode = "birth" | "now" | "moment" | "range" | "compare";
+
+/** Arrangement of the two Compare wheels. "overlay" is reserved for a later task. */
+export type CompareLayout = "side" | "stacked";
 
 /** Theme selection. "auto" blends day/night from the real Sun altitude. */
 export type ThemeMode = "light" | "dark" | "auto";
+
+/** Global time-of-day display format. Drives every time readout + the picker. */
+export type TimeFormat = "12h" | "24h";
 
 /** The two glyph layers that can be shown/hidden per planet. */
 export type Layer = "natal" | "live";

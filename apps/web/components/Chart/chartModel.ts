@@ -3,7 +3,7 @@
 // All astronomy/data lives in @astro/engine; this is presentation glue only.
 import { tzAbbrev, formatOffset } from "@astro/engine";
 import type { BirthData } from "@astro/engine";
-import type { Mode, Pace } from "./types";
+import type { Mode, Pace, TimeFormat } from "./types";
 
 export const HR = 3600 * 1000;
 export const DY = 24 * HR;
@@ -12,9 +12,10 @@ export const DY = 24 * HR;
 export const PACES: Pace[] = [
   { label: "Xtra-slow", rate: 1 * HR, note: "≈ 1 hour / sec" },
   { label: "Slow", rate: 6 * HR, note: "≈ 6 hours / sec" },
-  { label: "Medium", rate: 1 * DY, note: "≈ 1 day / sec" },
-  { label: "Medium-fast", rate: 7 * DY, note: "≈ 1 week / sec" },
-  { label: "Fast", rate: 30 * DY, note: "≈ 1 month / sec" },
+  { label: "Medium", rate: 12 * HR, note: "≈ 12 hours / sec" },
+  { label: "Medium-fast", rate: 1 * DY, note: "≈ 1 day / sec" },
+  { label: "Fast", rate: 7 * DY, note: "≈ 1 week / sec" },
+  { label: "Xtra-fast", rate: 30 * DY, note: "≈ 1 month / sec" },
 ];
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -63,13 +64,19 @@ export function fmtDate(date: Date, mode: Mode, birth: BirthData): string {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-/** Time label, with the same birth-zone vs. local rule as fmtDate. */
-export function fmtTime(date: Date, mode: Mode, birth: BirthData): string {
+/**
+ * Time label, with the same birth-zone vs. local rule as fmtDate. `hour: "2-digit"`
+ * forces a leading zero under 10 (08:30); 24h uses the h23 cycle so midnight reads 00:00,
+ * not 24:00. The format comes from the global preference set in the panel.
+ */
+export function fmtTime(date: Date, mode: Mode, birth: BirthData, timeFormat: TimeFormat): string {
+  const opts: Intl.DateTimeFormatOptions =
+    timeFormat === "24h"
+      ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
+      : { hour: "2-digit", minute: "2-digit", hour12: true };
   if (mode === "birth")
-    return birthShift(date.getTime(), birth).toLocaleTimeString(undefined, {
-      hour: "numeric", minute: "2-digit", timeZone: "UTC",
-    });
-  return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    return birthShift(date.getTime(), birth).toLocaleTimeString(undefined, { ...opts, timeZone: "UTC" });
+  return date.toLocaleTimeString(undefined, opts);
 }
 
 /** Viewer's local timezone abbreviation, e.g. "EST" (prototype localTzAbbr). */

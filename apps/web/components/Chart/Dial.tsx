@@ -19,7 +19,9 @@ function signArc(s: number): string {
     : arcPath(R.signLabel, lonC - span / 2, lonC + span / 2, 0);
 }
 
-function DialBase() {
+// idPrefix keeps the sign-arc <path> ids unique when more than one Dial is on the page
+// (Compare renders two). Default "" preserves the single-chart ids exactly.
+function DialBase({ idPrefix = "" }: { idPrefix?: string }) {
   const ticks: ReactNode[] = [];
   for (let t = 0; t < 360; t += 5) {
     if (t % 30 === 0) continue; // sign boundaries are drawn separately
@@ -35,7 +37,7 @@ function DialBase() {
     const [ox, oy] = polar(R.outer, s * 30);
     const [ix, iy] = polar(R.signInner, s * 30);
     bounds.push(<line key={`b${s}`} className="s-bound" x1={q(ix)} y1={q(iy)} x2={q(ox)} y2={q(oy)} strokeWidth={1.5} opacity={0.55} />);
-    const id = `acSignArc${s}`;
+    const id = `${idPrefix}acSignArc${s}`;
     defs.push(<path key={`p${s}`} id={id} d={signArc(s)} fill="none" stroke="none" />);
     labels.push(
       <text key={`l${s}`} className="s-sign" textAnchor="middle" dominantBaseline="central" fontSize={17} letterSpacing={2.5}>

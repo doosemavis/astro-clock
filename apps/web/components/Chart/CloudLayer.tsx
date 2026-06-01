@@ -6,10 +6,13 @@ import { memo } from "react";
  * (opacity = themeT), so stars cross-fade into clouds at dawn. No JS randomness, so it
  * is SSR-stable; masked to the sky around the wheel, like the stars. Not drawn at night.
  */
-function CloudLayerBase({ opacity, maskImage }: { opacity: number; maskImage?: string }) {
+function CloudLayerBase({
+  opacity, maskImage, maskComposite,
+}: { opacity: number; maskImage?: string; maskComposite?: string }) {
   if (opacity <= 0.001) return null;
+  const webkitComposite = maskComposite === "intersect" ? "source-in" : undefined;
   return (
-    <svg className="ac-clouds" aria-hidden style={{ opacity, WebkitMaskImage: maskImage, maskImage }}>
+    <svg className="ac-clouds" aria-hidden style={{ opacity, WebkitMaskImage: maskImage, maskImage, WebkitMaskComposite: webkitComposite, maskComposite }}>
       <defs>
         <filter id="ac-cloud-filter" x="-5%" y="-5%" width="110%" height="110%">
           <feTurbulence
