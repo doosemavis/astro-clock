@@ -32,12 +32,14 @@ export function LoginForm() {
     if (mode === "signup") {
       if (!pw.ok) { setError(`Password needs ${pw.problems.join(", ")}.`); return; }
       setBusy(true);
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email, password,
         options: { emailRedirectTo: redirectTo, data: { name } },
       });
       setBusy(false);
       if (error) { setError(error.message); return; }
+      // When email confirmation is off, signUp returns an active session — go straight in.
+      if (data.session) { router.push(next); router.refresh(); return; }
       setInfo("Check your email to confirm your account, then sign in.");
       setMode("signin");
       return;
