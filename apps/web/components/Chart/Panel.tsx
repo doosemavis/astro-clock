@@ -104,15 +104,15 @@ export function Panel(props: Props) {
   return (
     <aside className="ac-panel">
       <div className="ac-panel-inner">
+      <div className="auth-bar">
+        {userEmail ? (
+          <a className="auth-pill" href="/account" title={userEmail}>{userEmail}</a>
+        ) : (
+          <a className="auth-pill" href="/login">Sign in / Sign up</a>
+        )}
+      </div>
       <div className="identity">
         <div className="you">{name}</div>
-        <div className="handle">
-          {userEmail ? (
-            <>{userEmail} · <a className="auth-link" href="/account">Account</a></>
-          ) : (
-            <a className="auth-link" href="/login">Sign in</a>
-          )}
-        </div>
         <div className="sig">{bigThree}</div>
       </div>
 
