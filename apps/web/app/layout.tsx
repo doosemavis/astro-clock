@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "Astro — your living chart",
+  title: "MoveStar — your living chart",
   description: "A living astrological chart: real planets moving across your fixed birth sky.",
 };
 

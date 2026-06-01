@@ -66,6 +66,7 @@ export function LoginForm() {
   return (
     <div className="auth-root">
       <form className="auth-card" onSubmit={onSubmit}>
+        <div className="auth-brand">MoveStar</div>
         <h1 className="auth-title">{mode === "signin" ? "Sign in" : "Create account"}</h1>
 
         <button type="button" className="auth-google" onClick={onGoogle}>Continue with Google</button>

@@ -8,6 +8,7 @@
   background: rgba(10, 11, 34, 0.92); border: 1px solid #2a2c52; border-radius: 16px;
   padding: 28px 26px; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
 }
+.auth-brand { text-align: center; font-size: 13px; letter-spacing: .34em; text-transform: uppercase; color: #c7cbe6; }
 .auth-title { font-size: 24px; letter-spacing: .02em; margin: 0 0 4px; }
 .auth-field { display: flex; flex-direction: column; gap: 5px; }
 .auth-field > span { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa0c8; }
