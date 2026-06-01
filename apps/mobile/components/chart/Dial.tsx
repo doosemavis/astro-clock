@@ -62,6 +62,7 @@ function DialBase({ curvedLabels = true }: Props) {
           fontSize={CHART.signFontSize}
           letterSpacing={CHART.signLetterSpacing}
           textAnchor="middle"
+          alignmentBaseline="central"
         >
           <TextPath href={`#${id}`} startOffset="50%">{label}</TextPath>
         </SvgText>,
