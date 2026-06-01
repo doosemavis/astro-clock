@@ -1,26 +1,25 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
-import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf } from "@astro/engine";
+import { useFonts, NotoSansSymbols_400Regular } from "@expo-google-fonts/noto-sans-symbols";
+import { DEFAULT_BIRTH, birthInstant, positions, NIGHT } from "@astro/engine";
+import { ChartWheel } from "./components/chart/ChartWheel";
 
 export default function App() {
-  const date = birthInstant(DEFAULT_BIRTH);
-  const np = positions(date);
-  const asc = ascendant(date, DEFAULT_BIRTH.lat, DEFAULT_BIRTH.lon);
-  const bigThree = `☉ ${signOf(np.sun)}  ·  ☽ ${signOf(np.moon)}  ·  ↑ ${signOf(asc)}`;
+  // Gate on the glyph font: rendering planet glyphs before it loads would flash tofu.
+  const [fontsLoaded] = useFonts({ NotoSansSymbols_400Regular });
+  const np = positions(birthInstant(DEFAULT_BIRTH));
 
   return (
     <View style={styles.root}>
       <Text style={styles.brand}>MoveStar</Text>
-      <Text style={styles.signs}>{bigThree}</Text>
-      <Text style={styles.note}>engine running on React Native</Text>
+      {fontsLoaded ? <ChartWheel positions={np} /> : <Text style={styles.note}>loading…</Text>}
       <StatusBar style="light" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#0a0b22", alignItems: "center", justifyContent: "center", gap: 14, padding: 24 },
-  brand: { color: "#e9eaf6", fontSize: 34, letterSpacing: 6, fontWeight: "600" },
-  signs: { color: "#c7cbe6", fontSize: 18, letterSpacing: 1 },
-  note: { color: "#6a6f99", fontSize: 12, letterSpacing: 2, textTransform: "uppercase", marginTop: 8 },
+  root: { flex: 1, backgroundColor: NIGHT.bg, alignItems: "center", justifyContent: "center", gap: 16, padding: 12 },
+  brand: { color: NIGHT.text, fontSize: 28, letterSpacing: 5, fontWeight: "600" },
+  note: { color: NIGHT.textDim, fontSize: 13, letterSpacing: 2 },
 });
