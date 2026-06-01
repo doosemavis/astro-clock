@@ -2,10 +2,21 @@
 
 **Date:** 2026-06-01
 **Author:** moosedavis + Claude
-**Status:** Approved (brainstorm); pending implementation plan
+**Status:** Implemented + merged to main (2026-06-01).
 **Part of:** the MoveStar Android app build (slice 1 of 6). Builds on Slice 0 (foundation).
 Later slices: auth in RN, living views + settings, subscriptions (RevenueCat + Google
 Play Billing), store launch.
+
+> **Amendment (2026-06-01, during implementation):** Scope was expanded per user direction
+> beyond static natal-only. The wheel now **also** renders the **moveable "now" ring** — the
+> planets at the current moment on the inner live ring (`R.liveGlyph` = 330), drawn in the
+> live/gold color (`NIGHT.live`) via a new `LiveLayer`, with the aspect lines connecting those
+> *moveable* positions — matching the web app's default "now" view. Birth planets stay on the
+> outer ring (the `NatalLayer`). The "now" positions are a **static snapshot frozen at app
+> launch** (`positions(new Date())`); the continuous **animation** of the moveable planets
+> remains deferred to the living-views slice. This supersedes the "static natal-only" /
+> "no live ring" language in §1, §2, and §7 for the *static* ring; only the *animation*
+> stays out of scope.
 
 ---
 
