@@ -49,6 +49,8 @@
 .ac-panel .identity { margin-bottom: 20px; }
 .ac-panel .you { font-size: 25px; letter-spacing: .05em; }
 .ac-panel .handle { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.ac-panel .handle .auth-link { color: var(--text-dim); text-decoration: underline; }
+.ac-panel .handle .auth-link:hover { color: var(--text); }
 .ac-panel .sig { font-size: 12.5px; color: var(--text-dim); letter-spacing: .08em; margin-top: 9px; }
 .ac-panel .block { margin-bottom: 20px; }
 /* Section grouping: native <fieldset>/<legend> — the label notches into the top border,

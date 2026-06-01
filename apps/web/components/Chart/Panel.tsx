@@ -9,6 +9,7 @@ import type { CompareLayout, Layer, Mode, ThemeMode, TimeFormat, Vis } from "./t
 
 interface Props {
   name: string;
+  userEmail?: string | null;
   bigThree: string;
   readoutDate: string;
   readoutSub: string;
@@ -90,7 +91,7 @@ function themeNote(themeMode: ThemeMode, mode: Mode, place: string): string {
  *  same behavior as the prior hand-rolled buttons. */
 export function Panel(props: Props) {
   const {
-    name, bigThree, readoutDate, readoutSub, mode, themeMode, timeFormat, birth, placeLabel,
+    name, userEmail, bigThree, readoutDate, readoutSub, mode, themeMode, timeFormat, birth, placeLabel,
     vis, showMajor, showMinor, glyphPanelOpen, editing, playing, loop, rate,
     rangeStartMs, rangeEndMs, momentMs, compareAMs, compareBMs, compareLayout,
     onMode, onTheme, onTimeFormat, onToggleMajor, onToggleMinor, onToggleGlyphPanel, onToggleVis,
@@ -105,7 +106,13 @@ export function Panel(props: Props) {
       <div className="ac-panel-inner">
       <div className="identity">
         <div className="you">{name}</div>
-        <div className="handle">@doosemavis</div>
+        <div className="handle">
+          {userEmail ? (
+            <>{userEmail} · <a className="auth-link" href="/account">Account</a></>
+          ) : (
+            <a className="auth-link" href="/login">Sign in</a>
+          )}
+        </div>
         <div className="sig">{bigThree}</div>
       </div>
 
