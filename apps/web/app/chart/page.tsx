@@ -12,10 +12,15 @@ export default async function ChartPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const initialBirth = user ? await getPrimaryBirthChart(supabase) : null;
+  const userName =
+    (user?.user_metadata?.name as string | undefined) ??
+    (user?.user_metadata?.full_name as string | undefined) ??
+    null;
   return (
     <Chart
       userId={user?.id ?? null}
       userEmail={user?.email ?? null}
+      userName={userName}
       initialBirth={initialBirth}
     />
   );

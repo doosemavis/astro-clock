@@ -39,10 +39,11 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 interface ChartProps {
   userId?: string | null;
   userEmail?: string | null;
+  userName?: string | null;
   initialBirth?: BirthData | null;
 }
 
-export default function Chart({ userId = null, userEmail = null, initialBirth = null }: ChartProps) {
+export default function Chart({ userId = null, userEmail = null, userName = null, initialBirth = null }: ChartProps) {
   // --- birth + derived natal data ---
   const [birth, setBirth] = useState<BirthData>(initialBirth ?? DEFAULT_BIRTH);
   const birthMs = useMemo(() => birthInstant(birth).getTime(), [birth]);
@@ -304,7 +305,7 @@ export default function Chart({ userId = null, userEmail = null, initialBirth = 
         )}
       </button>
       <Panel
-        name={birth.name || "You"}
+        name={(birth.name && birth.name !== "You") ? birth.name : (userName || "You")}
         userEmail={userEmail}
         bigThree={bigThree}
         readoutDate={readoutDate}

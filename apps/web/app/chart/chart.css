@@ -36,7 +36,7 @@
 /* Always-visible toggle. Rides the panel's right edge open -> slides to the screen edge when
    collapsed. Sits over both the panel and the sky, so it reads in any theme. */
 .ac-panel-toggle {
-  position: fixed; top: 14px; left: 298px; z-index: 5;
+  position: fixed; top: 23px; left: 298px; z-index: 5;
   width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
   border-radius: 50%; border: 1px solid var(--border); background: var(--panel); color: var(--text-dim);
   font-size: 19px; line-height: 1; cursor: pointer; font-family: inherit;
