@@ -19,6 +19,8 @@ import { CompareWheel } from "./CompareWheel";
 import { useAnimationFrame } from "./useAnimationFrame";
 import { DY, resolveDate, fmtDate, fmtTime, readoutTz, localApproxLoc } from "./chartModel";
 import type { Mode, ThemeMode, TimeFormat, CompareLayout, Layer, Vis, VisMap } from "./types";
+import { createClient } from "@/lib/supabase/client";
+import { upsertPrimaryBirthChart } from "@/lib/birthCharts";
 
 const STORAGE_KEY = "astroBirth";
 const TIME_FORMAT_KEY = "ac:timeFormat";
@@ -34,9 +36,15 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
  * color, and data come from @astro/engine — this component is the React renderer + the
  * interactive state (mode, theme, visibility, playback) ported from prototype/index.html.
  */
-export default function Chart() {
+interface ChartProps {
+  userId?: string | null;
+  userEmail?: string | null;
+  initialBirth?: BirthData | null;
+}
+
+export default function Chart({ userId = null, userEmail = null, initialBirth = null }: ChartProps) {
   // --- birth + derived natal data ---
-  const [birth, setBirth] = useState<BirthData>(DEFAULT_BIRTH);
+  const [birth, setBirth] = useState<BirthData>(initialBirth ?? DEFAULT_BIRTH);
   const birthMs = useMemo(() => birthInstant(birth).getTime(), [birth]);
   const natalPos = useMemo(() => positions(new Date(birthMs)), [birthMs]);
   const bigThree = useMemo(() => {
@@ -91,14 +99,30 @@ export default function Chart() {
     setMomentMs(now);
     setCompareBMs(now); // Compare's Chart B starts at "now"; Chart A stays at the birth instant
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setBirth(JSON.parse(raw) as BirthData);
       const tf = localStorage.getItem(TIME_FORMAT_KEY);
       if (tf === "12h" || tf === "24h") setTimeFormat(tf);
-    } catch {
-      /* ignore corrupt storage */
+    } catch { /* ignore */ }
+
+    if (userId) {
+      // Logged in: if the account has no saved chart yet, migrate the local one once.
+      if (!initialBirth) {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const b = JSON.parse(raw) as BirthData;
+            setBirth(b);
+            void upsertPrimaryBirthChart(createClient(), b, userId);
+          }
+        } catch { /* ignore */ }
+      }
+      return;
     }
-  }, []);
+    // Anonymous: birth comes from localStorage (free chart still works logged out).
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) setBirth(JSON.parse(raw) as BirthData);
+    } catch { /* ignore */ }
+  }, [userId, initialBirth]);
 
   // Mask the starfield to the area outside the wheel (prototype updateStarMask).
   useEffect(() => {
@@ -229,7 +253,8 @@ export default function Chart() {
     setCompareAMs(birthInstant(b).getTime());
     setEditing(false);
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(b)); } catch { /* ignore */ }
-  }, []);
+    if (userId) void upsertPrimaryBirthChart(createClient(), b, userId);
+  }, [userId]);
   const togglePlay = useCallback(() => { if (posRef.current >= 1) posRef.current = 0; setPlaying((p) => !p); }, []);
   const resetPlay = useCallback(() => { posRef.current = 0; setPlaying(false); }, []);
 
@@ -280,6 +305,7 @@ export default function Chart() {
       </button>
       <Panel
         name={birth.name || "You"}
+        userEmail={userEmail}
         bigThree={bigThree}
         readoutDate={readoutDate}
         readoutSub={readoutSub}
