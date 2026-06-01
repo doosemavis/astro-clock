@@ -1,0 +1,162 @@
+/* Living-chart styles — ported from prototype/index.html's <style>, scoped under
+   .ac-root. Theme colors arrive as CSS custom properties set inline by <Chart/>
+   (engine themeVars), so every element here reads var(--…) and recolors without React
+   re-rendering it. */
+
+.ac-root {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  overflow: hidden;
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  background: radial-gradient(circle at 50% 34%, var(--bg), var(--bg-edge));
+}
+.ac-root * { box-sizing: border-box; }
+
+.ac-starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.ac-clouds { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* ---------- panel ---------- */
+.ac-panel {
+  position: relative; z-index: 1; width: 340px; flex: 0 0 340px; height: 100vh;
+  overflow-y: auto; background: var(--panel); border-right: 1px solid var(--border);
+  padding: 24px 22px 22px;
+}
+.ac-panel .identity { margin-bottom: 20px; }
+.ac-panel .you { font-size: 25px; letter-spacing: .05em; }
+.ac-panel .handle { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.ac-panel .sig { font-size: 12.5px; color: var(--text-dim); letter-spacing: .08em; margin-top: 9px; }
+.ac-panel .block { margin-bottom: 20px; }
+.ac-panel .seclabel { font-size: 10px; color: var(--seclabel); letter-spacing: .22em; text-transform: uppercase; margin-bottom: 9px; }
+.ac-panel .readout-date { font-size: 18px; letter-spacing: .02em; }
+.ac-panel .readout-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; letter-spacing: .06em; }
+.ac-panel .legend { font-size: 11px; color: var(--text-dim); display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.ac-panel .legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin-right: 7px; }
+.ac-panel .legend .dot.natal { background: var(--natal); }
+.ac-panel .legend .dot.live { background: var(--live); }
+.ac-panel .ephem-note { font-size: 9.5px; color: var(--seclabel); letter-spacing: .14em; text-transform: uppercase; opacity: .8; }
+.ac-panel .theme-note, .ac-panel .pace-note { font-size: 11px; color: var(--text-dim); margin-top: 8px; letter-spacing: .06em; }
+
+.ac-panel .segmented { display: flex; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+.ac-panel .segmented button { flex: 1; border: none; border-right: 1px solid var(--border); border-radius: 0; padding: 9px 0; }
+.ac-panel .segmented button:last-child { border-right: none; }
+
+.ac-panel button {
+  background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-family: inherit;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase; padding: 7px 12px; cursor: pointer;
+  border-radius: 3px; transition: background .15s, color .15s, border-color .15s;
+}
+.ac-panel button:hover { color: var(--text); border-color: var(--text-dim); }
+.ac-panel button.active { color: var(--bg); background: var(--text); border-color: var(--text); }
+/* react-aria-components map the active state to [data-selected]; mirror .active so the
+   swapped buttons/toggles look identical to the prior hand-rolled ones. */
+.ac-panel button[data-selected]:not(.vchip) { color: var(--bg); background: var(--text); border-color: var(--text); }
+.ac-panel .vchip[data-selected] { border-color: transparent; }
+.ac-panel .vchip[data-selected].layer-natal { background: var(--natal); }
+.ac-panel .vchip[data-selected].layer-live { background: var(--live); }
+.ac-panel .vchip[data-selected] .dot { background: var(--bg); }
+.ac-panel button[data-hovered]:not([data-selected]) { color: var(--text); border-color: var(--text-dim); }
+.ac-panel button[data-focus-visible] { outline: 2px solid var(--live); outline-offset: 2px; }
+.ac-panel .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.ac-panel .pace-row { gap: 6px; }
+.ac-panel .pace-row button { padding: 6px 9px; letter-spacing: .05em; font-size: 10px; }
+
+.ac-panel .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.ac-panel .field.row-check { flex-direction: row; align-items: center; gap: 8px; }
+.ac-panel .field.grow { flex: 1; min-width: 0; }
+.ac-panel .field span { font-size: 10px; color: var(--text-dim); letter-spacing: .16em; text-transform: uppercase; }
+.ac-panel .field.row-check span { letter-spacing: .06em; text-transform: none; }
+.ac-panel .field input, .ac-panel .field select {
+  background: var(--bg); border: 1px solid var(--border); color: var(--text); font-family: inherit;
+  font-size: 13px; padding: 7px 8px; border-radius: 3px; width: 100%;
+}
+.ac-panel .field.row-check input { width: auto; }
+.ac-panel .editbtn { width: 100%; margin-top: 2px; }
+.ac-panel .birth-form { margin-top: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,.025); }
+.ac-panel .bf-note { font-size: 10.5px; color: var(--text-dim); margin-top: 10px; line-height: 1.55; letter-spacing: .03em; }
+.ac-panel .bf-note.err { color: #ff7a7a; }
+.ac-panel .bf-note.ok { color: #7ad19a; }
+
+/* glyph visibility grid */
+.ac-panel .vis-panel { margin-top: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,.025); }
+.ac-panel .visgrid { display: grid; grid-template-columns: 1fr auto auto; gap: 6px 10px; align-items: center; }
+.ac-panel .visgrid .vh { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--seclabel); text-align: center; }
+.ac-panel .visgrid .vname { font-size: 12px; color: var(--text); letter-spacing: .02em; display: flex; align-items: center; gap: 8px; text-transform: none; }
+.ac-panel .visgrid .vname .g { font-size: 15px; width: 18px; text-align: center; color: var(--text-dim); }
+.ac-panel .visgrid .vall { color: var(--text-dim); letter-spacing: .1em; text-transform: uppercase; font-size: 10px; }
+.ac-panel .visdiv { grid-column: 1 / 4; height: 1px; background: var(--border); margin: 3px 0; opacity: .7; }
+.ac-panel .vchip {
+  width: 34px; height: 22px; border-radius: 7px; border: 1px solid var(--border); background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; padding: 0; transition: background .12s, border-color .12s;
+}
+.ac-panel .vchip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-dim); transition: background .12s; }
+.ac-panel .vchip.on { border-color: transparent; }
+.ac-panel .vchip.on.layer-natal { background: var(--natal); }
+.ac-panel .vchip.on.layer-live { background: var(--live); }
+.ac-panel .vchip.on .dot { background: var(--bg); }
+
+/* ---------- stage + chart ---------- */
+.ac-stage { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
+.ac-chart { height: calc(100vh - 32px); width: auto; max-width: 100%; aspect-ratio: 1 / 1; }
+
+.ac-root .s-ring { stroke: var(--line); fill: none; }
+.ac-root .s-tick { stroke: var(--line); }
+.ac-root .s-bound { stroke: var(--line); }
+.ac-root .s-sign { fill: var(--sign); }
+.ac-root .s-natal { fill: var(--natal); }
+.ac-root .s-ntick { stroke: var(--natal); }
+.ac-root .s-live { fill: var(--live); }
+.ac-root .s-ntoken { fill: var(--bg); stroke: var(--natal); }
+
+/* ---------- tooltip ---------- */
+.ac-tooltip {
+  position: fixed; z-index: 50; pointer-events: none; background: var(--panel); border: 1px solid var(--border);
+  color: var(--text); font-family: Georgia, serif; font-size: 13px; letter-spacing: .03em; padding: 7px 11px;
+  border-radius: 6px; box-shadow: 0 6px 22px rgba(0,0,0,.45); white-space: nowrap;
+}
+.ac-tooltip .tip-glyph { font-size: 15px; margin-right: 6px; }
+.ac-tooltip .tip-deg { color: var(--text-dim); margin-left: 8px; }
+
+/* ---------- custom date+time picker ---------- */
+.dtp-field {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  background: var(--bg); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 13px;
+  letter-spacing: .02em; text-transform: none; padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.dtp-field:hover { border-color: var(--text-dim); background: rgba(255,255,255,.02); }
+.dtp-field .dtp-ico { opacity: .55; flex: 0 0 auto; }
+.dtp-val { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dtp-pop {
+  position: fixed; z-index: 60; width: 288px; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 16px; box-shadow: 0 20px 56px rgba(0,0,0,.55); padding: 16px; color: var(--text);
+  font-family: Georgia, serif;
+}
+.dtp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.dtp-title { flex: 1; text-align: center; font-size: 14px; letter-spacing: .05em; color: var(--text); background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 5px 8px; cursor: pointer; text-transform: none; }
+.dtp-title:hover { background: rgba(255,255,255,.07); }
+.dtp-caret { font-size: 9px; opacity: .55; margin-left: 5px; }
+.dtp-nav { width: 30px; min-width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1px solid transparent; background: transparent; color: var(--text-dim); font-size: 17px; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.dtp-nav:hover { background: rgba(255,255,255,.07); color: var(--text); }
+.dtp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.dtp-years { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.dtp-wd { font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--seclabel); text-align: center; padding: 2px 0 6px; }
+.dtp-day { aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; font-size: 12.5px; border-radius: 50%; cursor: pointer; color: var(--text); background: transparent; border: 1px solid transparent; padding: 0; text-transform: none; letter-spacing: 0; transition: background .12s, color .12s; }
+.dtp-day:hover { background: rgba(255,255,255,.09); color: var(--text); }
+.dtp-day.out { color: var(--seclabel); opacity: .4; }
+.dtp-day.today { border-color: var(--text-dim); }
+.dtp-day.sel, .dtp-day.sel:hover { background: var(--live); color: var(--bg); border-color: var(--live); }
+.dtp-year { padding: 12px 0; display: flex; align-items: center; justify-content: center; font-size: 13px; border-radius: 9px; cursor: pointer; color: var(--text); background: transparent; border: 1px solid transparent; text-transform: none; letter-spacing: .02em; transition: background .12s, color .12s; }
+.dtp-year:hover { background: rgba(255,255,255,.09); }
+.dtp-year.sel, .dtp-year.sel:hover { background: var(--live); color: var(--bg); border-color: var(--live); }
+.dtp-time { display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.dtp-sp { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.dtp-sp button { width: 36px; height: 22px; min-width: 0; padding: 0; border: none; background: transparent; color: var(--text-dim); font-size: 11px; line-height: 1; cursor: pointer; border-radius: 6px; text-transform: none; letter-spacing: 0; }
+.dtp-sp button:hover { background: rgba(255,255,255,.08); color: var(--text); }
+.dtp-num { font-size: 21px; letter-spacing: .02em; color: var(--text); min-width: 36px; text-align: center; font-variant-numeric: tabular-nums; }
+.dtp-colon { font-size: 21px; color: var(--text-dim); padding-bottom: 2px; }
+.dtp-ampm { margin-left: 6px; padding: 8px 12px; border-radius: 9px; border: 1px solid var(--border); background: transparent; color: var(--text); font-family: inherit; font-size: 12px; letter-spacing: .08em; cursor: pointer; text-transform: none; }
+.dtp-ampm:hover { border-color: var(--text-dim); }
+.dtp-done { width: 100%; margin-top: 14px; padding: 9px; border-radius: 10px; border: 1px solid var(--border); background: var(--text); color: var(--bg); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; font-family: inherit; }
+.dtp-done:hover { opacity: .92; }

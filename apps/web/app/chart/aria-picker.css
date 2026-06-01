@@ -1,0 +1,88 @@
+/* react-aria date+time picker theme. Targets the react-aria-components DOM
+   (data-attributes for state) using the existing chart CSS variables, so the picker
+   matches the dark / light / auto themes. The trigger reuses .dtp-field from chart.css.
+   Kept compact so it fits the space above/below its trigger without scrolling to Done. */
+
+/* Portaled popovers escape the global box-sizing in chart.css, so set it here —
+   otherwise width:100% children (Done button, the grid) overflow their padded container. */
+.acp-pop, .acp-pop *, .acp-selpop, .acp-selpop * { box-sizing: border-box; }
+.acp-pop {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 20px 56px rgba(0, 0, 0, .55); padding: 12px;
+  width: 280px; max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px); overflow-y: auto;
+  color: var(--text); font-family: Georgia, serif; outline: none;
+}
+.acp-dialog { outline: none; }
+
+/* calendar header: prev / month+year dropdowns / next */
+.acp-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
+.acp-nav {
+  width: 28px; min-width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1px solid transparent;
+  background: transparent; color: var(--text-dim); font-size: 16px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.acp-nav[data-hovered] { background: rgba(255, 255, 255, .07); color: var(--text); }
+.acp-nav[data-focus-visible] { outline: 2px solid var(--live); outline-offset: 1px; }
+.acp-selects { display: flex; gap: 6px; flex: 1; justify-content: center; }
+
+/* month / year Select dropdowns */
+.acp-selbtn {
+  display: flex; align-items: center; gap: 4px; background: transparent; border: 1px solid transparent;
+  border-radius: 8px; color: var(--text); font-family: inherit; font-size: 13.5px; letter-spacing: .03em;
+  padding: 4px 7px; cursor: pointer;
+}
+.acp-selbtn[data-hovered] { background: rgba(255, 255, 255, .07); }
+.acp-selbtn[data-focus-visible] { outline: 2px solid var(--live); outline-offset: 1px; }
+.acp-caret { font-size: 9px; opacity: .55; }
+.acp-selpop {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .5); padding: 4px; max-height: 240px; overflow: auto;
+}
+.acp-list { outline: none; display: flex; flex-direction: column; min-width: 92px; }
+.acp-item {
+  padding: 5px 13px; border-radius: 7px; font-size: 13px; color: var(--text); cursor: pointer;
+  outline: none; white-space: nowrap;
+}
+.acp-item[data-hovered], .acp-item[data-focused] { background: rgba(255, 255, 255, .09); }
+.acp-item[data-selected] { background: var(--live); color: var(--bg); }
+
+/* month grid */
+.acp-grid { border-collapse: collapse; width: 100%; }
+.acp-grid th, .acp-wd {
+  font-size: 9px; letter-spacing: .05em; text-transform: uppercase; color: var(--seclabel);
+  font-weight: normal; padding: 1px 0 3px; text-align: center;
+}
+.acp-grid td { padding: 0; text-align: center; }
+.acp-cell {
+  width: 30px; height: 30px; margin: 0 auto; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; border-radius: 50%; cursor: pointer; color: var(--text); border: 1px solid transparent; outline: none;
+}
+.acp-cell[data-outside-month] { color: var(--seclabel); opacity: .4; }
+.acp-cell[data-hovered] { background: rgba(255, 255, 255, .09); }
+.acp-cell[data-focus-visible] { outline: 2px solid var(--live); outline-offset: 1px; }
+.acp-cell[data-today] { border-color: var(--text-dim); }
+.acp-cell[data-selected] { background: var(--live); color: var(--bg); border-color: var(--live); }
+.acp-cell[data-disabled] { opacity: .3; cursor: default; }
+.acp-cell[data-unavailable] { opacity: .3; cursor: default; text-decoration: line-through; }
+
+/* time field (editable segments) */
+.acp-time { display: flex; justify-content: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.acp-timefield { display: inline-flex; }
+.acp-timeinput {
+  display: inline-flex; align-items: center; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 9px; padding: 4px 10px; font-size: 16px; font-variant-numeric: tabular-nums; color: var(--text);
+}
+.acp-seg { padding: 0 2px; border-radius: 4px; outline: none; color: var(--text); text-align: center; }
+.acp-seg[data-type="literal"] { color: var(--text-dim); padding: 0; }
+.acp-seg[data-placeholder] { color: var(--text-dim); }
+.acp-seg[data-focused] { background: var(--live); color: var(--bg); }
+
+/* done */
+.acp-done {
+  width: 100%; margin-top: 8px; padding: 7px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--text); color: var(--bg); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  cursor: pointer; font-family: inherit;
+}
+.acp-done[data-hovered] { opacity: .92; }
+.acp-done[data-focus-visible] { outline: 2px solid var(--live); outline-offset: 2px; }

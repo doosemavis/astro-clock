@@ -63,8 +63,11 @@ function smoothstep(x: number): number {
 
 /**
  * Day/night blend value (0 = night, 1 = day) for a moment & place, from the real Sun
- * altitude. Prototype solarT: maps altitude -9°..+9° across the twilight band.
+ * altitude. Holds full dark through night AND twilight (sun at or below the horizon),
+ * then brightens as the sun climbs, reaching full day by ~+18° altitude. This keeps
+ * dawn/dusk on the dark palette instead of washing out through a low-contrast grey
+ * midpoint (the prototype's -9°..+9° band brightened too early at dusk).
  */
 export function solarT(date: Date, lat: number, lon: number): number {
-  return smoothstep((sunAltitude(date, lat, lon) + 9) / 18);
+  return smoothstep(sunAltitude(date, lat, lon) / 18);
 }
