@@ -228,3 +228,19 @@ readability, captions correct per wheel, each wheel's own aspects, and that Majo
 Cross-chart synastry (→ Pro, post-launch). `Side` layout. Light/dark/auto theme,
 sun-altitude day/night sky, per-planet glyph visibility grid (3c). Glyph tap/tooltip on
 mobile. Saved/multiple charts, auth, and cloud sync remain on the longer roadmap.
+
+## 9. Amendments (post-build device feedback, 2026-06-02)
+
+Two changes made after the first working build supersede the relevant text above:
+
+1. **Per-wheel captions use the readout pill.** Each Compare wheel's `Chart A · date · time ·
+   tz` caption now renders in the **same rounded, bordered, panel-filled pill** the other four
+   views use (App's `moment` style), instead of the plain bold/muted text described in §4.4.
+
+2. **Pages is a coin-flip, not a slide.** The Pages view no longer uses a horizontal
+   `ScrollView` pager (§2, §4.5). Instead it shows one full-size wheel and **flips it 180°
+   like a coin** (`Animated` `rotateY`, tap the chart or a dot) to reveal the other chart. A
+   hard opacity cut at the edge-on midpoint swaps the faces (also covering platforms where
+   `backfaceVisibility` doesn't hide native SVG). Because there is no scroll offset to map,
+   the `pageIndex` helper and its unit tests (§4.1, §4.2, §6) were **removed** — the active
+   dot is now driven directly by flip state. No new dependencies (`Animated` is built-in).
