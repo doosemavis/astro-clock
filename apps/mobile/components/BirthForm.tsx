@@ -88,7 +88,7 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
     setLat(initial.lat);
     setLon(initial.lon);
     setTzOffset(initial.tzOffset);
-    setIanaTz(null);
+    setIanaTz(initial.ianaTz ?? null);
     setPlaceLabel(initial.placeLabel ?? "");
     setQuery("");
     setResults([]);
@@ -139,7 +139,7 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
   }
 
   function onSavePress() {
-    const res = validateBirth({ name, date, time, lat, lon, tzOffset, placeLabel });
+    const res = validateBirth({ name, date, time, lat, lon, tzOffset, placeLabel, ianaTz: ianaTz ?? undefined });
     if (!res.ok) { setError(res.error); return; }
     onSave(res.birth);
   }

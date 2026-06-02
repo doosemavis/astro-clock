@@ -8,6 +8,7 @@ export interface BirthDraft {
   lon: number | null;
   tzOffset: number | null; // total offset hours
   placeLabel?: string;
+  ianaTz?: string;         // IANA zone the offset came from (persisted for re-editing)
 }
 
 export type ValidationResult =
@@ -39,6 +40,7 @@ export function validateBirth(d: BirthDraft): ValidationResult {
       lat: d.lat,
       lon: d.lon,
       placeLabel: d.placeLabel,
+      ianaTz: d.ianaTz,
     },
   };
 }
