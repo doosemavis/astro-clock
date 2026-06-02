@@ -7,6 +7,7 @@ import type { BirthData, Palette, Sign, PlanetKey } from "@astro/engine";
 import { GLYPH_FONT, CHART } from "./components/chart/palette";
 import { ChartWheel } from "./components/chart/ChartWheel";
 import { CompareView } from "./components/chart/CompareView";
+import { Sky } from "./components/chart/Sky";
 import { ChartControls } from "./components/chart/ChartControls";
 import { RangeHud } from "./components/chart/RangeHud";
 import { BottomSheet, SHEET_COLLAPSED_HEIGHT } from "./components/BottomSheet";
@@ -89,6 +90,7 @@ export default function App() {
   return (
     <ThemeProvider value={{ t: themeT, palette }}>
       <View style={styles.root}>
+      <Sky themeT={themeT} />
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Text style={styles.brand}>MoveStar</Text>
