@@ -61,7 +61,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
     const r = await signInWithGoogle();
     setBusy(false);
     if (r.error) { setError(r.error); return; }
-    // Success closes via the onAuthStateChange listener flipping session; close the sheet too.
+    if (r.cancelled) return; // user dismissed the browser — keep the sheet open
     close();
   }
 

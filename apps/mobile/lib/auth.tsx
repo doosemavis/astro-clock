@@ -10,6 +10,7 @@ import { supabase } from "./supabase";
 export interface AuthResult {
   error?: string;
   needsConfirm?: boolean;
+  cancelled?: boolean;
 }
 
 interface AuthValue {
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error || !data?.url) return { error: error?.message ?? "Could not start Google sign-in." };
 
     const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-    if (res.type !== "success") return {}; // user dismissed the browser — not an error
+    if (res.type !== "success") return { cancelled: true }; // user dismissed the browser — not an error
 
     const { queryParams } = Linking.parse(res.url);
     const code = typeof queryParams?.code === "string" ? queryParams.code : undefined;
