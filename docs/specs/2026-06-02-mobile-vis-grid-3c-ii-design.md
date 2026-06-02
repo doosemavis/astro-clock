@@ -164,3 +164,24 @@ component is built so a real uploaded photo can replace the default glyph later.
 
 Files added to §5: `packages/engine/src/types.ts` (+ `index.ts` export) for `SIGN_GLYPH`;
 new `apps/mobile/components/Avatar.tsx`; `App.tsx` header edit.
+
+## 10. Addendum — time-format consistency (folded into this slice)
+
+Two more mid-slice requests, both about the 12h/24h time format:
+
+1. **The global Clock toggle must reformat the settings-panel time inputs**, not just the
+   on-chart readout. `ChartControls`' `DateField` will take a `timeFormat` prop and format its
+   time string accordingly (12h → `hour12`, 24h → `hourCycle: "h23"`, both `padHour`'d).
+   `ChartControls` passes the existing `timeFormat` to every `DateField`. This affects the
+   views with a time input — **Date** (moment) and **Compare** (Chart A / Chart B). Range
+   From/To are date-only and unchanged.
+
+2. **The birth form gets its own 12h/24h toggle** for the birth-time field. The stored birth
+   time stays canonical `HH:MM` (24h) in `BirthData`; the toggle only changes how the time is
+   *displayed* on the field. `BirthForm` gains a `Segmented` (Clock 12h/24h), a local
+   `birthTf` state seeded from the app's current `timeFormat` (passed as a prop) but
+   independently toggleable, and a small `HH:MM → display` formatter.
+
+Files added to §5: `apps/mobile/components/chart/ChartControls.tsx` (`DateField` `timeFormat`);
+`apps/mobile/components/BirthForm.tsx` (own 12h/24h toggle); `apps/mobile/App.tsx` (pass
+`timeFormat` to `BirthForm`).
