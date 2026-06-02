@@ -52,7 +52,7 @@ export default function App() {
 
   // Persistent readout of the moment on screen — which view + when (fixed vs. moveable).
   const moment =
-    `${MODE_LABEL[clock.mode]}  ·  ${fmtDate(clock.displayInstant, clock.mode, birth)}  ·  ${fmtTime(clock.displayInstant, clock.mode, birth, timeFormat)}  ${readoutTz(clock.displayInstant, clock.mode, birth)}`;
+    `${MODE_LABEL[clock.mode]}  ·  ${fmtDate(clock.displayInstant, clock.mode, birth)}  ·  ${fmtTime(clock.displayInstant, clock.mode, birth, timeFormat, clock.mode === "now")}  ${readoutTz(clock.displayInstant, clock.mode, birth)}`;
 
   function onSave(b: BirthData) {
     setBirth(b);

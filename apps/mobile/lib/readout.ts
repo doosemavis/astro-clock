@@ -20,12 +20,14 @@ export function fmtDate(date: Date, mode: Mode, birth: BirthData): string {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-/** Time label, birth-zone vs. local per mode; 24h uses the h23 cycle (00:00, not 24:00). */
-export function fmtTime(date: Date, mode: Mode, birth: BirthData, timeFormat: TimeFormat): string {
-  const opts: Intl.DateTimeFormatOptions =
+/** Time label, birth-zone vs. local per mode; 24h uses the h23 cycle (00:00, not 24:00).
+ *  `withSeconds` adds a live seconds field (used by the ticking Now readout). */
+export function fmtTime(date: Date, mode: Mode, birth: BirthData, timeFormat: TimeFormat, withSeconds = false): string {
+  const base: Intl.DateTimeFormatOptions =
     timeFormat === "24h"
       ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
       : { hour: "2-digit", minute: "2-digit", hour12: true };
+  const opts: Intl.DateTimeFormatOptions = withSeconds ? { ...base, second: "2-digit" } : base;
   if (mode === "birth")
     return birthShift(date.getTime(), birth).toLocaleTimeString(undefined, { ...opts, timeZone: "UTC" });
   return date.toLocaleTimeString(undefined, opts);
