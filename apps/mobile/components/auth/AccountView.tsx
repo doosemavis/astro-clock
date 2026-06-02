@@ -15,9 +15,12 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
 
   async function onSignOut() {
     setBusy(true);
-    await signOut();
-    setBusy(false);
-    onClose();
+    try {
+      await signOut();
+      onClose();
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
