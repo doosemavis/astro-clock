@@ -217,8 +217,8 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
                   value={lon === null ? "" : String(lon)}
                   onChangeText={(t) => setLon(t === "" || t === "-" ? null : Number(t))}
                   placeholder="-180 to 180" placeholderTextColor={NIGHT.textDim} />
-                <Text style={styles.label}>UTC offset</Text>
-                <OffsetSelect value={tzOffset} onChange={(v) => { setIanaTz(null); setTzOffset(v); }} />
+                <Text style={styles.label}>Birth timezone</Text>
+                <OffsetSelect valueZone={ianaTz} date={date} time={time} onChange={setIanaTz} />
               </View>
             ) : null}
 
