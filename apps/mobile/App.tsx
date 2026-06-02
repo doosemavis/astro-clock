@@ -67,8 +67,6 @@ export default function App() {
   const palette = useMemo(() => mixPalette(themeT), [themeT]);
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
-  const displayName = birth.name && birth.name !== "You" ? birth.name : "Your chart";
-
   // The chart's signature: Sun / Moon / Ascendant signs (mirrors the web bigThree).
   const bigThree = useMemo(() => {
     const asc = ascendant(new Date(birthMs), birth.lat, birth.lon);
@@ -94,8 +92,7 @@ export default function App() {
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Text style={styles.brand}>MoveStar</Text>
-          <Pressable onPress={() => setEditing(true)} style={styles.editBtn}>
-            <Text style={styles.editText}>{displayName}</Text>
+          <Pressable onPress={() => setEditing(true)} style={styles.editBtn} hitSlop={8}>
             <Avatar glyph={sunGlyph} />
           </Pressable>
         </View>

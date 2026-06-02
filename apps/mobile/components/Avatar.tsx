@@ -23,11 +23,11 @@ function AvatarBase({ glyph, size = 42 }: Props) {
       <SvgText
         x={r}
         y={r}
-        dy={fs * 0.35}
         fill={p.live}
         fontFamily={GLYPH_FONT}
         fontSize={fs}
         textAnchor="middle"
+        alignmentBaseline="central"
       >
         {glyph}
       </SvgText>
