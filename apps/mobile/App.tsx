@@ -15,6 +15,9 @@ import { BirthForm } from "./components/BirthForm";
 import { useChartClock } from "./hooks/useChartClock";
 import { ThemeProvider } from "./lib/theme";
 import { Avatar } from "./components/Avatar";
+import { AuthProvider, useAuth } from "./lib/auth";
+import { LoginScreen } from "./components/auth/LoginScreen";
+import { AccountView } from "./components/auth/AccountView";
 import { allVisible, toggleVis } from "./lib/chartModel";
 import type { Mode, TimeFormat, ThemeMode, Vis, Layer } from "./lib/chartModel";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
@@ -26,7 +29,7 @@ const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "
 // frame in Auto+Range), which bounds re-renders/style recreation.
 const quantize = (x: number) => Math.round(x * 50) / 50;
 
-export default function App() {
+function AppInner() {
   // Gate on the glyph font: rendering planet glyphs before it loads would flash tofu.
   const [fontsLoaded] = useFonts({ [GLYPH_FONT]: NotoSansSymbols_400Regular });
   const { width, height } = useWindowDimensions();
@@ -34,6 +37,8 @@ export default function App() {
 
   const [birth, setBirth] = useState<BirthData>(DEFAULT_BIRTH);
   const [editing, setEditing] = useState(false);
+  const { session } = useAuth();
+  const [authView, setAuthView] = useState<null | "login" | "account">(null);
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
   const [showMajor, setShowMajor] = useState(true);
   const [showMinor, setShowMinor] = useState(false);
@@ -94,9 +99,14 @@ export default function App() {
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Text style={styles.brand}>MoveStar</Text>
-          <Pressable onPress={() => setEditing(true)} style={styles.editBtn} hitSlop={8}>
-            <Avatar glyph={sunGlyph} />
-          </Pressable>
+          <View style={styles.headerRight}>
+            <Pressable onPress={() => setAuthView(session ? "account" : "login")} style={styles.authBtn} hitSlop={8}>
+              <Text style={styles.authText}>{session ? "Account" : "Sign in"}</Text>
+            </Pressable>
+            <Pressable onPress={() => setEditing(true)} style={styles.editBtn} hitSlop={8}>
+              <Avatar glyph={sunGlyph} />
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -144,9 +154,19 @@ export default function App() {
       </BottomSheet>
 
       <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} timeFormat={timeFormat} />
+      <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
+      <AccountView visible={authView === "account"} onClose={() => setAuthView(null)} />
       <StatusBar style="light" />
       </View>
     </ThemeProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppInner />
+    </AuthProvider>
   );
 }
 
@@ -156,6 +176,9 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   brand: { color: p.text, fontSize: 24, letterSpacing: 4, fontWeight: "600" },
   editBtn: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4, paddingLeft: 12 },
+  headerRight: { flexDirection: "row", alignItems: "center", gap: 6 },
+  authBtn: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderColor: p.border, borderWidth: 1 },
+  authText: { color: p.live, fontSize: 13, letterSpacing: 0.5, fontWeight: "600" },
   editText: { color: p.live, fontSize: 15, letterSpacing: 1, textAlign: "right" },
   bigThree: { color: p.textDim, fontSize: 14, letterSpacing: 1, textAlign: "center", marginBottom: 12 },
   stage: { flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: SHEET_COLLAPSED_HEIGHT },
