@@ -76,6 +76,10 @@ paged) is re-authored for a phone.
 - Extend `Mode` to `"birth" | "now" | "moment" | "range" | "compare"`.
 - Add `export type CompareView = "both" | "pages";` (mobile-specific; replaces the web's
   `CompareLayout`).
+- Add a pure `pageIndex(offsetX, pageWidth, count)` helper (scroll offset → current page,
+  clamped to `[0, count − 1]`) for the pager's dots. It lives here, alongside `resolveDate`
+  / `PACES`, because `chartModel.ts` is engine-free and therefore unit-testable under the
+  strip-types runner.
 
 ### 4.2 Caption helper — `lib/readout.ts` (edit)
 
@@ -83,8 +87,10 @@ paged) is re-authored for a phone.
   the web's `cmpCaption`: it formats with the **`"moment"` mode** (viewer's local zone),
   reusing the existing `fmtDate` / `fmtTime` / `readoutTz` (so it inherits leading-zero hours
   and the 12h/24h preference). `birth` is required only because those existing signatures
-  take it; in `"moment"` mode the birth zone is not read, so any `BirthData` (the app's
-  current birth) is fine — which also makes the helper trivial to unit-test.
+  take it; in `"moment"` mode the birth zone is not read, so the app's current `birth` is
+  passed through. Like the rest of `readout.ts` (which statically imports engine runtime),
+  `cmpCaption` is **verified via render**, not a unit test — the engine-free, unit-tested
+  helper for this slice is `pageIndex` in `chartModel.ts`.
 
   ```
   cmpCaption(ms, birth, tf) =>
@@ -135,8 +141,8 @@ Arranges the two `CompareWheel`s per `compareView`:
 - **Pages** — a horizontal `ScrollView` (`horizontal`, `pagingEnabled`,
   `showsHorizontalScrollIndicator={false}`) with two full-width pages (each a full-size
   `CompareWheel`), plus a **page-dots** row (`● ○`) below. Current page tracked via
-  `onMomentumScrollEnd` using a pure helper `pageIndex(offsetX, pageWidth)` =
-  `Math.round(offsetX / pageWidth)` clamped to `[0, 1]`.
+  `onMomentumScrollEnd` using the engine-free `pageIndex(offsetX, pageWidth, count)` helper
+  from `chartModel.ts` (`Math.round(offsetX / pageWidth)` clamped to `[0, count − 1]`).
 - Props: `{ posA; posB; captionA; captionB; subA; subB; view; size: { both; full };
   showMajor; showMinor }`.
 
@@ -170,12 +176,13 @@ Arranges the two `CompareWheel`s per `compareView`:
 
 | File | Action | Notes |
 |---|---|---|
-| `lib/chartModel.ts` | edit | add `"compare"` to `Mode`; add `CompareView` type |
-| `lib/readout.ts` (+ test) | edit | add `cmpCaption(ms, birth, timeFormat)` (local zone, web parity) |
+| `lib/chartModel.ts` (+ test) | edit | add `"compare"` to `Mode`; add `CompareView` type; add `pageIndex(offsetX, pageWidth, count)` + unit tests |
+| `lib/readout.ts` | edit | add `cmpCaption(ms, birth, timeFormat)` (local zone, web parity; verified via render) |
 | `hooks/useChartClock.ts` | edit | `compareAMs` / `compareBMs` / `compareView` + setters; A resets on birth change; no loop in Compare |
 | `components/chart/CompareWheel.tsx` | new | one self-contained wheel (Dial + AspectLayer + LiveLayer + caption), `size` + `idPrefix` |
-| `components/chart/CompareView.tsx` (+ test) | new | Both (stacked) / Pages (`ScrollView` pager + dots); `pageIndex` pure helper |
-| `components/chart/Dial.tsx`, `LiveLayer.tsx`, `AspectLayer.tsx` | edit (if needed) | thread `idPrefix` so two wheels don't share SVG ids |
+| `components/chart/CompareView.tsx` | new | Both (stacked) / Pages (`ScrollView` pager + dots, via `pageIndex`) |
+| `components/chart/Dial.tsx` | edit | add `idPrefix` prop, prefix the `acSignArc{s}` `<Defs>` ids so two wheels don't collide (LiveLayer/AspectLayer use no SVG ids — unchanged) |
+| `components/Segmented.tsx` | edit | optional `wrap` prop (let the 5-mode switcher wrap to two rows) |
 | `components/chart/ChartControls.tsx` | edit | Compare in mode switcher (wrap to 2 rows) + Compare section (View toggle + A/B `DateField`s) |
 | `App.tsx` | edit | render `CompareView` in Compare; hide global pill; memo `compareAPos`/`compareBPos` |
 
@@ -185,8 +192,10 @@ Arranges the two `CompareWheel`s per `compareView`:
 
 1. `apps/mobile` typechecks (`pnpm --filter @astro/mobile typecheck`).
 2. **Unit tests** (`node --test --experimental-strip-types`, the Slice-2/3a runner):
-   - `cmpCaption` — local-zone formatting, leading-zero hour, 12h vs 24h.
-   - `pageIndex(offsetX, pageWidth)` — 0, midpoint rounding, clamp at both ends.
+   - `pageIndex(offsetX, pageWidth, count)` — page 0, midpoint rounding to the next page,
+     and clamping at both ends.
+   - (`cmpCaption` is verified via render in step 4, not unit-tested — `readout.ts` imports
+     engine runtime, matching that module's existing render-verified pattern.)
 3. `npx expo export --platform android` bundles (Metro resolves everything; no new native
    modules).
 4. Web-target render via `/browse` (390×844): switch to Compare → two stacked wheels with
@@ -208,9 +217,9 @@ readability, captions correct per wheel, each wheel's own aspects, and that Majo
   Fallback: cap wheel size to width and accept vertical scrolling of the pair if needed.
 - **Caption zone may surprise.** Per web parity, Chart A (birth instant) is shown in the
   **viewer's local zone**, so a Central-time birth viewed from Eastern reads one hour later
-  than the birth wall-clock. This matches the web. If the user prefers Chart A in its birth
-  zone, it is a one-line change (`"birth"` mode for A's caption) — flagged for the spec
-  review.
+  than the birth wall-clock. **Decision (spec review): both captions use the local zone —
+  web parity.** (If revisited, Chart A in its birth zone is a one-line change: `"birth"`
+  mode for A's caption.)
 - **`pagingEnabled` feel without a gesture lib.** `ScrollView` paging is built-in and
   snappy; if the feel disappoints, a gesture library is a later, isolated swap (not now).
 
