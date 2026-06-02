@@ -140,3 +140,27 @@ Rendered as a `Section label="Glyphs"` in `ChartControls`.
 ## 8. Out of scope (later)
 
 Day/night sky (**3c-iii**). Persisting visibility. Auth / cloud sync. Synastry (→ Pro).
+
+## 9. Addendum — header avatar (folded into this slice)
+
+Per a mid-slice request, also replace the header **"Your chart ✎"** text affordance with a
+circular **Avatar** whose default image is the user's **Sun-sign** zodiac glyph (e.g. ♌ for a
+Leo Sun). Tapping the avatar opens the birth form, exactly as the text button did. The
+component is built so a real uploaded photo can replace the default glyph later.
+
+- **Engine:** add `SIGN_GLYPH: Record<Sign, string>` (the 12 zodiac symbols ♈…♓, keyed to the
+  existing `SIGNS`) next to `PLANET_GLYPH`, and export it. Static map — no test (mirrors
+  `PLANET_GLYPH`).
+- **`components/Avatar.tsx` (new):** a themed (`useTheme`) circular view — `borderRadius`
+  = `size/2`, `live`-colored ring, `panel` fill — rendering a glyph in the bundled
+  `GLYPH_FONT`. Props `{ glyph: string; size?: number }`. (A future `imageUri?: string` would
+  render an `<Image>` instead of the glyph.)
+- **`App.tsx`:** compute `sunGlyph = SIGN_GLYPH[signOf(natalPos.sun) as Sign]`; in the header,
+  replace the `Pressable`/text with a `Pressable onPress={() => setEditing(true)}` wrapping the
+  name + `<Avatar glyph={sunGlyph} />` (avatar on the right). The big-three line under the
+  brand is unchanged.
+- **Verify:** avatar shows the Sun-sign glyph (♌ for the default Jonesboro chart, Sun in Leo);
+  tapping opens the form; the circle re-themes in Light/Dark.
+
+Files added to §5: `packages/engine/src/types.ts` (+ `index.ts` export) for `SIGN_GLYPH`;
+new `apps/mobile/components/Avatar.tsx`; `App.tsx` header edit.
