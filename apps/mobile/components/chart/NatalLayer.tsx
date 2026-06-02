@@ -23,7 +23,7 @@ function NatalLayerBase({ positions, vis }: Props) {
     const [gx, gy] = polar(R.natalGlyph, disp[key]);
     return (
       <G key={key}>
-        <Line x1={tx} y1={ty} x2={gx} y2={gy} stroke={p.natal} strokeWidth={CHART.natalTickStroke} opacity={CHART.natalTickOpacity} />
+        <Line x1={tx} y1={ty} x2={gx} y2={gy} stroke={p.natal} strokeWidth={CHART.ringStroke} opacity={CHART.ringOpacity} />
         <Circle cx={gx} cy={gy} r={CHART.natalTokenR} fill={p.bg} stroke={p.natal} strokeWidth={CHART.tokenStroke} />
         <SvgText
           x={gx} y={gy}
