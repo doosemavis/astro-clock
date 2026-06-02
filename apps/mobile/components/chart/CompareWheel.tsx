@@ -2,6 +2,7 @@ import { memo, useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Svg from "react-native-svg";
 import type { Palette, Positions } from "@astro/engine";
+import type { VisMap } from "../../lib/chartModel";
 import { Dial } from "./Dial";
 import { AspectLayer } from "./AspectLayer";
 import { LiveLayer } from "./LiveLayer";
@@ -20,11 +21,12 @@ interface Props {
   pos: Positions;
   showMajor: boolean;
   showMinor: boolean;
+  vis?: VisMap;
 }
 
 /** One Compare chart for a single instant: the zodiac Dial, this moment's planets (live
  *  ring) and that moment's own aspects. No fixed natal overlay — mirrors the web CompareWheel. */
-function CompareWheelBase({ idPrefix, caption, subCaption, size, pos, showMajor, showMinor }: Props) {
+function CompareWheelBase({ idPrefix, caption, subCaption, size, pos, showMajor, showMinor, vis }: Props) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
   return (
@@ -33,8 +35,8 @@ function CompareWheelBase({ idPrefix, caption, subCaption, size, pos, showMajor,
       <View style={{ width: size, height: size }}>
         <Svg width={size} height={size} viewBox="0 0 1000 1000">
           <Dial idPrefix={idPrefix} />
-          <AspectLayer positions={pos} showMajor={showMajor} showMinor={showMinor} />
-          <LiveLayer positions={pos} />
+          <AspectLayer positions={pos} showMajor={showMajor} showMinor={showMinor} visLive={vis} />
+          <LiveLayer positions={pos} vis={vis} />
         </Svg>
       </View>
     </View>
