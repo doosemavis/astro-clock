@@ -1,10 +1,10 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useFonts, NotoSansSymbols_400Regular } from "@expo-google-fonts/noto-sans-symbols";
 import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, NIGHT } from "@astro/engine";
 import type { BirthData } from "@astro/engine";
-import { GLYPH_FONT } from "./components/chart/palette";
+import { GLYPH_FONT, CHART } from "./components/chart/palette";
 import { ChartWheel } from "./components/chart/ChartWheel";
 import { ChartControls } from "./components/chart/ChartControls";
 import { RangeHud } from "./components/chart/RangeHud";
@@ -20,6 +20,9 @@ const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "
 export default function App() {
   // Gate on the glyph font: rendering planet glyphs before it loads would flash tofu.
   const [fontsLoaded] = useFonts({ [GLYPH_FONT]: NotoSansSymbols_400Regular });
+  const { width, height } = useWindowDimensions();
+  const wheelSize = Math.max(0, Math.min(width, height) - CHART.wheelPadding);
+
   const [birth, setBirth] = useState<BirthData>(DEFAULT_BIRTH);
   const [editing, setEditing] = useState(false);
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
@@ -60,19 +63,24 @@ export default function App() {
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.brand}>MoveStar</Text>
-        <Pressable onPress={() => setEditing(true)} style={styles.editBtn}>
-          <Text style={styles.editText}>{displayName}  ✎</Text>
-        </Pressable>
+        <View style={styles.headerRow}>
+          <Text style={styles.brand}>MoveStar</Text>
+          <Pressable onPress={() => setEditing(true)} style={styles.editBtn}>
+            <Text style={styles.editText}>{displayName}  ✎</Text>
+          </Pressable>
+        </View>
         <Text style={styles.bigThree}>{bigThree}</Text>
       </View>
 
-      <Text style={styles.moment}>{moment}</Text>
-
       <View style={styles.stage}>
-        {fontsLoaded
-          ? <ChartWheel natalPositions={natalPos} livePositions={livePos} showMajor={showMajor} showMinor={showMinor} />
-          : <Text style={styles.note}>loading…</Text>}
+        <View style={[styles.wheelBox, { width: wheelSize, height: wheelSize }]}>
+          {fontsLoaded
+            ? <ChartWheel natalPositions={natalPos} livePositions={livePos} showMajor={showMajor} showMinor={showMinor} />
+            : <Text style={styles.note}>loading…</Text>}
+          <View style={styles.momentWrap} pointerEvents="none">
+            <Text style={styles.moment}>{moment}</Text>
+          </View>
+        </View>
       </View>
 
       {clock.mode === "range" && !sheetExpanded ? <RangeHud clock={clock} /> : null}
@@ -98,11 +106,18 @@ export default function App() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: NIGHT.bg },
   header: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 2 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   brand: { color: NIGHT.text, fontSize: 24, letterSpacing: 4, fontWeight: "600" },
-  editBtn: { alignSelf: "flex-start", paddingVertical: 4, marginTop: 2 },
-  editText: { color: NIGHT.live, fontSize: 15, letterSpacing: 1 },
+  editBtn: { paddingVertical: 4, paddingLeft: 12 },
+  editText: { color: NIGHT.live, fontSize: 15, letterSpacing: 1, textAlign: "right" },
   bigThree: { color: NIGHT.textDim, fontSize: 14, letterSpacing: 1, marginTop: 4 },
-  moment: { color: NIGHT.text, fontSize: 13, letterSpacing: 0.5, textAlign: "center", marginTop: 8 },
   stage: { flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: SHEET_COLLAPSED_HEIGHT },
+  wheelBox: { position: "relative", alignItems: "center", justifyContent: "center" },
+  momentWrap: { position: "absolute", top: 0, left: 0, right: 0, alignItems: "center" },
+  moment: {
+    color: NIGHT.text, fontSize: 13, letterSpacing: 0.5, textAlign: "center",
+    backgroundColor: "rgba(10,11,34,0.82)", borderColor: NIGHT.border, borderWidth: 1,
+    borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, overflow: "hidden",
+  },
   note: { color: NIGHT.textDim, fontSize: 13, letterSpacing: 2 },
 });

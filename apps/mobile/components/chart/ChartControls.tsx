@@ -72,7 +72,7 @@ export function ChartControls({
               <Text style={styles.btnPrimaryText}>{playing ? "❚❚ Pause" : "▶ Play"}</Text>
             </Pressable>
             <Pressable style={[styles.btn, loop && styles.btnOn]} onPress={toggleLoop}>
-              <Text style={styles.btnText}>Loop</Text>
+              <Text style={[styles.btnText, loop && styles.btnTextOn]}>Loop</Text>
             </Pressable>
             <Pressable style={styles.btn} onPress={resetPlay}>
               <Text style={styles.btnText}>↺ Restart</Text>
@@ -99,10 +99,10 @@ export function ChartControls({
       <Section label="Aspects">
         <View style={styles.rowTight}>
           <Pressable style={[styles.btn, showMajor && styles.btnOn]} onPress={onToggleMajor}>
-            <Text style={styles.btnText}>Major</Text>
+            <Text style={[styles.btnText, showMajor && styles.btnTextOn]}>Major</Text>
           </Pressable>
           <Pressable style={[styles.btn, showMinor && styles.btnOn]} onPress={onToggleMinor}>
-            <Text style={styles.btnText}>Minor</Text>
+            <Text style={[styles.btnText, showMinor && styles.btnTextOn]}>Minor</Text>
           </Pressable>
         </View>
       </Section>
@@ -199,10 +199,11 @@ const styles = StyleSheet.create({
   rowTight: { flexDirection: "row", gap: 8 },
   flex1: { flex: 1 },
   btn: { flex: 1, paddingVertical: 11, borderRadius: 9, alignItems: "center", backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1 },
-  btnOn: { backgroundColor: NIGHT.border },
+  btnOn: { backgroundColor: NIGHT.live, borderColor: NIGHT.live },
   btnPrimary: { backgroundColor: NIGHT.live, borderColor: NIGHT.live },
   btnText: { color: NIGHT.text, fontSize: 14, fontWeight: "600" },
   btnPrimaryText: { color: NIGHT.bg, fontSize: 14, fontWeight: "700" },
+  btnTextOn: { color: NIGHT.bg, fontWeight: "700" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
   chip: { paddingVertical: 6, paddingHorizontal: 11, borderRadius: 14, borderColor: NIGHT.border, borderWidth: 1 },
   chipOn: { backgroundColor: NIGHT.live, borderColor: NIGHT.live },
