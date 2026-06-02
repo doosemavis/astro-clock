@@ -237,10 +237,15 @@ Two changes made after the first working build supersede the relevant text above
    tz` caption now renders in the **same rounded, bordered, panel-filled pill** the other four
    views use (App's `moment` style), instead of the plain bold/muted text described in §4.4.
 
-2. **Pages is a coin-flip, not a slide.** The Pages view no longer uses a horizontal
-   `ScrollView` pager (§2, §4.5). Instead it shows one full-size wheel and **flips it 180°
-   like a coin** (`Animated` `rotateY`, tap the chart or a dot) to reveal the other chart. A
-   hard opacity cut at the edge-on midpoint swaps the faces (also covering platforms where
-   `backfaceVisibility` doesn't hide native SVG). Because there is no scroll offset to map,
-   the `pageIndex` helper and its unit tests (§4.1, §4.2, §6) were **removed** — the active
-   dot is now driven directly by flip state. No new dependencies (`Animated` is built-in).
+2. **Three display modes, not one.** `CompareView` is now `"both" | "pages" | "flip"`, surfaced
+   as a **Both / Page / Flip** segmented toggle (§4.6's `CVIEWS`):
+   - **Both** — two wheels stacked (as designed in §4.5).
+   - **Page** — the full-size horizontal `ScrollView` swipe pager + dots (the original §4.5
+     design; `pageIndex` from §4.1 drives the active dot on `onMomentumScrollEnd`).
+   - **Flip** — one full-size wheel that **spins 180° like a coin** (`Animated` `rotateY`, tap
+     the chart or a dot) to reveal the other chart, with a *"tap the chart to flip"* hint. A
+     hard opacity cut at the edge-on midpoint swaps the faces (also covering platforms where
+     `backfaceVisibility` doesn't hide native SVG); the active dot is driven by flip state.
+
+   `pageIndex` (§4.1, §4.2, §6) is **retained** for the Page pager. No new dependencies
+   (`ScrollView` and `Animated` are both built-in).
