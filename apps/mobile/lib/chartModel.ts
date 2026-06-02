@@ -2,7 +2,7 @@
 // No engine *values* are imported (only the erased BirthData type), so this module is
 // unit-testable under the strip-types runner. Readout formatting lives in ./readout.ts.
 // Ported from apps/web/components/Chart/chartModel.ts (Compare + theme helpers removed).
-import type { BirthData } from "@astro/engine";
+import type { BirthData, PlanetKey } from "@astro/engine";
 
 export type Mode = "birth" | "now" | "moment" | "range" | "compare";
 export type TimeFormat = "12h" | "24h";
@@ -48,6 +48,33 @@ export function resolveDate(
   if (mode === "now") return new Date();
   if (mode === "moment") return new Date(momentMs);
   return new Date(rangeStart + pos * (rangeEnd - rangeStart));
+}
+
+/** Which glyph layer a visibility toggle targets: the fixed birth ring or the moving ring. */
+export type Layer = "natal" | "live";
+/** Per-planet show/hide flags for one ring. */
+export type VisMap = Record<PlanetKey, boolean>;
+/** Visibility for both rings (mirrors the web `Vis`). */
+export interface Vis { natal: VisMap; live: VisMap; }
+
+/** A visibility map with every given planet shown. */
+export function allVisible(keys: PlanetKey[]): VisMap {
+  const m = {} as VisMap;
+  keys.forEach((k) => { m[k] = true; });
+  return m;
+}
+
+/** Immutable per-planet/per-layer toggle. `key === "all"` flips the whole layer to the
+ *  opposite of "is every key currently on". Never mutates the input. */
+export function toggleVis(vis: Vis, key: PlanetKey | "all", layer: Layer): Vis {
+  const map = vis[layer];
+  if (key === "all") {
+    const allOn = Object.values(map).every(Boolean);
+    const next = {} as VisMap;
+    (Object.keys(map) as PlanetKey[]).forEach((k) => { next[k] = !allOn; });
+    return { ...vis, [layer]: next };
+  }
+  return { ...vis, [layer]: { ...map, [key]: !map[key] } };
 }
 
 /** Current page from a horizontal scroll offset — drives the Compare "Page" pager's dots.
