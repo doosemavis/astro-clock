@@ -62,6 +62,7 @@ function DialBase({ curvedLabels = true, idPrefix = "" }: Props) {
         <SvgText
           key={`l${s}`}
           fill={p.sign}
+          fontWeight="600"
           fontSize={CHART.signFontSize}
           letterSpacing={CHART.signLetterSpacing}
           textAnchor="middle"
@@ -80,6 +81,7 @@ function DialBase({ curvedLabels = true, idPrefix = "" }: Props) {
           key={`l${s}`}
           x={q(lx)} y={q(ly)}
           fill={p.sign}
+          fontWeight="600"
           fontSize={CHART.signFontSize}
           textAnchor="middle"
           dy={CHART.signFontSize * 0.35}

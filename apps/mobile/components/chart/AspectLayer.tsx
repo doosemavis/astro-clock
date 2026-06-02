@@ -28,7 +28,7 @@ function AspectLayerBase({ positions, showMajor = true, showMinor = true, visLiv
           key={`${a}-${b}`}
           x1={x1} y1={y1} x2={x2} y2={y2}
           stroke={aspectColor(def, t)}
-          strokeWidth={def.width}
+          strokeWidth={def.width + 0.4}
           opacity={def.opacity}
           strokeDasharray={def.dash || undefined}
         />

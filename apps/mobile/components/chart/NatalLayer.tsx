@@ -28,6 +28,8 @@ function NatalLayerBase({ positions, vis }: Props) {
         <SvgText
           x={gx} y={gy}
           fill={p.natal}
+          stroke={p.natal}
+          strokeWidth={0.5}
           fontFamily={GLYPH_FONT}
           fontSize={CHART.natalGlyphSize}
           textAnchor="middle"
