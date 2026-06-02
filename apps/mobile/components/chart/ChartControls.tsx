@@ -6,6 +6,7 @@ import type { DateTimePickerEvent } from "@react-native-community/datetimepicker
 import { NIGHT } from "@astro/engine";
 import { PACES } from "../../lib/chartModel";
 import type { Mode, TimeFormat } from "../../lib/chartModel";
+import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
 
@@ -124,7 +125,7 @@ function DateField({
   const [showTime, setShowTime] = useState(false);
   const d = new Date(valueMs);
   const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-  const timeStr = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  const timeStr = padHour(d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }));
 
   return (
     <View style={styles.field}>

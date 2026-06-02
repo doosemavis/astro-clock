@@ -20,6 +20,10 @@ export function fmtDate(date: Date, mode: Mode, birth: BirthData): string {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+/** Force a leading zero on a single-digit leading hour ("2:28 PM" -> "02:28 PM"). Some
+ *  platforms drop the pad on the 12-hour clock even with hour:"2-digit", so normalize it. */
+export const padHour = (s: string): string => s.replace(/^(\d):/, "0$1:");
+
 /** Time label, birth-zone vs. local per mode; 24h uses the h23 cycle (00:00, not 24:00).
  *  `withSeconds` adds a live seconds field (used by the ticking Now readout). */
 export function fmtTime(date: Date, mode: Mode, birth: BirthData, timeFormat: TimeFormat, withSeconds = false): string {
@@ -28,9 +32,10 @@ export function fmtTime(date: Date, mode: Mode, birth: BirthData, timeFormat: Ti
       ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
       : { hour: "2-digit", minute: "2-digit", hour12: true };
   const opts: Intl.DateTimeFormatOptions = withSeconds ? { ...base, second: "2-digit" } : base;
-  if (mode === "birth")
-    return birthShift(date.getTime(), birth).toLocaleTimeString(undefined, { ...opts, timeZone: "UTC" });
-  return date.toLocaleTimeString(undefined, opts);
+  const raw = mode === "birth"
+    ? birthShift(date.getTime(), birth).toLocaleTimeString(undefined, { ...opts, timeZone: "UTC" })
+    : date.toLocaleTimeString(undefined, opts);
+  return padHour(raw);
 }
 
 /** Viewer's local timezone abbreviation, e.g. "EST" (prototype localTzAbbr). */
