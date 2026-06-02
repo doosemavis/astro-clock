@@ -69,11 +69,11 @@ export default function App() {
             <Text style={styles.editText}>{displayName}  ✎</Text>
           </Pressable>
         </View>
-        <Text style={styles.bigThree}>{bigThree}</Text>
       </View>
 
       <View style={styles.stage}>
         <Text style={styles.moment}>{moment}</Text>
+        <Text style={styles.bigThree}>{bigThree}</Text>
         <View style={[styles.wheelBox, { width: wheelSize, height: wheelSize }]}>
           {fontsLoaded
             ? <ChartWheel natalPositions={natalPos} livePositions={livePos} showMajor={showMajor} showMinor={showMinor} />
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   brand: { color: NIGHT.text, fontSize: 24, letterSpacing: 4, fontWeight: "600" },
   editBtn: { paddingVertical: 4, paddingLeft: 12 },
   editText: { color: NIGHT.live, fontSize: 15, letterSpacing: 1, textAlign: "right" },
-  bigThree: { color: NIGHT.textDim, fontSize: 14, letterSpacing: 1, marginTop: 4 },
+  bigThree: { color: NIGHT.textDim, fontSize: 14, letterSpacing: 1, textAlign: "center", marginBottom: 12 },
   stage: { flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: SHEET_COLLAPSED_HEIGHT },
   wheelBox: { alignItems: "center", justifyContent: "center" },
   // Sits directly above the wheel with a 12px gap — never overlaps the circle.
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     color: NIGHT.text, fontSize: 13, letterSpacing: 0.5, textAlign: "center",
     backgroundColor: NIGHT.panel, borderColor: NIGHT.border, borderWidth: 1,
     borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, overflow: "hidden",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   note: { color: NIGHT.textDim, fontSize: 13, letterSpacing: 2 },
 });
