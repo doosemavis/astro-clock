@@ -36,6 +36,7 @@ export function BottomSheet({ children, onExpandedChange }: Props) {
   collapsedTYRef.current = collapsedTY;
   const notifyRef = useRef(onExpandedChange);
   notifyRef.current = onExpandedChange;
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     const id = ty.addListener(({ value }) => { tyVal.current = value; });
@@ -52,6 +53,8 @@ export function BottomSheet({ children, onExpandedChange }: Props) {
       expandedRef.current = expand;
       notifyRef.current?.(expand);
     }
+    // Collapsing: scroll the content back to the top so the View switcher shows in the peek.
+    if (!expand) scrollRef.current?.scrollTo({ y: 0, animated: true });
     Animated.spring(ty, {
       toValue: expand ? 0 : collapsedTYRef.current,
       useNativeDriver: true,
@@ -84,7 +87,7 @@ export function BottomSheet({ children, onExpandedChange }: Props) {
             <View style={styles.handle} />
           </Pressable>
         </View>
-        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scrollRef} style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={styles.content}>{children}</View>
         </ScrollView>
       </Animated.View>
