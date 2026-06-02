@@ -71,7 +71,7 @@ export function ChartControls({
   const styles = useMemo(() => makeStyles(pal), [pal]);
   const {
     mode, setMode, momentMs, setMomentMs,
-    rangeStartMs, setRangeStartMs, rangeEndMs, setRangeEndMs,
+    rangeStart, setRangeStart, rangeEnd, setRangeEnd,
     playing, togglePlay, loop, toggleLoop, rate, setRate, resetPlay,
     compareA, setCompareA, compareB, setCompareB, compareView, setCompareView,
   } = clock;
@@ -90,8 +90,8 @@ export function ChartControls({
 
       {mode === "range" ? (
         <Section label="Time range">
-          <DateField label="From" valueMs={rangeStartMs} onChange={setRangeStartMs} timeFormat={timeFormat} />
-          <DateField label="To" valueMs={rangeEndMs} onChange={setRangeEndMs} timeFormat={timeFormat} />
+          <ZonedMomentField label="From" moment={rangeStart} onChange={setRangeStart} timeFormat={timeFormat} />
+          <ZonedMomentField label="To" moment={rangeEnd} onChange={setRangeEnd} timeFormat={timeFormat} />
           <View style={styles.row}>
             <Pressable style={[styles.btn, styles.btnPrimary]} onPress={togglePlay}>
               <Text style={styles.btnPrimaryText}>{playing ? "❚❚ Pause" : "▶ Play"}</Text>
