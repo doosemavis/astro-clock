@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Modal, View, Text, TextInput, Pressable, ScrollView,
-  ActivityIndicator, StyleSheet, Platform, KeyboardAvoidingView,
+  ActivityIndicator, StyleSheet, Platform, KeyboardAvoidingView, Animated,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -48,6 +48,24 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
   const [advanced, setAdvanced] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Drop-from-top animation. Keep the Modal mounted through the close tween so the
+  // panel slides back up instead of vanishing. translateY rides the measured panel
+  // height so it starts fully off-screen above the top edge.
+  const drop = useRef(new Animated.Value(0)).current;
+  const [mounted, setMounted] = useState(visible);
+  const [panelH, setPanelH] = useState(800);
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      Animated.timing(drop, { toValue: 1, duration: 260, useNativeDriver: true }).start();
+    } else {
+      Animated.timing(drop, { toValue: 0, duration: 200, useNativeDriver: true }).start(({ finished }) => {
+        if (finished) setMounted(false);
+      });
+    }
+  }, [visible, drop]);
+
   // Reset the draft each time the modal (re)opens.
   useEffect(() => {
     if (!visible) return;
@@ -65,6 +83,7 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
     setError(null);
     setShowDate(false);
     setShowTime(false);
+    setAdvanced(false);
   }, [visible, initial]);
 
   // Debounced place search.
@@ -93,6 +112,8 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
     if (ianaTz) setTzOffset(offsetHoursAt(date, time, ianaTz));
   }, [date, time, ianaTz]);
 
+  // Selecting a place fills lat/lon, the IANA zone, and the derived offset, so the
+  // Advanced coordinates always mirror the chosen Place.
   function pickPlace(p: PlaceResult) {
     setLat(p.lat);
     setLon(p.lon);
@@ -110,11 +131,16 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
   }
 
   const iosPicker = Platform.OS === "ios";
+  const translateY = drop.interpolate({ inputRange: [0, 1], outputRange: [-panelH, 0] });
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onCancel}>
-      <KeyboardAvoidingView style={styles.backdrop} behavior={iosPicker ? "padding" : undefined}>
-        <View style={styles.sheet}>
+    <Modal visible={mounted} animationType="none" transparent onRequestClose={onCancel}>
+      <KeyboardAvoidingView style={styles.root} behavior={iosPicker ? "padding" : undefined}>
+        <Animated.View style={[styles.backdrop, { opacity: drop }]} pointerEvents="none" />
+        <Animated.View
+          onLayout={(e) => setPanelH(e.nativeEvent.layout.height)}
+          style={[styles.sheet, { transform: [{ translateY }] }]}
+        >
           <Text style={styles.title}>Your birth</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
             <Text style={styles.label}>Name</Text>
@@ -208,15 +234,23 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
               <Text style={styles.btnText}>Save</Text>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" },
-  sheet: { backgroundColor: NIGHT.panel, borderTopLeftRadius: 18, borderTopRightRadius: 18, paddingHorizontal: 18, paddingTop: 16, paddingBottom: 24, maxHeight: "88%" },
+  root: { flex: 1, justifyContent: "flex-start" },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.55)" },
+  sheet: {
+    backgroundColor: NIGHT.panel,
+    borderBottomLeftRadius: 18, borderBottomRightRadius: 18,
+    paddingHorizontal: 18,
+    paddingTop: Platform.OS === "ios" ? 54 : 28,
+    paddingBottom: 18,
+    maxHeight: "90%",
+  },
   scroll: { marginBottom: 12 },
   title: { color: NIGHT.text, fontSize: 20, fontWeight: "600", marginBottom: 10 },
   label: { color: NIGHT.seclabel, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginTop: 12, marginBottom: 4 },
