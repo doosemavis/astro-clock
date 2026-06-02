@@ -114,6 +114,9 @@ const styles = StyleSheet.create({
   // Sits directly above the wheel with a 12px gap — never overlaps the circle.
   moment: {
     color: NIGHT.text, fontSize: 13, letterSpacing: 0.5, textAlign: "center",
+    // Tabular figures: every digit is the same width, so the ticking seconds never
+    // resize or re-center the pill — only the seconds glyphs change in place.
+    fontVariant: ["tabular-nums"],
     backgroundColor: NIGHT.panel, borderColor: NIGHT.border, borderWidth: 1,
     borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, overflow: "hidden",
     marginBottom: 8,
