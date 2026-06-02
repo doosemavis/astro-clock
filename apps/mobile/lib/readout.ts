@@ -4,7 +4,8 @@
 import { tzAbbrev, formatOffset } from "@astro/engine";
 import type { BirthData } from "@astro/engine";
 import { actualOffset, HR } from "./chartModel";
-import type { Mode, TimeFormat } from "./chartModel";
+import type { Mode, TimeFormat, CompareMoment } from "./chartModel";
+import { zoneAbbr } from "./timezone";
 
 // Reconstruct the wall-clock time as it was, where it was (birth zone).
 function birthShift(instantMs: number, birth: BirthData): Date {
@@ -55,10 +56,16 @@ export function readoutTz(date: Date, mode: Mode, birth: BirthData): string {
   return mode === "birth" ? tzAbbrev(birth.tzOffset, birth.isDst) : localTzAbbr(date);
 }
 
-/** Per-wheel caption for Compare: "Mon D YYYY · hh:mm AM TZ" in the viewer's LOCAL zone
- *  (web parity — formats with "moment" mode). `birth` is unused by "moment" mode but is
- *  required by the shared fmt* signatures; the app's current birth is passed through. */
-export function cmpCaption(ms: number, birth: BirthData, timeFormat: TimeFormat): string {
-  const d = new Date(ms);
-  return `${fmtDate(d, "moment", birth)} · ${fmtTime(d, "moment", birth, timeFormat)} ${readoutTz(d, "moment", birth)}`;
+/** Per-wheel Compare caption: "Mon D YYYY · hh:mm AM · CDT" from the chart's {date,time,zone}
+ *  (the wall-clock is shown as entered; the zone abbrev comes from zoneAbbr). */
+export function cmpCaption(moment: CompareMoment, timeFormat: TimeFormat): string {
+  const [Y, M, D] = moment.date.split("-").map(Number);
+  const [h, m] = moment.time.split(":").map(Number);
+  const d = new Date(Y || 2000, (M || 1) - 1, D || 1, h || 0, m || 0);
+  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const opts: Intl.DateTimeFormatOptions = timeFormat === "24h"
+    ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
+    : { hour: "2-digit", minute: "2-digit", hour12: true };
+  const timeStr = padHour(d.toLocaleTimeString(undefined, opts));
+  return `${dateStr} · ${timeStr} · ${zoneAbbr(moment.date, moment.time, moment.zone)}`;
 }
