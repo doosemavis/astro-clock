@@ -13,6 +13,9 @@ export type ThemeMode = "light" | "dark" | "auto";
 /** Mobile Compare presentation: both wheels stacked ("both"), a full-size horizontal
  *  swipe pager ("pages"), or a single full-size wheel that coin-flips between charts ("flip"). */
 export type CompareView = "both" | "pages" | "flip";
+
+/** A Compare chart's moment: wall-clock date/time interpreted in an IANA zone. */
+export interface CompareMoment { date: string; time: string; zone: string; }
 export interface Pace {
   label: string;
   rate: number; // sim-time ms advanced per real second
