@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDate, PACES, actualOffset, HR, DY } from "./chartModel.ts";
+import { resolveDate, PACES, actualOffset, HR, DY, pageIndex } from "./chartModel.ts";
 import type { BirthData } from "@astro/engine";
 
 const BIRTH: BirthData = {
@@ -34,4 +34,26 @@ test("PACES: 6 speeds spanning 1 hour/sec to 1 month/sec", () => {
 test("actualOffset: adds the DST hour when isDst", () => {
   assert.equal(actualOffset(BIRTH), -5);
   assert.equal(actualOffset({ ...BIRTH, isDst: false }), -6);
+});
+
+test("pageIndex: offset 0 → page 0", () => {
+  assert.equal(pageIndex(0, 390, 2), 0);
+});
+test("pageIndex: just under half a page stays on page 0", () => {
+  assert.equal(pageIndex(194, 390, 2), 0);
+});
+test("pageIndex: at half a page rounds to the next page", () => {
+  assert.equal(pageIndex(195, 390, 2), 1);
+});
+test("pageIndex: a full page width → page 1", () => {
+  assert.equal(pageIndex(390, 390, 2), 1);
+});
+test("pageIndex: overscroll clamps to the last page", () => {
+  assert.equal(pageIndex(900, 390, 2), 1);
+});
+test("pageIndex: negative overscroll clamps to 0", () => {
+  assert.equal(pageIndex(-50, 390, 2), 0);
+});
+test("pageIndex: a zero page width is safe (→ 0)", () => {
+  assert.equal(pageIndex(100, 0, 2), 0);
 });

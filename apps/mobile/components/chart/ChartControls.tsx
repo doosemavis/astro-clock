@@ -5,7 +5,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { NIGHT } from "@astro/engine";
 import { PACES } from "../../lib/chartModel";
-import type { Mode, TimeFormat } from "../../lib/chartModel";
+import type { Mode, TimeFormat, CompareView } from "../../lib/chartModel";
 import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
@@ -25,10 +25,16 @@ const MODES: { key: Mode; label: string }[] = [
   { key: "now", label: "Now" },
   { key: "moment", label: "Date" },
   { key: "range", label: "Range" },
+  { key: "compare", label: "Compare" },
 ];
 const FORMATS: { key: TimeFormat; label: string }[] = [
   { key: "12h", label: "12h" },
   { key: "24h", label: "24h" },
+];
+const CVIEWS: { key: CompareView; label: string }[] = [
+  { key: "both", label: "Both" },
+  { key: "pages", label: "Page" },
+  { key: "flip", label: "Flip" },
 ];
 
 const iosPicker = Platform.OS === "ios";
@@ -50,12 +56,13 @@ export function ChartControls({
     mode, setMode, momentMs, setMomentMs,
     rangeStartMs, setRangeStartMs, rangeEndMs, setRangeEndMs,
     playing, togglePlay, loop, toggleLoop, rate, setRate, resetPlay,
+    compareAMs, setCompareA, compareBMs, setCompareB, compareView, setCompareView,
   } = clock;
 
   return (
     <View>
       <Section label="View">
-        <Segmented options={MODES} value={mode} onChange={setMode} />
+        <Segmented options={MODES} value={mode} onChange={setMode} wrap />
       </Section>
 
       {mode === "moment" ? (
@@ -90,6 +97,18 @@ export function ChartControls({
               );
             })}
           </View>
+        </Section>
+      ) : null}
+
+      {mode === "compare" ? (
+        <Section label="Compare two charts">
+          <Text style={styles.fieldLabel}>View</Text>
+          <Segmented options={CVIEWS} value={compareView} onChange={setCompareView} />
+          <DateField label="Chart A" valueMs={compareAMs} onChange={setCompareA} withTime />
+          <DateField label="Chart B" valueMs={compareBMs} onChange={setCompareB} withTime />
+          <Text style={styles.note}>
+            Chart A starts at your birth moment, Chart B at now — change either to compare two date/times.
+          </Text>
         </Section>
       ) : null}
 
@@ -217,4 +236,5 @@ const styles = StyleSheet.create({
   pickerWrap: { backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 8, marginTop: 6 },
   pickerDone: { alignSelf: "flex-end", paddingHorizontal: 16, paddingVertical: 10 },
   pickerDoneText: { color: NIGHT.live, fontSize: 15, fontWeight: "600" },
+  note: { color: NIGHT.textDim, fontSize: 12, marginTop: 10, lineHeight: 17 },
 });

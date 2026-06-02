@@ -6,16 +6,17 @@ import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, NIGHT } from
 import type { BirthData } from "@astro/engine";
 import { GLYPH_FONT, CHART } from "./components/chart/palette";
 import { ChartWheel } from "./components/chart/ChartWheel";
+import { CompareView } from "./components/chart/CompareView";
 import { ChartControls } from "./components/chart/ChartControls";
 import { RangeHud } from "./components/chart/RangeHud";
 import { BottomSheet, SHEET_COLLAPSED_HEIGHT } from "./components/BottomSheet";
 import { BirthForm } from "./components/BirthForm";
 import { useChartClock } from "./hooks/useChartClock";
 import type { Mode, TimeFormat } from "./lib/chartModel";
-import { fmtDate, fmtTime, readoutTz } from "./lib/readout";
+import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
 import { loadBirth, saveBirth } from "./lib/birthStore";
 
-const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "Date", range: "Range" };
+const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "Date", range: "Range", compare: "Compare" };
 
 export default function App() {
   // Gate on the glyph font: rendering planet glyphs before it loads would flash tofu.
@@ -41,6 +42,10 @@ export default function App() {
   const natalPos = useMemo(() => positions(new Date(birthMs)), [birthMs]);
   const clock = useChartClock(birthMs);
   const livePos = useMemo(() => positions(clock.displayInstant), [clock.displayInstant]);
+  const compareAPos = useMemo(() => positions(new Date(clock.compareAMs)), [clock.compareAMs]);
+  const compareBPos = useMemo(() => positions(new Date(clock.compareBMs)), [clock.compareBMs]);
+  const cmpA = cmpCaption(clock.compareAMs, birth, timeFormat);
+  const cmpB = cmpCaption(clock.compareBMs, birth, timeFormat);
 
   const displayName = birth.name && birth.name !== "You" ? birth.name : "Your chart";
 
@@ -71,15 +76,29 @@ export default function App() {
         </View>
       </View>
 
-      <View style={styles.stage}>
-        <Text style={styles.moment}>{moment}</Text>
-        <Text style={styles.bigThree}>{bigThree}</Text>
-        <View style={[styles.wheelBox, { width: wheelSize, height: wheelSize }]}>
-          {fontsLoaded
-            ? <ChartWheel natalPositions={natalPos} livePositions={livePos} showMajor={showMajor} showMinor={showMinor} />
-            : <Text style={styles.note}>loading…</Text>}
+      {clock.mode === "compare" ? (
+        fontsLoaded ? (
+          <CompareView
+            a={{ caption: "Chart A", sub: cmpA, pos: compareAPos }}
+            b={{ caption: "Chart B", sub: cmpB, pos: compareBPos }}
+            view={clock.compareView}
+            showMajor={showMajor}
+            showMinor={showMinor}
+          />
+        ) : (
+          <View style={styles.stage}><Text style={styles.note}>loading…</Text></View>
+        )
+      ) : (
+        <View style={styles.stage}>
+          <Text style={styles.moment}>{moment}</Text>
+          <Text style={styles.bigThree}>{bigThree}</Text>
+          <View style={[styles.wheelBox, { width: wheelSize, height: wheelSize }]}>
+            {fontsLoaded
+              ? <ChartWheel natalPositions={natalPos} livePositions={livePos} showMajor={showMajor} showMinor={showMinor} />
+              : <Text style={styles.note}>loading…</Text>}
+          </View>
         </View>
-      </View>
+      )}
 
       {clock.mode === "range" && !sheetExpanded ? <RangeHud clock={clock} /> : null}
 

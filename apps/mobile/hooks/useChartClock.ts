@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAnimationFrame } from "../lib/useAnimationFrame";
 import { DY, resolveDate } from "../lib/chartModel";
-import type { Mode } from "../lib/chartModel";
+import type { Mode, CompareView } from "../lib/chartModel";
 
 export interface ChartClock {
   mode: Mode;
@@ -14,6 +14,9 @@ export interface ChartClock {
   loop: boolean; toggleLoop: () => void;
   rate: number; setRate: (r: number) => void;
   resetPlay: () => void;
+  compareAMs: number; setCompareA: (ms: number) => void;
+  compareBMs: number; setCompareB: (ms: number) => void;
+  compareView: CompareView; setCompareView: (v: CompareView) => void;
 }
 
 /**
@@ -30,6 +33,9 @@ export function useChartClock(birthMs: number): ChartClock {
   const [momentMs, setMomentMs] = useState(birthMs);
   const [rangeStartMs, setRangeStartMs] = useState(birthMs);
   const [rangeEndMs, setRangeEndMs] = useState(birthMs);
+  const [compareAMs, setCompareA] = useState(birthMs);
+  const [compareBMs, setCompareB] = useState<number>(() => Date.now());
+  const [compareView, setCompareView] = useState<CompareView>("both");
   const posRef = useRef(0);
   const [displayInstant, setDisplayInstant] = useState<Date>(() => new Date());
 
@@ -42,6 +48,10 @@ export function useChartClock(birthMs: number): ChartClock {
 
   // Range start tracks the birth instant (re-seeds when the birth changes).
   useEffect(() => { setRangeStartMs(birthMs); }, [birthMs]);
+
+  // Compare's Chart A tracks the birth instant (re-seeds when the birth changes),
+  // mirroring the web's applyBirth -> setCompareAMs(birthInstant(b)).
+  useEffect(() => { setCompareA(birthMs); }, [birthMs]);
 
   // Birth / Date: static frame.
   useEffect(() => {
@@ -93,5 +103,6 @@ export function useChartClock(birthMs: number): ChartClock {
     mode, setMode, displayInstant,
     momentMs, setMomentMs, rangeStartMs, setRangeStartMs, rangeEndMs, setRangeEndMs,
     playing, togglePlay, loop, toggleLoop, rate, setRate, resetPlay,
+    compareAMs, setCompareA, compareBMs, setCompareB, compareView, setCompareView,
   };
 }

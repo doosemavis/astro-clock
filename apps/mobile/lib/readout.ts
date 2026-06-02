@@ -54,3 +54,11 @@ export function localTzAbbr(date: Date): string {
 export function readoutTz(date: Date, mode: Mode, birth: BirthData): string {
   return mode === "birth" ? tzAbbrev(birth.tzOffset, birth.isDst) : localTzAbbr(date);
 }
+
+/** Per-wheel caption for Compare: "Mon D YYYY · hh:mm AM TZ" in the viewer's LOCAL zone
+ *  (web parity — formats with "moment" mode). `birth` is unused by "moment" mode but is
+ *  required by the shared fmt* signatures; the app's current birth is passed through. */
+export function cmpCaption(ms: number, birth: BirthData, timeFormat: TimeFormat): string {
+  const d = new Date(ms);
+  return `${fmtDate(d, "moment", birth)} · ${fmtTime(d, "moment", birth, timeFormat)} ${readoutTz(d, "moment", birth)}`;
+}
