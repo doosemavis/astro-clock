@@ -13,6 +13,8 @@ const HANDLE_H = 28;
 
 interface Props {
   children: ReactNode;
+  /** Notified when the sheet snaps open/closed (lets the chart hide its floating HUD). */
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 /**
@@ -22,7 +24,7 @@ interface Props {
  * Sheet height tracks its content (capped at 60% of the screen) so simple modes show a
  * short sheet and barely cover the wheel. No gesture library — PanResponder is built in.
  */
-export function BottomSheet({ children }: Props) {
+export function BottomSheet({ children, onExpandedChange }: Props) {
   const { height: screenH } = useWindowDimensions();
   const maxH = Math.round(screenH * 0.6);
   const [contentH, setContentH] = useState(0);
@@ -37,6 +39,8 @@ export function BottomSheet({ children }: Props) {
   const collapsedTYRef = useRef(collapsedTY);
   collapsedTYRef.current = collapsedTY;
   const initRef = useRef(false);
+  const notifyRef = useRef(onExpandedChange);
+  notifyRef.current = onExpandedChange;
 
   useEffect(() => {
     const id = ty.addListener(({ value }) => { tyVal.current = value; });
@@ -44,7 +48,10 @@ export function BottomSheet({ children }: Props) {
   }, [ty]);
 
   const snapTo = (expand: boolean) => {
-    expandedRef.current = expand;
+    if (expandedRef.current !== expand) {
+      expandedRef.current = expand;
+      notifyRef.current?.(expand);
+    }
     Animated.spring(ty, {
       toValue: expand ? 0 : collapsedTYRef.current,
       useNativeDriver: true,

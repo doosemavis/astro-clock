@@ -11,6 +11,7 @@ import { searchPlaces } from "../lib/geocode";
 import type { PlaceResult } from "../lib/geocode";
 import { offsetHoursAt } from "../lib/timezone";
 import { validateBirth } from "../lib/birthValidation";
+import { OffsetSelect } from "./OffsetSelect";
 
 interface Props {
   visible: boolean;
@@ -216,11 +217,8 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
                   value={lon === null ? "" : String(lon)}
                   onChangeText={(t) => setLon(t === "" || t === "-" ? null : Number(t))}
                   placeholder="-180 to 180" placeholderTextColor={NIGHT.textDim} />
-                <Text style={styles.label}>UTC offset (hours)</Text>
-                <TextInput style={styles.input} keyboardType="numbers-and-punctuation"
-                  value={tzOffset === null ? "" : String(tzOffset)}
-                  onChangeText={(t) => setTzOffset(t === "" || t === "-" ? null : Number(t))}
-                  placeholder="e.g. -6 or 5.5" placeholderTextColor={NIGHT.textDim} />
+                <Text style={styles.label}>UTC offset</Text>
+                <OffsetSelect value={tzOffset} onChange={(v) => { setIanaTz(null); setTzOffset(v); }} />
               </View>
             ) : null}
 

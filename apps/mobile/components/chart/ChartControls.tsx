@@ -4,15 +4,12 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { NIGHT } from "@astro/engine";
-import type { BirthData } from "@astro/engine";
 import { PACES } from "../../lib/chartModel";
 import type { Mode, TimeFormat } from "../../lib/chartModel";
-import { fmtDate, fmtTime, readoutTz } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
 
 interface Props {
-  birth: BirthData;
   clock: ChartClock;
   timeFormat: TimeFormat;
   onTimeFormat: (f: TimeFormat) => void;
@@ -46,21 +43,16 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export function ChartControls({
-  birth, clock, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
+  clock, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
 }: Props) {
   const {
-    mode, setMode, displayInstant, momentMs, setMomentMs,
+    mode, setMode, momentMs, setMomentMs,
     rangeStartMs, setRangeStartMs, rangeEndMs, setRangeEndMs,
     playing, togglePlay, loop, toggleLoop, rate, setRate, resetPlay,
   } = clock;
 
-  const readout =
-    `${fmtDate(displayInstant, mode, birth)}  ·  ${fmtTime(displayInstant, mode, birth, timeFormat)}  ${readoutTz(displayInstant, mode, birth)}`;
-
   return (
     <View>
-      <Text style={styles.readout}>{readout}</Text>
-
       <Section label="View">
         <Segmented options={MODES} value={mode} onChange={setMode} />
       </Section>
@@ -196,7 +188,6 @@ function DateField({
 }
 
 const styles = StyleSheet.create({
-  readout: { color: NIGHT.text, fontSize: 15, fontWeight: "600", textAlign: "center", marginTop: 2, marginBottom: 6 },
   section: {
     borderColor: NIGHT.border, borderWidth: 1, borderRadius: 12,
     paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12,
