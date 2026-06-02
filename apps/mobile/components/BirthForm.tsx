@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Modal, View, Text, TextInput, Pressable, ScrollView,
-  ActivityIndicator, StyleSheet, Platform,
+  ActivityIndicator, StyleSheet, Platform, KeyboardAvoidingView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -63,6 +63,8 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
     setResults([]);
     setSearchError(null);
     setError(null);
+    setShowDate(false);
+    setShowTime(false);
   }, [visible, initial]);
 
   // Debounced place search.
@@ -107,9 +109,11 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
     onSave(res.birth);
   }
 
+  const iosPicker = Platform.OS === "ios";
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onCancel}>
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView style={styles.backdrop} behavior={iosPicker ? "padding" : undefined}>
         <View style={styles.sheet}>
           <Text style={styles.title}>Your birth</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
@@ -118,25 +122,43 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
               placeholder="You" placeholderTextColor={NIGHT.textDim} />
 
             <Text style={styles.label}>Birth date</Text>
-            <Pressable style={styles.input} onPress={() => setShowDate(true)}>
+            <Pressable style={styles.input} onPress={() => { setShowTime(false); setShowDate((s) => !s); }}>
               <Text style={styles.inputText}>{date}</Text>
             </Pressable>
             {showDate && (
-              <DateTimePicker
-                value={strToDate(date, time)} mode="date" display="default"
-                onChange={(_e: DateTimePickerEvent, d?: Date) => { setShowDate(Platform.OS === "ios"); if (d) setDate(dateToStr(d)); }}
-              />
+              <View style={styles.pickerWrap}>
+                <DateTimePicker
+                  value={strToDate(date, time)} mode="date"
+                  display={iosPicker ? "spinner" : "default"}
+                  textColor={NIGHT.text}
+                  onChange={(_e: DateTimePickerEvent, d?: Date) => { if (!iosPicker) setShowDate(false); if (d) setDate(dateToStr(d)); }}
+                />
+                {iosPicker ? (
+                  <Pressable style={styles.pickerDone} onPress={() => setShowDate(false)}>
+                    <Text style={styles.pickerDoneText}>Done</Text>
+                  </Pressable>
+                ) : null}
+              </View>
             )}
 
             <Text style={styles.label}>Birth time</Text>
-            <Pressable style={styles.input} onPress={() => setShowTime(true)}>
+            <Pressable style={styles.input} onPress={() => { setShowDate(false); setShowTime((s) => !s); }}>
               <Text style={styles.inputText}>{time}</Text>
             </Pressable>
             {showTime && (
-              <DateTimePicker
-                value={strToDate(date, time)} mode="time" display="default"
-                onChange={(_e: DateTimePickerEvent, d?: Date) => { setShowTime(Platform.OS === "ios"); if (d) setTime(timeToStr(d)); }}
-              />
+              <View style={styles.pickerWrap}>
+                <DateTimePicker
+                  value={strToDate(date, time)} mode="time"
+                  display={iosPicker ? "spinner" : "default"}
+                  textColor={NIGHT.text}
+                  onChange={(_e: DateTimePickerEvent, d?: Date) => { if (!iosPicker) setShowTime(false); if (d) setTime(timeToStr(d)); }}
+                />
+                {iosPicker ? (
+                  <Pressable style={styles.pickerDone} onPress={() => setShowTime(false)}>
+                    <Text style={styles.pickerDoneText}>Done</Text>
+                  </Pressable>
+                ) : null}
+              </View>
             )}
 
             <Text style={styles.label}>Place</Text>
@@ -187,7 +209,7 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
             </Pressable>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -200,6 +222,9 @@ const styles = StyleSheet.create({
   label: { color: NIGHT.seclabel, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginTop: 12, marginBottom: 4 },
   input: { backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: NIGHT.text, fontSize: 16, justifyContent: "center" },
   inputText: { color: NIGHT.text, fontSize: 16 },
+  pickerWrap: { backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 8, marginTop: 6 },
+  pickerDone: { alignSelf: "flex-end", paddingHorizontal: 16, paddingVertical: 10 },
+  pickerDoneText: { color: NIGHT.live, fontSize: 15, fontWeight: "600" },
   resolved: { color: NIGHT.live, fontSize: 13, marginBottom: 6 },
   spinner: { marginVertical: 6 },
   hint: { color: NIGHT.textDim, fontSize: 13, marginTop: 6 },
