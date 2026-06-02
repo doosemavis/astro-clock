@@ -53,7 +53,12 @@ export function localTzAbbr(date: Date): string {
 
 /** Timezone shown in the readout: birth zone in Birth mode, else the viewer's. */
 export function readoutTz(date: Date, mode: Mode, birth: BirthData): string {
-  return mode === "birth" ? tzAbbrev(birth.tzOffset, birth.isDst) : localTzAbbr(date);
+  if (mode !== "birth") return localTzAbbr(date);
+  // Prefer the true zone abbrev (e.g. "CDT") from the persisted IANA zone — `tzAbbrev` only
+  // sees the total offset + a DST flag, so a summer Central birth (stored as -5/isDst:false)
+  // would otherwise read as "EST". Fall back to tzAbbrev for older charts without a zone.
+  if (birth.ianaTz) return zoneAbbr(birth.date, birth.time, birth.ianaTz);
+  return tzAbbrev(birth.tzOffset, birth.isDst);
 }
 
 /** Per-wheel Compare caption: "Mon D YYYY · hh:mm AM · CDT" from the chart's {date,time,zone}
