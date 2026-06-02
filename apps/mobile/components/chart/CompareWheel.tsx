@@ -1,11 +1,11 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Svg from "react-native-svg";
-import { NIGHT } from "@astro/engine";
-import type { Positions } from "@astro/engine";
+import type { Palette, Positions } from "@astro/engine";
 import { Dial } from "./Dial";
 import { AspectLayer } from "./AspectLayer";
 import { LiveLayer } from "./LiveLayer";
+import { useTheme } from "../../lib/theme";
 
 interface Props {
   /** Unique per wheel ("a-" / "b-") so two Dials' <Defs> ids never collide on web. */
@@ -25,6 +25,8 @@ interface Props {
 /** One Compare chart for a single instant: the zodiac Dial, this moment's planets (live
  *  ring) and that moment's own aspects. No fixed natal overlay — mirrors the web CompareWheel. */
 function CompareWheelBase({ idPrefix, caption, subCaption, size, pos, showMajor, showMinor }: Props) {
+  const { palette: p } = useTheme();
+  const styles = useMemo(() => makeStyles(p), [p]);
   return (
     <View style={styles.cell}>
       <Text style={styles.pill}>{`${caption}  ·  ${subCaption}`}</Text>
@@ -41,14 +43,14 @@ function CompareWheelBase({ idPrefix, caption, subCaption, size, pos, showMajor,
 
 export const CompareWheel = memo(CompareWheelBase);
 
-const styles = StyleSheet.create({
+const makeStyles = (p: Palette) => StyleSheet.create({
   cell: { alignItems: "center" },
   // The same readout pill the other four views use (App.tsx `moment`): rounded, bordered,
   // panel-filled, tabular figures — here it reads "Chart A · date · time · tz".
   pill: {
-    color: NIGHT.text, fontSize: 13, letterSpacing: 0.5, textAlign: "center",
+    color: p.text, fontSize: 13, letterSpacing: 0.5, textAlign: "center",
     fontVariant: ["tabular-nums"],
-    backgroundColor: NIGHT.panel, borderColor: NIGHT.border, borderWidth: 1,
+    backgroundColor: p.panel, borderColor: p.border, borderWidth: 1,
     borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, overflow: "hidden",
     marginBottom: 10,
   },
