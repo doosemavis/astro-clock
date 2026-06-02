@@ -29,7 +29,7 @@ function NatalLayerBase({ positions, vis }: Props) {
           x={gx} y={gy}
           fill={p.natal}
           stroke={p.natal}
-          strokeWidth={0.5}
+          strokeWidth={0.8}
           fontFamily={GLYPH_FONT}
           fontSize={CHART.natalGlyphSize}
           textAnchor="middle"

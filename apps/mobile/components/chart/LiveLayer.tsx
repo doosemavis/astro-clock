@@ -26,7 +26,7 @@ function LiveLayerBase({ positions, vis }: Props) {
         y={y}
         fill={p.live}
         stroke={p.live}
-        strokeWidth={0.7}
+        strokeWidth={1.0}
         fontFamily={GLYPH_FONT}
         fontSize={CHART.liveGlyphSize}
         textAnchor="middle"
