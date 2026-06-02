@@ -3,13 +3,14 @@ import type { ReactNode } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import type { Palette } from "@astro/engine";
+import type { Palette, PlanetKey } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { PACES } from "../../lib/chartModel";
-import type { Mode, TimeFormat, CompareView, ThemeMode } from "../../lib/chartModel";
+import type { Mode, TimeFormat, CompareView, ThemeMode, Vis, Layer } from "../../lib/chartModel";
 import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
+import { VisGrid } from "./VisGrid";
 
 interface Props {
   clock: ChartClock;
@@ -21,6 +22,8 @@ interface Props {
   onToggleMinor: () => void;
   themeMode: ThemeMode;
   onTheme: (m: ThemeMode) => void;
+  vis: Vis;
+  onToggleVis: (key: PlanetKey | "all", layer: Layer) => void;
 }
 
 const MODES: { key: Mode; label: string }[] = [
@@ -61,7 +64,7 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 
 export function ChartControls({
   clock, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
-  themeMode, onTheme,
+  themeMode, onTheme, vis, onToggleVis,
 }: Props) {
   const { palette: pal } = useTheme();
   const styles = useMemo(() => makeStyles(pal), [pal]);
@@ -131,6 +134,10 @@ export function ChartControls({
 
       <Section label="Theme">
         <Segmented options={THEMES} value={themeMode} onChange={onTheme} />
+      </Section>
+
+      <Section label="Glyphs">
+        <VisGrid vis={vis} onToggle={onToggleVis} />
       </Section>
 
       <Section label="Aspects">

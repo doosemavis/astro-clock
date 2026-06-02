@@ -2,8 +2,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useFonts, NotoSansSymbols_400Regular } from "@expo-google-fonts/noto-sans-symbols";
-import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, mixPalette, solarT } from "@astro/engine";
-import type { BirthData, Palette } from "@astro/engine";
+import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, mixPalette, solarT, PLANET_KEYS, SIGN_GLYPH } from "@astro/engine";
+import type { BirthData, Palette, Sign, PlanetKey } from "@astro/engine";
 import { GLYPH_FONT, CHART } from "./components/chart/palette";
 import { ChartWheel } from "./components/chart/ChartWheel";
 import { CompareView } from "./components/chart/CompareView";
@@ -13,7 +13,9 @@ import { BottomSheet, SHEET_COLLAPSED_HEIGHT } from "./components/BottomSheet";
 import { BirthForm } from "./components/BirthForm";
 import { useChartClock } from "./hooks/useChartClock";
 import { ThemeProvider } from "./lib/theme";
-import type { Mode, TimeFormat, ThemeMode } from "./lib/chartModel";
+import { Avatar } from "./components/Avatar";
+import { allVisible, toggleVis } from "./lib/chartModel";
+import type { Mode, TimeFormat, ThemeMode, Vis, Layer } from "./lib/chartModel";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
 import { loadBirth, saveBirth } from "./lib/birthStore";
 
@@ -36,6 +38,8 @@ export default function App() {
   const [showMinor, setShowMinor] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
+  const [vis, setVis] = useState<Vis>(() => ({ natal: allVisible(PLANET_KEYS), live: allVisible(PLANET_KEYS) }));
+  const onToggleVis = (key: PlanetKey | "all", layer: Layer) => setVis((v) => toggleVis(v, key, layer));
 
   // Load the saved birth on launch (falls back to DEFAULT_BIRTH).
   useEffect(() => {
@@ -71,6 +75,9 @@ export default function App() {
     return `☉ ${signOf(natalPos.sun)}   ☽ ${signOf(natalPos.moon)}   ↑ ${signOf(asc)}`;
   }, [birthMs, birth.lat, birth.lon, natalPos]);
 
+  // The user's Sun sign, as a zodiac glyph, for the header avatar.
+  const sunGlyph = SIGN_GLYPH[signOf(natalPos.sun) as Sign];
+
   // Persistent readout of the moment on screen — which view + when (fixed vs. moveable).
   const moment =
     `${MODE_LABEL[clock.mode]}  ·  ${fmtDate(clock.displayInstant, clock.mode, birth)}  ·  ${fmtTime(clock.displayInstant, clock.mode, birth, timeFormat, clock.mode === "now")}  ${readoutTz(clock.displayInstant, clock.mode, birth)}`;
@@ -88,7 +95,8 @@ export default function App() {
         <View style={styles.headerRow}>
           <Text style={styles.brand}>MoveStar</Text>
           <Pressable onPress={() => setEditing(true)} style={styles.editBtn}>
-            <Text style={styles.editText}>{displayName}  ✎</Text>
+            <Text style={styles.editText}>{displayName}</Text>
+            <Avatar glyph={sunGlyph} />
           </Pressable>
         </View>
       </View>
@@ -101,6 +109,7 @@ export default function App() {
             view={clock.compareView}
             showMajor={showMajor}
             showMinor={showMinor}
+            vis={vis.live}
           />
         ) : (
           <View style={styles.stage}><Text style={styles.note}>loading…</Text></View>
@@ -111,7 +120,7 @@ export default function App() {
           <Text style={styles.bigThree}>{bigThree}</Text>
           <View style={[styles.wheelBox, { width: wheelSize, height: wheelSize }]}>
             {fontsLoaded
-              ? <ChartWheel natalPositions={natalPos} livePositions={livePos} showMajor={showMajor} showMinor={showMinor} />
+              ? <ChartWheel natalPositions={natalPos} livePositions={livePos} showMajor={showMajor} showMinor={showMinor} vis={vis} />
               : <Text style={styles.note}>loading…</Text>}
           </View>
         </View>
@@ -130,10 +139,12 @@ export default function App() {
           onToggleMajor={() => setShowMajor((v) => !v)}
           showMinor={showMinor}
           onToggleMinor={() => setShowMinor((v) => !v)}
+          vis={vis}
+          onToggleVis={onToggleVis}
         />
       </BottomSheet>
 
-      <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} />
+      <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} timeFormat={timeFormat} />
       <StatusBar style="light" />
       </View>
     </ThemeProvider>
@@ -145,7 +156,7 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   header: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 2 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   brand: { color: p.text, fontSize: 24, letterSpacing: 4, fontWeight: "600" },
-  editBtn: { paddingVertical: 4, paddingLeft: 12 },
+  editBtn: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4, paddingLeft: 12 },
   editText: { color: p.live, fontSize: 15, letterSpacing: 1, textAlign: "right" },
   bigThree: { color: p.textDim, fontSize: 14, letterSpacing: 1, textAlign: "center", marginBottom: 12 },
   stage: { flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: SHEET_COLLAPSED_HEIGHT },
