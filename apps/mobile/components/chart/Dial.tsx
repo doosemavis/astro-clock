@@ -20,9 +20,10 @@ function signArc(s: number): string {
 
 interface Props {
   curvedLabels?: boolean;
+  idPrefix?: string;
 }
 
-function DialBase({ curvedLabels = true }: Props) {
+function DialBase({ curvedLabels = true, idPrefix = "" }: Props) {
   const ticks: ReactElement[] = [];
   for (let t = 0; t < 360; t += 5) {
     if (t % 30 === 0) continue; // sign boundaries drawn separately
@@ -53,7 +54,7 @@ function DialBase({ curvedLabels = true }: Props) {
 
     const label = SIGNS[s].toUpperCase();
     if (curvedLabels) {
-      const id = `acSignArc${s}`;
+      const id = `${idPrefix}acSignArc${s}`;
       defs.push(<Path key={`p${s}`} id={id} d={signArc(s)} fill="none" stroke="none" />);
       labels.push(
         <SvgText
