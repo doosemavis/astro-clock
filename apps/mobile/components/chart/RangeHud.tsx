@@ -10,7 +10,7 @@ import { SHEET_COLLAPSED_HEIGHT } from "../BottomSheet";
  * stay reachable without opening the sheet. Speed taps cycle through the PACES presets.
  */
 export function RangeHud({ clock }: { clock: ChartClock }) {
-  const { playing, togglePlay, loop, toggleLoop, resetPlay, rate, setRate } = clock;
+  const { playing, togglePlay, resetPlay, rate, setRate } = clock;
   const idx = Math.max(0, PACES.findIndex((p) => p.rate === rate));
   const cycleSpeed = () => setRate(PACES[(idx + 1) % PACES.length].rate);
 
@@ -19,9 +19,6 @@ export function RangeHud({ clock }: { clock: ChartClock }) {
       <View style={styles.pill}>
         <Pressable onPress={togglePlay} style={styles.btn} hitSlop={6}>
           <Text style={styles.play}>{playing ? "❚❚" : "▶"}</Text>
-        </Pressable>
-        <Pressable onPress={toggleLoop} style={styles.btn} hitSlop={6}>
-          <Text style={[styles.txt, loop && styles.on]}>Loop</Text>
         </Pressable>
         <Pressable onPress={resetPlay} style={styles.btn} hitSlop={6}>
           <Text style={styles.txt}>↺</Text>
