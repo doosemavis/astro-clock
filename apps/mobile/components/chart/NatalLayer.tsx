@@ -5,17 +5,20 @@ import { R, polar, declutter, PLANET_KEYS, PLANET_GLYPH } from "@astro/engine";
 import type { Positions } from "@astro/engine";
 import { CHART, GLYPH_FONT } from "./palette";
 import { useTheme } from "../../lib/theme";
+import type { VisMap } from "../../lib/chartModel";
 
 interface Props {
   positions: Positions;
+  vis?: VisMap;
 }
 
 // Fixed birth glyphs on the inner ring, fanned out so a stellium doesn't overlap (declutter),
 // each with a leader tick back to its true longitude and a bordered token (mirrors web NatalLayer).
-function NatalLayerBase({ positions }: Props) {
+function NatalLayerBase({ positions, vis }: Props) {
   const { palette: p } = useTheme();
   const disp = declutter(positions);
-  const nodes: ReactElement[] = PLANET_KEYS.map((key) => {
+  const nodes: (ReactElement | null)[] = PLANET_KEYS.map((key) => {
+    if (vis && !vis[key]) return null;
     const [tx, ty] = polar(R.signInner, positions[key]);
     const [gx, gy] = polar(R.natalGlyph, disp[key]);
     return (
