@@ -50,12 +50,12 @@ export default function App() {
 
   const birthMs = useMemo(() => birthInstant(birth).getTime(), [birth]);
   const natalPos = useMemo(() => positions(new Date(birthMs)), [birthMs]);
-  const clock = useChartClock(birthMs);
+  const clock = useChartClock(birthMs, birth);
   const livePos = useMemo(() => positions(clock.displayInstant), [clock.displayInstant]);
   const compareAPos = useMemo(() => positions(new Date(clock.compareAMs)), [clock.compareAMs]);
   const compareBPos = useMemo(() => positions(new Date(clock.compareBMs)), [clock.compareBMs]);
-  const cmpA = cmpCaption(clock.compareAMs, birth, timeFormat);
-  const cmpB = cmpCaption(clock.compareBMs, birth, timeFormat);
+  const cmpA = cmpCaption(clock.compareA, timeFormat);
+  const cmpB = cmpCaption(clock.compareB, timeFormat);
 
   // Theme: light=1 / dark=0 / auto=Sun altitude at the displayed moment (birth location).
   const themeT = useMemo(() => {

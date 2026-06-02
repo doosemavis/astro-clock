@@ -11,6 +11,7 @@ import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
 import { VisGrid } from "./VisGrid";
+import { ZonedMomentField } from "./ZonedMomentField";
 
 interface Props {
   clock: ChartClock;
@@ -72,7 +73,7 @@ export function ChartControls({
     mode, setMode, momentMs, setMomentMs,
     rangeStartMs, setRangeStartMs, rangeEndMs, setRangeEndMs,
     playing, togglePlay, loop, toggleLoop, rate, setRate, resetPlay,
-    compareAMs, setCompareA, compareBMs, setCompareB, compareView, setCompareView,
+    compareA, setCompareA, compareB, setCompareB, compareView, setCompareView,
   } = clock;
 
   return (
@@ -120,10 +121,10 @@ export function ChartControls({
         <Section label="Compare two charts">
           <Text style={styles.fieldLabel}>View</Text>
           <Segmented options={CVIEWS} value={compareView} onChange={setCompareView} />
-          <DateField label="Chart A" valueMs={compareAMs} onChange={setCompareA} withTime timeFormat={timeFormat} />
-          <DateField label="Chart B" valueMs={compareBMs} onChange={setCompareB} withTime timeFormat={timeFormat} />
+          <ZonedMomentField label="Chart A" moment={compareA} onChange={setCompareA} timeFormat={timeFormat} />
+          <ZonedMomentField label="Chart B" moment={compareB} onChange={setCompareB} timeFormat={timeFormat} />
           <Text style={styles.note}>
-            Chart A starts at your birth moment, Chart B at now — change either to compare two date/times.
+            Each chart's time is read in its own timezone — set them independently to compare across zones.
           </Text>
         </Section>
       ) : null}
