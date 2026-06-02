@@ -27,8 +27,7 @@ interface Props {
 function CompareWheelBase({ idPrefix, caption, subCaption, size, pos, showMajor, showMinor }: Props) {
   return (
     <View style={styles.cell}>
-      <Text style={styles.cap}>{caption}</Text>
-      <Text style={styles.sub}>{subCaption}</Text>
+      <Text style={styles.pill}>{`${caption}  ·  ${subCaption}`}</Text>
       <View style={{ width: size, height: size }}>
         <Svg width={size} height={size} viewBox="0 0 1000 1000">
           <Dial idPrefix={idPrefix} />
@@ -44,6 +43,13 @@ export const CompareWheel = memo(CompareWheelBase);
 
 const styles = StyleSheet.create({
   cell: { alignItems: "center" },
-  cap: { color: NIGHT.text, fontSize: 14, fontWeight: "700", letterSpacing: 1 },
-  sub: { color: NIGHT.textDim, fontSize: 12, marginTop: 2, marginBottom: 6, fontVariant: ["tabular-nums"] },
+  // The same readout pill the other four views use (App.tsx `moment`): rounded, bordered,
+  // panel-filled, tabular figures — here it reads "Chart A · date · time · tz".
+  pill: {
+    color: NIGHT.text, fontSize: 13, letterSpacing: 0.5, textAlign: "center",
+    fontVariant: ["tabular-nums"],
+    backgroundColor: NIGHT.panel, borderColor: NIGHT.border, borderWidth: 1,
+    borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, overflow: "hidden",
+    marginBottom: 10,
+  },
 });
