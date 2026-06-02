@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { G, Line } from "react-native-svg";
 import { R, polar, findAspects, aspectColor } from "@astro/engine";
 import type { Positions } from "@astro/engine";
+import { useTheme } from "../../lib/theme";
 
 interface Props {
   positions: Positions;
@@ -13,6 +14,7 @@ interface Props {
 // Lines between aspecting planet pairs, filtered by tier via the engine's findAspects.
 // Colored for the dark theme (aspectColor(def, 0)); mirrors the web AspectLayer.
 function AspectLayerBase({ positions, showMajor = true, showMinor = true }: Props) {
+  const { t } = useTheme();
   const lines: ReactElement[] = findAspects(positions, { major: showMajor, minor: showMinor }).map(
     ({ a, b, def }) => {
       const [x1, y1] = polar(R.aspect, positions[a]);
@@ -21,7 +23,7 @@ function AspectLayerBase({ positions, showMajor = true, showMinor = true }: Prop
         <Line
           key={`${a}-${b}`}
           x1={x1} y1={y1} x2={x2} y2={y2}
-          stroke={aspectColor(def, 0)}
+          stroke={aspectColor(def, t)}
           strokeWidth={def.width}
           opacity={def.opacity}
           strokeDasharray={def.dash || undefined}
