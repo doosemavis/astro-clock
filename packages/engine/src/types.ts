@@ -22,6 +22,12 @@ export const SIGNS = [
 
 export type Sign = (typeof SIGNS)[number];
 
+/** Zodiac symbols, keyed to SIGNS — used for the user's sign avatar. */
+export const SIGN_GLYPH: Record<Sign, string> = {
+  Aries: "♈", Taurus: "♉", Gemini: "♊", Cancer: "♋", Leo: "♌", Virgo: "♍",
+  Libra: "♎", Scorpio: "♏", Sagittarius: "♐", Capricorn: "♑", Aquarius: "♒", Pisces: "♓",
+};
+
 /** Geocentric ecliptic longitude (degrees, 0..360) for every body. */
 export type Positions = Record<PlanetKey, number>;
 
