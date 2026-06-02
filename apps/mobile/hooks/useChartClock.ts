@@ -1,21 +1,39 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAnimationFrame } from "../lib/useAnimationFrame";
 import { DY, resolveDate } from "../lib/chartModel";
-import type { Mode, CompareView } from "../lib/chartModel";
+import type { Mode, CompareView, CompareMoment } from "../lib/chartModel";
+import { zonedInstant } from "../lib/timezone";
+import type { BirthData } from "@astro/engine";
+
+const localZone = (): string => {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return "UTC"; }
+};
+const z2 = (n: number) => String(n).padStart(2, "0");
+const birthMoment = (b: BirthData): CompareMoment => ({ date: b.date, time: b.time, zone: b.ianaTz ?? localZone() });
+const nowMoment = (): CompareMoment => {
+  const d = new Date();
+  return {
+    date: `${d.getFullYear()}-${z2(d.getMonth() + 1)}-${z2(d.getDate())}`,
+    time: `${z2(d.getHours())}:${z2(d.getMinutes())}`,
+    zone: localZone(),
+  };
+};
 
 export interface ChartClock {
   mode: Mode;
   setMode: (m: Mode) => void;
   displayInstant: Date;
   momentMs: number; setMomentMs: (ms: number) => void;
-  rangeStartMs: number; setRangeStartMs: (ms: number) => void;
-  rangeEndMs: number; setRangeEndMs: (ms: number) => void;
+  rangeStart: CompareMoment; setRangeStart: (m: CompareMoment) => void;
+  rangeEnd: CompareMoment; setRangeEnd: (m: CompareMoment) => void;
+  rangeStartMs: number; rangeEndMs: number;
   playing: boolean; togglePlay: () => void;
   loop: boolean; toggleLoop: () => void;
   rate: number; setRate: (r: number) => void;
   resetPlay: () => void;
-  compareAMs: number; setCompareA: (ms: number) => void;
-  compareBMs: number; setCompareB: (ms: number) => void;
+  compareA: CompareMoment; setCompareA: (m: CompareMoment) => void;
+  compareB: CompareMoment; setCompareB: (m: CompareMoment) => void;
+  compareAMs: number; compareBMs: number;
   compareView: CompareView; setCompareView: (v: CompareView) => void;
 }
 
@@ -25,33 +43,33 @@ export interface ChartClock {
  * 1 Hz here (a setInterval) rather than every animation frame — real planetary motion
  * per second is imperceptible, so 1 Hz is smooth and battery-friendly.
  */
-export function useChartClock(birthMs: number): ChartClock {
+export function useChartClock(birthMs: number, birth: BirthData): ChartClock {
   const [mode, setModeRaw] = useState<Mode>("now");
   const [playing, setPlaying] = useState(false);
   const [loop, setLoop] = useState(false);
   const [rate, setRate] = useState(DY); // 1 day / sec
   const [momentMs, setMomentMs] = useState(birthMs);
-  const [rangeStartMs, setRangeStartMs] = useState(birthMs);
-  const [rangeEndMs, setRangeEndMs] = useState(birthMs);
-  const [compareAMs, setCompareA] = useState(birthMs);
-  const [compareBMs, setCompareB] = useState<number>(() => Date.now());
+  const [rangeStart, setRangeStart] = useState<CompareMoment>(() => birthMoment(birth));
+  const [rangeEnd, setRangeEnd] = useState<CompareMoment>(() => nowMoment());
+  const rangeStartMs = useMemo(() => zonedInstant(rangeStart.date, rangeStart.time, rangeStart.zone), [rangeStart]);
+  const rangeEndMs = useMemo(() => zonedInstant(rangeEnd.date, rangeEnd.time, rangeEnd.zone), [rangeEnd]);
+  const [compareA, setCompareA] = useState<CompareMoment>(() => birthMoment(birth));
+  const [compareB, setCompareB] = useState<CompareMoment>(() => nowMoment());
   const [compareView, setCompareView] = useState<CompareView>("both");
+  const compareAMs = useMemo(() => zonedInstant(compareA.date, compareA.time, compareA.zone), [compareA]);
+  const compareBMs = useMemo(() => zonedInstant(compareB.date, compareB.time, compareB.zone), [compareB]);
   const posRef = useRef(0);
   const [displayInstant, setDisplayInstant] = useState<Date>(() => new Date());
 
-  // Seed now-based defaults once on mount (Range end + Date moment start at "now").
+  // Seed the Date-mode moment to "now" once on mount.
+  useEffect(() => { setMomentMs(Date.now()); }, []);
+
+  // Range "From" and Compare's Chart A track the birth (re-seed when the birth changes).
   useEffect(() => {
-    const now = Date.now();
-    setRangeEndMs(now);
-    setMomentMs(now);
-  }, []);
-
-  // Range start tracks the birth instant (re-seeds when the birth changes).
-  useEffect(() => { setRangeStartMs(birthMs); }, [birthMs]);
-
-  // Compare's Chart A tracks the birth instant (re-seeds when the birth changes),
-  // mirroring the web's applyBirth -> setCompareAMs(birthInstant(b)).
-  useEffect(() => { setCompareA(birthMs); }, [birthMs]);
+    const bm = birthMoment(birth);
+    setRangeStart(bm);
+    setCompareA(bm);
+  }, [birth.date, birth.time, birth.ianaTz]);
 
   // Birth / Date: static frame.
   useEffect(() => {
@@ -101,8 +119,8 @@ export function useChartClock(birthMs: number): ChartClock {
 
   return {
     mode, setMode, displayInstant,
-    momentMs, setMomentMs, rangeStartMs, setRangeStartMs, rangeEndMs, setRangeEndMs,
+    momentMs, setMomentMs, rangeStart, setRangeStart, rangeEnd, setRangeEnd, rangeStartMs, rangeEndMs,
     playing, togglePlay, loop, toggleLoop, rate, setRate, resetPlay,
-    compareAMs, setCompareA, compareBMs, setCompareB, compareView, setCompareView,
+    compareA, setCompareA, compareB, setCompareB, compareAMs, compareBMs, compareView, setCompareView,
   };
 }

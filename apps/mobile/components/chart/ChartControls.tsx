@@ -11,6 +11,7 @@ import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
 import { VisGrid } from "./VisGrid";
+import { ZonedMomentField } from "./ZonedMomentField";
 
 interface Props {
   clock: ChartClock;
@@ -70,9 +71,9 @@ export function ChartControls({
   const styles = useMemo(() => makeStyles(pal), [pal]);
   const {
     mode, setMode, momentMs, setMomentMs,
-    rangeStartMs, setRangeStartMs, rangeEndMs, setRangeEndMs,
+    rangeStart, setRangeStart, rangeEnd, setRangeEnd,
     playing, togglePlay, loop, toggleLoop, rate, setRate, resetPlay,
-    compareAMs, setCompareA, compareBMs, setCompareB, compareView, setCompareView,
+    compareA, setCompareA, compareB, setCompareB, compareView, setCompareView,
   } = clock;
 
   return (
@@ -89,8 +90,8 @@ export function ChartControls({
 
       {mode === "range" ? (
         <Section label="Time range">
-          <DateField label="From" valueMs={rangeStartMs} onChange={setRangeStartMs} timeFormat={timeFormat} />
-          <DateField label="To" valueMs={rangeEndMs} onChange={setRangeEndMs} timeFormat={timeFormat} />
+          <ZonedMomentField label="From" moment={rangeStart} onChange={setRangeStart} timeFormat={timeFormat} />
+          <ZonedMomentField label="To" moment={rangeEnd} onChange={setRangeEnd} timeFormat={timeFormat} />
           <View style={styles.row}>
             <Pressable style={[styles.btn, styles.btnPrimary]} onPress={togglePlay}>
               <Text style={styles.btnPrimaryText}>{playing ? "❚❚ Pause" : "▶ Play"}</Text>
@@ -120,10 +121,10 @@ export function ChartControls({
         <Section label="Compare two charts">
           <Text style={styles.fieldLabel}>View</Text>
           <Segmented options={CVIEWS} value={compareView} onChange={setCompareView} />
-          <DateField label="Chart A" valueMs={compareAMs} onChange={setCompareA} withTime timeFormat={timeFormat} />
-          <DateField label="Chart B" valueMs={compareBMs} onChange={setCompareB} withTime timeFormat={timeFormat} />
+          <ZonedMomentField label="Chart A" moment={compareA} onChange={setCompareA} timeFormat={timeFormat} />
+          <ZonedMomentField label="Chart B" moment={compareB} onChange={setCompareB} timeFormat={timeFormat} />
           <Text style={styles.note}>
-            Chart A starts at your birth moment, Chart B at now — change either to compare two date/times.
+            Each chart's time is read in its own timezone — set them independently to compare across zones.
           </Text>
         </Section>
       ) : null}
