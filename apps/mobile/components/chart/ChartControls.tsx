@@ -3,13 +3,14 @@ import type { ReactNode } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import type { Palette } from "@astro/engine";
+import type { Palette, PlanetKey } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { PACES } from "../../lib/chartModel";
-import type { Mode, TimeFormat, CompareView, ThemeMode } from "../../lib/chartModel";
+import type { Mode, TimeFormat, CompareView, ThemeMode, Vis, Layer } from "../../lib/chartModel";
 import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
+import { VisGrid } from "./VisGrid";
 
 interface Props {
   clock: ChartClock;
@@ -21,6 +22,8 @@ interface Props {
   onToggleMinor: () => void;
   themeMode: ThemeMode;
   onTheme: (m: ThemeMode) => void;
+  vis: Vis;
+  onToggleVis: (key: PlanetKey | "all", layer: Layer) => void;
 }
 
 const MODES: { key: Mode; label: string }[] = [
@@ -61,7 +64,7 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 
 export function ChartControls({
   clock, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
-  themeMode, onTheme,
+  themeMode, onTheme, vis, onToggleVis,
 }: Props) {
   const { palette: pal } = useTheme();
   const styles = useMemo(() => makeStyles(pal), [pal]);
@@ -80,14 +83,14 @@ export function ChartControls({
 
       {mode === "moment" ? (
         <Section label="Pick a date & time">
-          <DateField label="Moment" valueMs={momentMs} onChange={setMomentMs} withTime />
+          <DateField label="Moment" valueMs={momentMs} onChange={setMomentMs} withTime timeFormat={timeFormat} />
         </Section>
       ) : null}
 
       {mode === "range" ? (
         <Section label="Time range">
-          <DateField label="From" valueMs={rangeStartMs} onChange={setRangeStartMs} />
-          <DateField label="To" valueMs={rangeEndMs} onChange={setRangeEndMs} />
+          <DateField label="From" valueMs={rangeStartMs} onChange={setRangeStartMs} timeFormat={timeFormat} />
+          <DateField label="To" valueMs={rangeEndMs} onChange={setRangeEndMs} timeFormat={timeFormat} />
           <View style={styles.row}>
             <Pressable style={[styles.btn, styles.btnPrimary]} onPress={togglePlay}>
               <Text style={styles.btnPrimaryText}>{playing ? "❚❚ Pause" : "▶ Play"}</Text>
@@ -117,8 +120,8 @@ export function ChartControls({
         <Section label="Compare two charts">
           <Text style={styles.fieldLabel}>View</Text>
           <Segmented options={CVIEWS} value={compareView} onChange={setCompareView} />
-          <DateField label="Chart A" valueMs={compareAMs} onChange={setCompareA} withTime />
-          <DateField label="Chart B" valueMs={compareBMs} onChange={setCompareB} withTime />
+          <DateField label="Chart A" valueMs={compareAMs} onChange={setCompareA} withTime timeFormat={timeFormat} />
+          <DateField label="Chart B" valueMs={compareBMs} onChange={setCompareB} withTime timeFormat={timeFormat} />
           <Text style={styles.note}>
             Chart A starts at your birth moment, Chart B at now — change either to compare two date/times.
           </Text>
@@ -131,6 +134,10 @@ export function ChartControls({
 
       <Section label="Theme">
         <Segmented options={THEMES} value={themeMode} onChange={onTheme} />
+      </Section>
+
+      <Section label="Glyphs">
+        <VisGrid vis={vis} onToggle={onToggleVis} />
       </Section>
 
       <Section label="Aspects">
@@ -150,12 +157,13 @@ export function ChartControls({
 /** A date (and optionally time) field using the native picker — date-only for Range
  *  bounds, date+time for the Date moment. Mirrors the Slice-2 BirthForm picker pattern. */
 function DateField({
-  label, valueMs, onChange, withTime = false,
+  label, valueMs, onChange, withTime = false, timeFormat,
 }: {
   label: string;
   valueMs: number;
   onChange: (ms: number) => void;
   withTime?: boolean;
+  timeFormat: TimeFormat;
 }) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
@@ -163,7 +171,10 @@ function DateField({
   const [showTime, setShowTime] = useState(false);
   const d = new Date(valueMs);
   const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-  const timeStr = padHour(d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }));
+  const timeOpts: Intl.DateTimeFormatOptions = timeFormat === "24h"
+    ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
+    : { hour: "2-digit", minute: "2-digit", hour12: true };
+  const timeStr = padHour(d.toLocaleTimeString(undefined, timeOpts));
 
   return (
     <View style={styles.field}>

@@ -7,6 +7,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import type { BirthData, Palette } from "@astro/engine";
 import { useTheme } from "../lib/theme";
+import { Segmented } from "./Segmented";
+import type { TimeFormat } from "../lib/chartModel";
 import { searchPlaces } from "../lib/geocode";
 import type { PlaceResult } from "../lib/geocode";
 import { offsetHoursAt } from "../lib/timezone";
@@ -18,7 +20,14 @@ interface Props {
   initial: BirthData;
   onSave: (b: BirthData) => void;
   onCancel: () => void;
+  /** Seeds the form's own 12h/24h toggle (independently changeable inside the form). */
+  timeFormat?: TimeFormat;
 }
+
+const TIME_FORMATS: { key: TimeFormat; label: string }[] = [
+  { key: "12h", label: "12h" },
+  { key: "24h", label: "24h" },
+];
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const dateToStr = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -29,7 +38,7 @@ const strToDate = (date: string, time: string) => {
   return new Date(Y || 2000, (M || 1) - 1, D || 1, h || 0, m || 0);
 };
 
-export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
+export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12h" }: Props) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
   const [name, setName] = useState(initial.name ?? "");
@@ -50,6 +59,7 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
   const [showTime, setShowTime] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [birthTf, setBirthTf] = useState<TimeFormat>(timeFormat); // form's own 12h/24h, seeded from the app
 
   // Drop-from-top animation. Keep the Modal mounted through the close tween so the
   // panel slides back up instead of vanishing. translateY rides the measured panel
@@ -87,7 +97,8 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
     setShowDate(false);
     setShowTime(false);
     setAdvanced(false);
-  }, [visible, initial]);
+    setBirthTf(timeFormat);
+  }, [visible, initial, timeFormat]);
 
   // Debounced place search.
   useEffect(() => {
@@ -135,6 +146,15 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
 
   const iosPicker = Platform.OS === "ios";
   const translateY = drop.interpolate({ inputRange: [0, 1], outputRange: [-panelH, 0] });
+  // Display the birth time per the form's own 12h/24h toggle; the stored value stays HH:MM.
+  const showTimeStr = (hhmm: string) => {
+    const [h, m] = hhmm.split(":").map(Number);
+    const dd = new Date(2000, 0, 1, h || 0, m || 0);
+    const opts: Intl.DateTimeFormatOptions = birthTf === "24h"
+      ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
+      : { hour: "2-digit", minute: "2-digit", hour12: true };
+    return dd.toLocaleTimeString(undefined, opts).replace(/^(\d):/, "0$1:");
+  };
 
   return (
     <Modal visible={mounted} animationType="none" transparent onRequestClose={onCancel}>
@@ -172,7 +192,7 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
 
             <Text style={styles.label}>Birth time</Text>
             <Pressable style={styles.input} onPress={() => { setShowDate(false); setShowTime((s) => !s); }}>
-              <Text style={styles.inputText}>{time}</Text>
+              <Text style={styles.inputText}>{showTimeStr(time)}</Text>
             </Pressable>
             {showTime && (
               <View style={styles.pickerWrap}>
@@ -189,6 +209,9 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
                 ) : null}
               </View>
             )}
+
+            <Text style={styles.label}>Clock</Text>
+            <Segmented options={TIME_FORMATS} value={birthTf} onChange={setBirthTf} />
 
             <Text style={styles.label}>Place</Text>
             {placeLabel ? (

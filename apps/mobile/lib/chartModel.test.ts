@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDate, PACES, actualOffset, HR, DY, pageIndex } from "./chartModel.ts";
+import { resolveDate, PACES, actualOffset, HR, DY, pageIndex, allVisible, toggleVis } from "./chartModel.ts";
+import type { PlanetKey } from "@astro/engine";
 import type { BirthData } from "@astro/engine";
 
 const BIRTH: BirthData = {
@@ -56,4 +57,29 @@ test("pageIndex: negative overscroll clamps to 0", () => {
 });
 test("pageIndex: a zero page width is safe (→ 0)", () => {
   assert.equal(pageIndex(100, 0, 2), 0);
+});
+
+const KEYS: PlanetKey[] = ["sun", "moon", "mercury"];
+
+test("allVisible: every key true", () => {
+  assert.deepEqual(allVisible(KEYS), { sun: true, moon: true, mercury: true });
+});
+test("toggleVis: flips one planet on one layer only, immutably", () => {
+  const vis = { natal: allVisible(KEYS), live: allVisible(KEYS) };
+  const next = toggleVis(vis, "moon", "live");
+  assert.equal(next.live.moon, false);
+  assert.equal(next.live.sun, true);
+  assert.equal(next.natal.moon, true);
+  assert.equal(vis.live.moon, true); // original not mutated
+});
+test("toggleVis all: when every key is on, turns the layer off", () => {
+  const vis = { natal: allVisible(KEYS), live: allVisible(KEYS) };
+  const next = toggleVis(vis, "all", "natal");
+  assert.deepEqual(next.natal, { sun: false, moon: false, mercury: false });
+  assert.deepEqual(next.live, vis.live);
+});
+test("toggleVis all: when some are off, turns the whole layer on", () => {
+  const vis = { natal: { sun: true, moon: false, mercury: true } as Record<PlanetKey, boolean>, live: allVisible(KEYS) };
+  const next = toggleVis(vis, "all", "natal");
+  assert.deepEqual(next.natal, { sun: true, moon: true, mercury: true });
 });

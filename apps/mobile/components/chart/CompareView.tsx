@@ -5,6 +5,7 @@ import type { Palette, Positions } from "@astro/engine";
 import { CHART } from "./palette";
 import { CompareWheel } from "./CompareWheel";
 import { pageIndex } from "../../lib/chartModel";
+import type { VisMap } from "../../lib/chartModel";
 import { useTheme } from "../../lib/theme";
 import { SHEET_COLLAPSED_HEIGHT } from "../BottomSheet";
 
@@ -20,6 +21,7 @@ interface Props {
   view: "both" | "pages" | "flip";
   showMajor: boolean;
   showMinor: boolean;
+  vis?: VisMap;
 }
 
 // Vertical chrome above/below the two wheels in "Both" (header + collapsed sheet + each
@@ -29,7 +31,7 @@ const COMPARE_CHROME = 360;
 const CAPTION_BLOCK = 52;
 const FLIP_MS = 600;
 
-function CompareViewBase({ a, b, view, showMajor, showMinor }: Props) {
+function CompareViewBase({ a, b, view, showMajor, showMinor, vis }: Props) {
   const { width, height } = useWindowDimensions();
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
@@ -47,7 +49,7 @@ function CompareViewBase({ a, b, view, showMajor, showMinor }: Props) {
         <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={onEnd}>
           {[a, b].map((w, i) => (
             <View key={i} style={[styles.page, { width }]}>
-              <CompareWheel idPrefix={i === 0 ? "a-" : "b-"} caption={w.caption} subCaption={w.sub} size={full} pos={w.pos} showMajor={showMajor} showMinor={showMinor} />
+              <CompareWheel idPrefix={i === 0 ? "a-" : "b-"} caption={w.caption} subCaption={w.sub} size={full} pos={w.pos} showMajor={showMajor} showMinor={showMinor} vis={vis} />
             </View>
           ))}
         </ScrollView>
@@ -78,10 +80,10 @@ function CompareViewBase({ a, b, view, showMajor, showMinor }: Props) {
       <View style={styles.center}>
         <Pressable onPress={() => goTo(face === 0 ? 1 : 0)} style={{ width: full, height: cardH }}>
           <Animated.View style={[styles.face, { opacity: frontOpacity, transform: [{ perspective: 1200 }, { rotateY: rotate("0deg", "180deg") }] }]}>
-            <CompareWheel idPrefix="a-" caption={a.caption} subCaption={a.sub} size={full} pos={a.pos} showMajor={showMajor} showMinor={showMinor} />
+            <CompareWheel idPrefix="a-" caption={a.caption} subCaption={a.sub} size={full} pos={a.pos} showMajor={showMajor} showMinor={showMinor} vis={vis} />
           </Animated.View>
           <Animated.View style={[styles.face, { opacity: backOpacity, transform: [{ perspective: 1200 }, { rotateY: rotate("180deg", "360deg") }] }]}>
-            <CompareWheel idPrefix="b-" caption={b.caption} subCaption={b.sub} size={full} pos={b.pos} showMajor={showMajor} showMinor={showMinor} />
+            <CompareWheel idPrefix="b-" caption={b.caption} subCaption={b.sub} size={full} pos={b.pos} showMajor={showMajor} showMinor={showMinor} vis={vis} />
           </Animated.View>
         </Pressable>
         <View style={styles.dotsRow}>
@@ -103,8 +105,8 @@ function CompareViewBase({ a, b, view, showMajor, showMinor }: Props) {
   );
   return (
     <View style={styles.stack}>
-      <CompareWheel idPrefix="a-" caption={a.caption} subCaption={a.sub} size={each} pos={a.pos} showMajor={showMajor} showMinor={showMinor} />
-      <CompareWheel idPrefix="b-" caption={b.caption} subCaption={b.sub} size={each} pos={b.pos} showMajor={showMajor} showMinor={showMinor} />
+      <CompareWheel idPrefix="a-" caption={a.caption} subCaption={a.sub} size={each} pos={a.pos} showMajor={showMajor} showMinor={showMinor} vis={vis} />
+      <CompareWheel idPrefix="b-" caption={b.caption} subCaption={b.sub} size={each} pos={b.pos} showMajor={showMajor} showMinor={showMinor} vis={vis} />
     </View>
   );
 }
