@@ -6,7 +6,11 @@ import { DEFAULT_BIRTH, birthInstant, positions, NIGHT } from "@astro/engine";
 import type { BirthData } from "@astro/engine";
 import { GLYPH_FONT } from "./components/chart/palette";
 import { ChartWheel } from "./components/chart/ChartWheel";
+import { ChartControls } from "./components/chart/ChartControls";
+import { BottomSheet } from "./components/BottomSheet";
 import { BirthForm } from "./components/BirthForm";
+import { useChartClock } from "./hooks/useChartClock";
+import type { TimeFormat } from "./lib/chartModel";
 import { loadBirth, saveBirth } from "./lib/birthStore";
 
 export default function App() {
@@ -14,6 +18,9 @@ export default function App() {
   const [fontsLoaded] = useFonts({ [GLYPH_FONT]: NotoSansSymbols_400Regular });
   const [birth, setBirth] = useState<BirthData>(DEFAULT_BIRTH);
   const [editing, setEditing] = useState(false);
+  const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
+  const [showMajor, setShowMajor] = useState(true);
+  const [showMinor, setShowMinor] = useState(true);
 
   // Load the saved birth on launch (falls back to DEFAULT_BIRTH).
   useEffect(() => {
@@ -22,9 +29,10 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
-  const natalPos = useMemo(() => positions(birthInstant(birth)), [birth]);
-  const [launchedAt] = useState(() => new Date());
-  const livePos = useMemo(() => positions(launchedAt), [launchedAt]);
+  const birthMs = useMemo(() => birthInstant(birth).getTime(), [birth]);
+  const natalPos = useMemo(() => positions(new Date(birthMs)), [birthMs]);
+  const clock = useChartClock(birthMs);
+  const livePos = useMemo(() => positions(clock.displayInstant), [clock.displayInstant]);
 
   const displayName = birth.name && birth.name !== "You" ? birth.name : "Your chart";
 
@@ -40,9 +48,23 @@ export default function App() {
       <Pressable onPress={() => setEditing(true)} style={styles.editBtn}>
         <Text style={styles.editText}>{displayName}  ✎</Text>
       </Pressable>
-      {fontsLoaded
-        ? <ChartWheel natalPositions={natalPos} livePositions={livePos} />
-        : <Text style={styles.note}>loading…</Text>}
+      <View style={styles.stage}>
+        {fontsLoaded
+          ? <ChartWheel natalPositions={natalPos} livePositions={livePos} showMajor={showMajor} showMinor={showMinor} />
+          : <Text style={styles.note}>loading…</Text>}
+      </View>
+      <BottomSheet>
+        <ChartControls
+          birth={birth}
+          clock={clock}
+          timeFormat={timeFormat}
+          onTimeFormat={setTimeFormat}
+          showMajor={showMajor}
+          onToggleMajor={() => setShowMajor((v) => !v)}
+          showMinor={showMinor}
+          onToggleMinor={() => setShowMinor((v) => !v)}
+        />
+      </BottomSheet>
       <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} />
       <StatusBar style="light" />
     </View>
@@ -50,9 +72,10 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: NIGHT.bg, alignItems: "center", justifyContent: "center", gap: 10, padding: 12 },
+  root: { flex: 1, backgroundColor: NIGHT.bg, alignItems: "center", paddingTop: 56 },
   brand: { color: NIGHT.text, fontSize: 28, letterSpacing: 5, fontWeight: "600" },
   editBtn: { paddingVertical: 4, paddingHorizontal: 10 },
   editText: { color: NIGHT.live, fontSize: 15, letterSpacing: 1 },
+  stage: { flex: 1, alignSelf: "stretch", alignItems: "center", justifyContent: "center" },
   note: { color: NIGHT.textDim, fontSize: 13, letterSpacing: 2 },
 });
