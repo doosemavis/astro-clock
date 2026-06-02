@@ -48,6 +48,9 @@ export interface BirthData {
   lat: number;
   lon: number;
   placeLabel?: string;
+  /** IANA zone the offset was derived from (e.g. "America/Chicago"), so the birth form can
+   *  re-display the chosen timezone when editing. Optional — older saved charts lack it. */
+  ianaTz?: string;
 }
 
 export type AspectTier = "major" | "minor";

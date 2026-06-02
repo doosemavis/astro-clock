@@ -6,6 +6,7 @@ import type { BirthData } from "./types.ts";
 export const DEFAULT_BIRTH: BirthData = {
   name: "You", date: "1992-07-29", time: "14:28",
   tzOffset: -6, isDst: true, lat: 35.8423, lon: -90.7043, placeLabel: "Jonesboro, AR",
+  ianaTz: "America/Chicago",
 };
 
 export interface City { lat: number; lon: number; off: number; }
