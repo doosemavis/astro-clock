@@ -45,11 +45,3 @@ export function resolveDate(
   if (mode === "moment") return new Date(momentMs);
   return new Date(rangeStart + pos * (rangeEnd - rangeStart));
 }
-
-/** Current page from a horizontal scroll offset — drives the Compare pager's dots.
- *  Rounds to the nearest page and clamps into [0, count-1]; degenerate inputs → 0. */
-export function pageIndex(offsetX: number, pageWidth: number, count: number): number {
-  if (pageWidth <= 0 || count <= 0) return 0;
-  const i = Math.round(offsetX / pageWidth);
-  return Math.max(0, Math.min(count - 1, i));
-}
