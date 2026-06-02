@@ -7,7 +7,7 @@ import type { BirthData } from "@astro/engine";
 import { GLYPH_FONT } from "./components/chart/palette";
 import { ChartWheel } from "./components/chart/ChartWheel";
 import { ChartControls } from "./components/chart/ChartControls";
-import { BottomSheet } from "./components/BottomSheet";
+import { BottomSheet, SHEET_COLLAPSED_HEIGHT } from "./components/BottomSheet";
 import { BirthForm } from "./components/BirthForm";
 import { useChartClock } from "./hooks/useChartClock";
 import type { TimeFormat } from "./lib/chartModel";
@@ -76,6 +76,8 @@ const styles = StyleSheet.create({
   brand: { color: NIGHT.text, fontSize: 28, letterSpacing: 5, fontWeight: "600" },
   editBtn: { paddingVertical: 4, paddingHorizontal: 10 },
   editText: { color: NIGHT.live, fontSize: 15, letterSpacing: 1 },
-  stage: { flex: 1, alignSelf: "stretch", alignItems: "center", justifyContent: "center" },
+  // Reserve the collapsed sheet's height so the full wheel rests above it (the expanded
+  // sheet still overlays the lower chart, but only while the user holds it open).
+  stage: { flex: 1, alignSelf: "stretch", alignItems: "center", justifyContent: "center", paddingBottom: SHEET_COLLAPSED_HEIGHT },
   note: { color: NIGHT.textDim, fontSize: 13, letterSpacing: 2 },
 });

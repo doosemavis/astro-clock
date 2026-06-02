@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -34,6 +35,16 @@ const FORMATS: { key: TimeFormat; label: string }[] = [
 
 const iosPicker = Platform.OS === "ios";
 
+/** A bordered, labelled container — mirrors the web Panel's <fieldset>/<legend> blocks. */
+function Section({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.legend}>{label}</Text>
+      {children}
+    </View>
+  );
+}
+
 export function ChartControls({
   birth, clock, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
 }: Props) {
@@ -49,16 +60,19 @@ export function ChartControls({
   return (
     <View>
       <Text style={styles.readout}>{readout}</Text>
-      <Segmented options={MODES} value={mode} onChange={setMode} />
+
+      <Section label="View">
+        <Segmented options={MODES} value={mode} onChange={setMode} />
+      </Section>
 
       {mode === "moment" ? (
-        <View style={styles.section}>
+        <Section label="Pick a date & time">
           <DateField label="Moment" valueMs={momentMs} onChange={setMomentMs} withTime />
-        </View>
+        </Section>
       ) : null}
 
       {mode === "range" ? (
-        <View style={styles.section}>
+        <Section label="Time range">
           <DateField label="From" valueMs={rangeStartMs} onChange={setRangeStartMs} />
           <DateField label="To" valueMs={rangeEndMs} onChange={setRangeEndMs} />
           <View style={styles.row}>
@@ -69,10 +83,10 @@ export function ChartControls({
               <Text style={styles.btnText}>Loop</Text>
             </Pressable>
             <Pressable style={styles.btn} onPress={resetPlay}>
-              <Text style={styles.btnText}>↺</Text>
+              <Text style={styles.btnText}>↺ Restart</Text>
             </Pressable>
           </View>
-          <Text style={styles.seclabel}>Speed</Text>
+          <Text style={[styles.legend, styles.subLegend]}>Speed</Text>
           <View style={styles.chips}>
             {PACES.map((p) => {
               const on = p.rate === rate;
@@ -83,17 +97,15 @@ export function ChartControls({
               );
             })}
           </View>
-        </View>
+        </Section>
       ) : null}
 
-      <View style={styles.section}>
-        <Text style={styles.seclabel}>Clock</Text>
+      <Section label="Clock">
         <Segmented options={FORMATS} value={timeFormat} onChange={onTimeFormat} />
-      </View>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={styles.seclabel}>Aspects</Text>
-        <View style={styles.row}>
+      <Section label="Aspects">
+        <View style={styles.rowTight}>
           <Pressable style={[styles.btn, showMajor && styles.btnOn]} onPress={onToggleMajor}>
             <Text style={styles.btnText}>Major</Text>
           </Pressable>
@@ -101,7 +113,7 @@ export function ChartControls({
             <Text style={styles.btnText}>Minor</Text>
           </Pressable>
         </View>
-      </View>
+      </Section>
     </View>
   );
 }
@@ -124,8 +136,8 @@ function DateField({
 
   return (
     <View style={styles.field}>
-      <Text style={styles.seclabel}>{label}</Text>
-      <View style={styles.row}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <View style={styles.rowTight}>
         <Pressable style={[styles.input, styles.flex1]} onPress={() => { setShowTime(false); setShowDate((s) => !s); }}>
           <Text style={styles.inputText}>{dateStr}</Text>
         </Pressable>
@@ -184,22 +196,29 @@ function DateField({
 }
 
 const styles = StyleSheet.create({
-  readout: { color: NIGHT.text, fontSize: 15, fontWeight: "600", textAlign: "center", marginBottom: 10 },
-  section: { marginTop: 14 },
-  seclabel: { color: NIGHT.seclabel, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 },
-  row: { flexDirection: "row", gap: 8, marginTop: 8 },
+  readout: { color: NIGHT.text, fontSize: 15, fontWeight: "600", textAlign: "center", marginTop: 2, marginBottom: 6 },
+  section: {
+    borderColor: NIGHT.border, borderWidth: 1, borderRadius: 12,
+    paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12,
+    marginTop: 12,
+  },
+  legend: { color: NIGHT.seclabel, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 },
+  subLegend: { marginTop: 14 },
+  row: { flexDirection: "row", gap: 8, marginTop: 10 },
+  rowTight: { flexDirection: "row", gap: 8 },
   flex1: { flex: 1 },
   btn: { flex: 1, paddingVertical: 11, borderRadius: 9, alignItems: "center", backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1 },
   btnOn: { backgroundColor: NIGHT.border },
   btnPrimary: { backgroundColor: NIGHT.live, borderColor: NIGHT.live },
   btnText: { color: NIGHT.text, fontSize: 14, fontWeight: "600" },
   btnPrimaryText: { color: NIGHT.bg, fontSize: 14, fontWeight: "700" },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
   chip: { paddingVertical: 6, paddingHorizontal: 11, borderRadius: 14, borderColor: NIGHT.border, borderWidth: 1 },
   chipOn: { backgroundColor: NIGHT.live, borderColor: NIGHT.live },
   chipText: { color: NIGHT.textDim, fontSize: 12 },
   chipTextOn: { color: NIGHT.bg, fontWeight: "700" },
-  field: { marginTop: 10 },
+  field: { marginTop: 4 },
+  fieldLabel: { color: NIGHT.textDim, fontSize: 12, marginBottom: 4, marginTop: 6 },
   input: { backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, justifyContent: "center" },
   inputText: { color: NIGHT.text, fontSize: 15 },
   pickerWrap: { backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 8, marginTop: 6 },
