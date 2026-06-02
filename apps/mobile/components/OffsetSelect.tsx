@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text } from "react-native";
-import { NIGHT, formatOffset } from "@astro/engine";
+import { formatOffset } from "@astro/engine";
+import type { Palette } from "@astro/engine";
+import { useTheme } from "../lib/theme";
 import { offsetHoursAt } from "../lib/timezone";
 
 interface Props {
@@ -55,6 +57,8 @@ const cityOf = (zone: string): string =>
   ZONES.find((z) => z.zone === zone)?.city ?? zone.split("/").pop()?.replace(/_/g, " ") ?? zone;
 
 export function OffsetSelect({ valueZone, date, time, onChange }: Props) {
+  const { palette: p } = useTheme();
+  const styles = useMemo(() => makeStyles(p), [p]);
   const [open, setOpen] = useState(false);
   const labelFor = (zone: string): string => `${formatOffset(offsetHoursAt(date, time, zone))} · ${cityOf(zone)}`;
 
@@ -92,21 +96,21 @@ export function OffsetSelect({ valueZone, date, time, onChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (p: Palette) => StyleSheet.create({
   field: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 8,
+    backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 8,
     paddingHorizontal: 12, paddingVertical: 12,
   },
-  value: { color: NIGHT.text, fontSize: 16 },
-  placeholder: { color: NIGHT.textDim, fontSize: 16 },
-  chevron: { color: NIGHT.textDim, fontSize: 14 },
+  value: { color: p.text, fontSize: 16 },
+  placeholder: { color: p.textDim, fontSize: 16 },
+  chevron: { color: p.textDim, fontSize: 14 },
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", paddingHorizontal: 28 },
-  card: { backgroundColor: NIGHT.panel, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 14, paddingVertical: 12, maxHeight: "70%" },
-  title: { color: NIGHT.text, fontSize: 16, fontWeight: "600", paddingHorizontal: 16, paddingBottom: 8 },
+  card: { backgroundColor: p.panel, borderColor: p.border, borderWidth: 1, borderRadius: 14, paddingVertical: 12, maxHeight: "70%" },
+  title: { color: p.text, fontSize: 16, fontWeight: "600", paddingHorizontal: 16, paddingBottom: 8 },
   list: { paddingHorizontal: 8 },
   row: { paddingVertical: 12, paddingHorizontal: 12, borderRadius: 8 },
-  rowOn: { backgroundColor: NIGHT.border },
-  rowText: { color: NIGHT.text, fontSize: 15 },
-  rowTextOn: { color: NIGHT.live, fontWeight: "700" },
+  rowOn: { backgroundColor: p.border },
+  rowText: { color: p.text, fontSize: 15 },
+  rowTextOn: { color: p.live, fontWeight: "700" },
 });
