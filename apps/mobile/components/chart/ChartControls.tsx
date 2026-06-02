@@ -33,7 +33,8 @@ const FORMATS: { key: TimeFormat; label: string }[] = [
 ];
 const CVIEWS: { key: CompareView; label: string }[] = [
   { key: "both", label: "Both" },
-  { key: "pages", label: "Pages" },
+  { key: "pages", label: "Page" },
+  { key: "flip", label: "Flip" },
 ];
 
 const iosPicker = Platform.OS === "ios";

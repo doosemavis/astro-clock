@@ -7,8 +7,9 @@ import type { BirthData } from "@astro/engine";
 export type Mode = "birth" | "now" | "moment" | "range" | "compare";
 export type TimeFormat = "12h" | "24h";
 
-/** Mobile Compare presentation: both wheels stacked on one page, or a full-size pager. */
-export type CompareView = "both" | "pages";
+/** Mobile Compare presentation: both wheels stacked ("both"), a full-size horizontal
+ *  swipe pager ("pages"), or a single full-size wheel that coin-flips between charts ("flip"). */
+export type CompareView = "both" | "pages" | "flip";
 export interface Pace {
   label: string;
   rate: number; // sim-time ms advanced per real second
@@ -44,4 +45,12 @@ export function resolveDate(
   if (mode === "now") return new Date();
   if (mode === "moment") return new Date(momentMs);
   return new Date(rangeStart + pos * (rangeEnd - rangeStart));
+}
+
+/** Current page from a horizontal scroll offset — drives the Compare "Page" pager's dots.
+ *  Rounds to the nearest page and clamps into [0, count-1]; degenerate inputs → 0. */
+export function pageIndex(offsetX: number, pageWidth: number, count: number): number {
+  if (pageWidth <= 0 || count <= 0) return 0;
+  const i = Math.round(offsetX / pageWidth);
+  return Math.max(0, Math.min(count - 1, i));
 }
