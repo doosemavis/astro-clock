@@ -27,7 +27,7 @@ export default function App() {
   const [editing, setEditing] = useState(false);
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
   const [showMajor, setShowMajor] = useState(true);
-  const [showMinor, setShowMinor] = useState(true);
+  const [showMinor, setShowMinor] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
 
   // Load the saved birth on launch (falls back to DEFAULT_BIRTH).
