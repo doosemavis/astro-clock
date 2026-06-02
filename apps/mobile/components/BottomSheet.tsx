@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 import {
   Animated, PanResponder, Pressable, ScrollView, StyleSheet, useWindowDimensions, View,
 } from "react-native";
-import { NIGHT } from "@astro/engine";
+import type { Palette } from "@astro/engine";
+import { useTheme } from "../lib/theme";
 
 /** Height of the always-visible collapsed bar (handle + the view switcher peek). */
 export const SHEET_COLLAPSED_HEIGHT = 132;
@@ -24,6 +25,8 @@ interface Props {
  */
 export function BottomSheet({ children, onExpandedChange }: Props) {
   const { height: screenH } = useWindowDimensions();
+  const { palette: p } = useTheme();
+  const styles = useMemo(() => makeStyles(p), [p]);
   const expandedH = Math.round(screenH * 0.55); // fixed for all views
   const collapsedTY = Math.max(0, expandedH - SHEET_COLLAPSED_HEIGHT);
 
@@ -95,18 +98,18 @@ export function BottomSheet({ children, onExpandedChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (p: Palette) => StyleSheet.create({
   wrap: { ...StyleSheet.absoluteFillObject, justifyContent: "flex-end", pointerEvents: "box-none" },
   sheet: {
-    backgroundColor: NIGHT.panel,
+    backgroundColor: p.panel,
     marginHorizontal: 10,
     borderTopLeftRadius: 22, borderTopRightRadius: 22,
-    borderColor: NIGHT.border, borderWidth: 1,
+    borderColor: p.border, borderWidth: 1,
     paddingHorizontal: 14,
     overflow: "hidden",
   },
   scroll: { flex: 1 },
   content: { paddingBottom: 28 },
   handleHit: { alignItems: "center", paddingVertical: 10 },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: NIGHT.border },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: p.border },
 });
