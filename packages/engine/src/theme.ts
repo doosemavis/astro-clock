@@ -71,3 +71,14 @@ function smoothstep(x: number): number {
 export function solarT(date: Date, lat: number, lon: number): number {
   return smoothstep(sunAltitude(date, lat, lon) / 18);
 }
+
+/** A full palette blended NIGHT->DAY by t (0 = night, 1 = day). The object form of
+ *  themeVars(), for runtime styling (React Native has no CSS custom properties). */
+export function mixPalette(t: number): Palette {
+  t = Math.max(0, Math.min(1, t));
+  const out = {} as Palette;
+  (Object.keys(THEME_VARS) as (keyof Palette)[]).forEach((k) => {
+    out[k] = mixColor(NIGHT[k], DAY[k], t);
+  });
+  return out;
+}
