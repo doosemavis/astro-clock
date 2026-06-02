@@ -2,7 +2,8 @@ import { memo } from "react";
 import type { ReactElement } from "react";
 import { G, Circle, Line, Path, Text as SvgText, TextPath, Defs } from "react-native-svg";
 import { R, CX, CY, polar, arcPath, SIGNS } from "@astro/engine";
-import { C, CHART } from "./palette";
+import { CHART } from "./palette";
+import { useTheme } from "../../lib/theme";
 
 // Round to 2 decimals to keep path strings short and stable.
 const q = (n: number) => Math.round(n * 100) / 100;
@@ -24,6 +25,7 @@ interface Props {
 }
 
 function DialBase({ curvedLabels = true, idPrefix = "" }: Props) {
+  const { palette: p } = useTheme();
   const ticks: ReactElement[] = [];
   for (let t = 0; t < 360; t += 5) {
     if (t % 30 === 0) continue; // sign boundaries drawn separately
@@ -33,7 +35,7 @@ function DialBase({ curvedLabels = true, idPrefix = "" }: Props) {
       <Line
         key={`t${t}`}
         x1={q(x1)} y1={q(y1)} x2={q(x2)} y2={q(y2)}
-        stroke={C.line} strokeWidth={CHART.tickStroke} opacity={CHART.tickOpacity}
+        stroke={p.line} strokeWidth={CHART.tickStroke} opacity={CHART.tickOpacity}
       />,
     );
   }
@@ -48,7 +50,7 @@ function DialBase({ curvedLabels = true, idPrefix = "" }: Props) {
       <Line
         key={`b${s}`}
         x1={q(ix)} y1={q(iy)} x2={q(ox)} y2={q(oy)}
-        stroke={C.line} strokeWidth={CHART.boundStroke} opacity={CHART.boundOpacity}
+        stroke={p.line} strokeWidth={CHART.boundStroke} opacity={CHART.boundOpacity}
       />,
     );
 
@@ -59,7 +61,7 @@ function DialBase({ curvedLabels = true, idPrefix = "" }: Props) {
       labels.push(
         <SvgText
           key={`l${s}`}
-          fill={C.sign}
+          fill={p.sign}
           fontSize={CHART.signFontSize}
           letterSpacing={CHART.signLetterSpacing}
           textAnchor="middle"
@@ -77,7 +79,7 @@ function DialBase({ curvedLabels = true, idPrefix = "" }: Props) {
         <SvgText
           key={`l${s}`}
           x={q(lx)} y={q(ly)}
-          fill={C.sign}
+          fill={p.sign}
           fontSize={CHART.signFontSize}
           textAnchor="middle"
           dy={CHART.signFontSize * 0.35}
@@ -91,9 +93,9 @@ function DialBase({ curvedLabels = true, idPrefix = "" }: Props) {
   return (
     <G>
       <Defs>{defs}</Defs>
-      <Circle cx={CX} cy={CY} r={R.outer} fill="none" stroke={C.line} strokeWidth={CHART.ringStroke} opacity={CHART.ringOpacity} />
-      <Circle cx={CX} cy={CY} r={R.signInner} fill="none" stroke={C.line} strokeWidth={CHART.ringStroke} opacity={CHART.ringOpacity} />
-      <Circle cx={CX} cy={CY} r={R.liveRing} fill="none" stroke={C.line} strokeWidth={CHART.tickStroke} opacity={CHART.liveRingOpacity} />
+      <Circle cx={CX} cy={CY} r={R.outer} fill="none" stroke={p.line} strokeWidth={CHART.ringStroke} opacity={CHART.ringOpacity} />
+      <Circle cx={CX} cy={CY} r={R.signInner} fill="none" stroke={p.line} strokeWidth={CHART.ringStroke} opacity={CHART.ringOpacity} />
+      <Circle cx={CX} cy={CY} r={R.liveRing} fill="none" stroke={p.line} strokeWidth={CHART.tickStroke} opacity={CHART.liveRingOpacity} />
       {ticks}
       {bounds}
       {labels}

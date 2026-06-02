@@ -4,7 +4,7 @@ export { positions, sunAltitude, ascendant, birthInstant, dayNumber } from "./ep
 export { ASPECT_DEFS, separation, aspectBetween, findAspects } from "./aspects.ts";
 export { R, CX, CY, signOf, degInSign, formatDMS, polar, declutter, arcPath } from "./chart.ts";
 export {
-  NIGHT, DAY, THEME_VARS, mixColor, themeVars, aspectColor, solarT,
+  NIGHT, DAY, THEME_VARS, mixColor, themeVars, mixPalette, aspectColor, solarT,
   type Palette,
 } from "./theme.ts";
 export {

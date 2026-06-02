@@ -2,8 +2,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useFonts, NotoSansSymbols_400Regular } from "@expo-google-fonts/noto-sans-symbols";
-import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, NIGHT } from "@astro/engine";
-import type { BirthData } from "@astro/engine";
+import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, mixPalette, solarT } from "@astro/engine";
+import type { BirthData, Palette } from "@astro/engine";
 import { GLYPH_FONT, CHART } from "./components/chart/palette";
 import { ChartWheel } from "./components/chart/ChartWheel";
 import { CompareView } from "./components/chart/CompareView";
@@ -12,11 +12,16 @@ import { RangeHud } from "./components/chart/RangeHud";
 import { BottomSheet, SHEET_COLLAPSED_HEIGHT } from "./components/BottomSheet";
 import { BirthForm } from "./components/BirthForm";
 import { useChartClock } from "./hooks/useChartClock";
-import type { Mode, TimeFormat } from "./lib/chartModel";
+import { ThemeProvider } from "./lib/theme";
+import type { Mode, TimeFormat, ThemeMode } from "./lib/chartModel";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
 import { loadBirth, saveBirth } from "./lib/birthStore";
 
 const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "Date", range: "Range", compare: "Compare" };
+
+// Quantize the Auto theme value so the palette only re-blends ~50x across a day (not every
+// frame in Auto+Range), which bounds re-renders/style recreation.
+const quantize = (x: number) => Math.round(x * 50) / 50;
 
 export default function App() {
   // Gate on the glyph font: rendering planet glyphs before it loads would flash tofu.
@@ -30,6 +35,7 @@ export default function App() {
   const [showMajor, setShowMajor] = useState(true);
   const [showMinor, setShowMinor] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
 
   // Load the saved birth on launch (falls back to DEFAULT_BIRTH).
   useEffect(() => {
@@ -46,6 +52,16 @@ export default function App() {
   const compareBPos = useMemo(() => positions(new Date(clock.compareBMs)), [clock.compareBMs]);
   const cmpA = cmpCaption(clock.compareAMs, birth, timeFormat);
   const cmpB = cmpCaption(clock.compareBMs, birth, timeFormat);
+
+  // Theme: light=1 / dark=0 / auto=Sun altitude at the displayed moment (birth location).
+  const themeT = useMemo(() => {
+    if (themeMode === "light") return 1;
+    if (themeMode === "dark") return 0;
+    const inst = clock.mode === "compare" ? new Date(clock.compareAMs) : clock.displayInstant;
+    return quantize(solarT(inst, birth.lat, birth.lon));
+  }, [themeMode, clock.mode, clock.displayInstant, clock.compareAMs, birth.lat, birth.lon]);
+  const palette = useMemo(() => mixPalette(themeT), [themeT]);
+  const styles = useMemo(() => makeStyles(palette), [palette]);
 
   const displayName = birth.name && birth.name !== "You" ? birth.name : "Your chart";
 
@@ -66,7 +82,8 @@ export default function App() {
   }
 
   return (
-    <View style={styles.root}>
+    <ThemeProvider value={{ t: themeT, palette }}>
+      <View style={styles.root}>
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Text style={styles.brand}>MoveStar</Text>
@@ -107,6 +124,8 @@ export default function App() {
           clock={clock}
           timeFormat={timeFormat}
           onTimeFormat={setTimeFormat}
+          themeMode={themeMode}
+          onTheme={setThemeMode}
           showMajor={showMajor}
           onToggleMajor={() => setShowMajor((v) => !v)}
           showMinor={showMinor}
@@ -116,29 +135,30 @@ export default function App() {
 
       <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} />
       <StatusBar style="light" />
-    </View>
+      </View>
+    </ThemeProvider>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: NIGHT.bg },
+const makeStyles = (p: Palette) => StyleSheet.create({
+  root: { flex: 1, backgroundColor: p.bg },
   header: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 2 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  brand: { color: NIGHT.text, fontSize: 24, letterSpacing: 4, fontWeight: "600" },
+  brand: { color: p.text, fontSize: 24, letterSpacing: 4, fontWeight: "600" },
   editBtn: { paddingVertical: 4, paddingLeft: 12 },
-  editText: { color: NIGHT.live, fontSize: 15, letterSpacing: 1, textAlign: "right" },
-  bigThree: { color: NIGHT.textDim, fontSize: 14, letterSpacing: 1, textAlign: "center", marginBottom: 12 },
+  editText: { color: p.live, fontSize: 15, letterSpacing: 1, textAlign: "right" },
+  bigThree: { color: p.textDim, fontSize: 14, letterSpacing: 1, textAlign: "center", marginBottom: 12 },
   stage: { flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: SHEET_COLLAPSED_HEIGHT },
   wheelBox: { alignItems: "center", justifyContent: "center" },
   // Sits directly above the wheel with a 12px gap — never overlaps the circle.
   moment: {
-    color: NIGHT.text, fontSize: 13, letterSpacing: 0.5, textAlign: "center",
+    color: p.text, fontSize: 13, letterSpacing: 0.5, textAlign: "center",
     // Tabular figures: every digit is the same width, so the ticking seconds never
     // resize or re-center the pill — only the seconds glyphs change in place.
     fontVariant: ["tabular-nums"],
-    backgroundColor: NIGHT.panel, borderColor: NIGHT.border, borderWidth: 1,
+    backgroundColor: p.panel, borderColor: p.border, borderWidth: 1,
     borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, overflow: "hidden",
     marginBottom: 8,
   },
-  note: { color: NIGHT.textDim, fontSize: 13, letterSpacing: 2 },
+  note: { color: p.textDim, fontSize: 13, letterSpacing: 2 },
 });

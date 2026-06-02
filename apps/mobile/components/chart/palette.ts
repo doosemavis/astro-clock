@@ -1,8 +1,3 @@
-import { NIGHT } from "@astro/engine";
-
-/** Dark ("Celestial Midnight") palette — reused from the engine. Light/Auto is a later slice. */
-export const C = NIGHT;
-
 /** Bundled symbols-font family carrying the planet glyphs (☉☽☿…). Must match the
  *  key passed to useFonts() in App.tsx and the @expo-google-fonts export name. */
 export const GLYPH_FONT = "NotoSansSymbols_400Regular";

@@ -1,11 +1,11 @@
-import { memo, useRef, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
-import { NIGHT } from "@astro/engine";
-import type { Positions } from "@astro/engine";
+import type { Palette, Positions } from "@astro/engine";
 import { CHART } from "./palette";
 import { CompareWheel } from "./CompareWheel";
 import { pageIndex } from "../../lib/chartModel";
+import { useTheme } from "../../lib/theme";
 import { SHEET_COLLAPSED_HEIGHT } from "../BottomSheet";
 
 interface WheelData {
@@ -31,6 +31,8 @@ const FLIP_MS = 600;
 
 function CompareViewBase({ a, b, view, showMajor, showMinor }: Props) {
   const { width, height } = useWindowDimensions();
+  const { palette: p } = useTheme();
+  const styles = useMemo(() => makeStyles(p), [p]);
   const [page, setPage] = useState(0); // settled page in the "Page" swipe pager
   const [face, setFace] = useState(0); // up face in the "Flip" coin (0 = A, 1 = B)
   const anim = useRef(new Animated.Value(0)).current;
@@ -109,7 +111,7 @@ function CompareViewBase({ a, b, view, showMajor, showMinor }: Props) {
 
 export const CompareView = memo(CompareViewBase);
 
-const styles = StyleSheet.create({
+const makeStyles = (p: Palette) => StyleSheet.create({
   fill: { flex: 1, alignSelf: "stretch" },
   page: { alignItems: "center", justifyContent: "center", paddingBottom: SHEET_COLLAPSED_HEIGHT },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: SHEET_COLLAPSED_HEIGHT },
@@ -117,7 +119,7 @@ const styles = StyleSheet.create({
   stack: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10, paddingBottom: SHEET_COLLAPSED_HEIGHT },
   dotsAbs: { position: "absolute", bottom: SHEET_COLLAPSED_HEIGHT + 14, left: 0, right: 0, flexDirection: "row", justifyContent: "center", gap: 8 },
   dotsRow: { flexDirection: "row", justifyContent: "center", gap: 10, marginTop: 16 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: NIGHT.border },
-  dotOn: { backgroundColor: NIGHT.live, width: 9, height: 9, borderRadius: 4.5 },
-  hint: { color: NIGHT.textDim, fontSize: 12, marginTop: 10, letterSpacing: 0.5 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: p.border },
+  dotOn: { backgroundColor: p.live, width: 9, height: 9, borderRadius: 4.5 },
+  hint: { color: p.textDim, fontSize: 12, marginTop: 10, letterSpacing: 0.5 },
 });

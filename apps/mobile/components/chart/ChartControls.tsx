@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { NIGHT } from "@astro/engine";
+import type { Palette } from "@astro/engine";
+import { useTheme } from "../../lib/theme";
 import { PACES } from "../../lib/chartModel";
-import type { Mode, TimeFormat, CompareView } from "../../lib/chartModel";
+import type { Mode, TimeFormat, CompareView, ThemeMode } from "../../lib/chartModel";
 import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
@@ -18,6 +19,8 @@ interface Props {
   onToggleMajor: () => void;
   showMinor: boolean;
   onToggleMinor: () => void;
+  themeMode: ThemeMode;
+  onTheme: (m: ThemeMode) => void;
 }
 
 const MODES: { key: Mode; label: string }[] = [
@@ -36,11 +39,18 @@ const CVIEWS: { key: CompareView; label: string }[] = [
   { key: "pages", label: "Page" },
   { key: "flip", label: "Flip" },
 ];
+const THEMES: { key: ThemeMode; label: string }[] = [
+  { key: "light", label: "Light" },
+  { key: "dark", label: "Dark" },
+  { key: "auto", label: "Auto" },
+];
 
 const iosPicker = Platform.OS === "ios";
 
 /** A bordered, labelled container — mirrors the web Panel's <fieldset>/<legend> blocks. */
 function Section({ label, children }: { label: string; children: ReactNode }) {
+  const { palette: p } = useTheme();
+  const styles = useMemo(() => makeStyles(p), [p]);
   return (
     <View style={styles.section}>
       <Text style={styles.legend}>{label}</Text>
@@ -51,7 +61,10 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 
 export function ChartControls({
   clock, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
+  themeMode, onTheme,
 }: Props) {
+  const { palette: pal } = useTheme();
+  const styles = useMemo(() => makeStyles(pal), [pal]);
   const {
     mode, setMode, momentMs, setMomentMs,
     rangeStartMs, setRangeStartMs, rangeEndMs, setRangeEndMs,
@@ -116,6 +129,10 @@ export function ChartControls({
         <Segmented options={FORMATS} value={timeFormat} onChange={onTimeFormat} />
       </Section>
 
+      <Section label="Theme">
+        <Segmented options={THEMES} value={themeMode} onChange={onTheme} />
+      </Section>
+
       <Section label="Aspects">
         <View style={styles.rowTight}>
           <Pressable style={[styles.btn, showMajor && styles.btnOn]} onPress={onToggleMajor}>
@@ -140,6 +157,8 @@ function DateField({
   onChange: (ms: number) => void;
   withTime?: boolean;
 }) {
+  const { palette: p } = useTheme();
+  const styles = useMemo(() => makeStyles(p), [p]);
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const d = new Date(valueMs);
@@ -164,7 +183,7 @@ function DateField({
           <DateTimePicker
             value={d} mode="date"
             display={iosPicker ? "spinner" : "default"}
-            textColor={NIGHT.text}
+            textColor={p.text}
             onChange={(_e: DateTimePickerEvent, picked?: Date) => {
               if (!iosPicker) setShowDate(false);
               if (picked) {
@@ -186,7 +205,7 @@ function DateField({
           <DateTimePicker
             value={d} mode="time"
             display={iosPicker ? "spinner" : "default"}
-            textColor={NIGHT.text}
+            textColor={p.text}
             onChange={(_e: DateTimePickerEvent, picked?: Date) => {
               if (!iosPicker) setShowTime(false);
               if (picked) {
@@ -207,34 +226,34 @@ function DateField({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (p: Palette) => StyleSheet.create({
   section: {
-    borderColor: NIGHT.border, borderWidth: 1, borderRadius: 12,
+    borderColor: p.border, borderWidth: 1, borderRadius: 12,
     paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12,
     marginTop: 12,
   },
-  legend: { color: NIGHT.seclabel, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 },
+  legend: { color: p.seclabel, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 },
   subLegend: { marginTop: 14 },
   row: { flexDirection: "row", gap: 8, marginTop: 10 },
   rowTight: { flexDirection: "row", gap: 8 },
   flex1: { flex: 1 },
-  btn: { flex: 1, paddingVertical: 11, borderRadius: 9, alignItems: "center", backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1 },
-  btnOn: { backgroundColor: NIGHT.live, borderColor: NIGHT.live },
-  btnPrimary: { backgroundColor: NIGHT.live, borderColor: NIGHT.live },
-  btnText: { color: NIGHT.text, fontSize: 14, fontWeight: "600" },
-  btnPrimaryText: { color: NIGHT.bg, fontSize: 14, fontWeight: "700" },
-  btnTextOn: { color: NIGHT.bg, fontWeight: "700" },
+  btn: { flex: 1, paddingVertical: 11, borderRadius: 9, alignItems: "center", backgroundColor: p.bg, borderColor: p.border, borderWidth: 1 },
+  btnOn: { backgroundColor: p.live, borderColor: p.live },
+  btnPrimary: { backgroundColor: p.live, borderColor: p.live },
+  btnText: { color: p.text, fontSize: 14, fontWeight: "600" },
+  btnPrimaryText: { color: p.bg, fontSize: 14, fontWeight: "700" },
+  btnTextOn: { color: p.bg, fontWeight: "700" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
-  chip: { paddingVertical: 6, paddingHorizontal: 11, borderRadius: 14, borderColor: NIGHT.border, borderWidth: 1 },
-  chipOn: { backgroundColor: NIGHT.live, borderColor: NIGHT.live },
-  chipText: { color: NIGHT.textDim, fontSize: 12 },
-  chipTextOn: { color: NIGHT.bg, fontWeight: "700" },
+  chip: { paddingVertical: 6, paddingHorizontal: 11, borderRadius: 14, borderColor: p.border, borderWidth: 1 },
+  chipOn: { backgroundColor: p.live, borderColor: p.live },
+  chipText: { color: p.textDim, fontSize: 12 },
+  chipTextOn: { color: p.bg, fontWeight: "700" },
   field: { marginTop: 4 },
-  fieldLabel: { color: NIGHT.textDim, fontSize: 12, marginBottom: 4, marginTop: 6 },
-  input: { backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, justifyContent: "center" },
-  inputText: { color: NIGHT.text, fontSize: 15 },
-  pickerWrap: { backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 8, marginTop: 6 },
+  fieldLabel: { color: p.textDim, fontSize: 12, marginBottom: 4, marginTop: 6 },
+  input: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, justifyContent: "center" },
+  inputText: { color: p.text, fontSize: 15 },
+  pickerWrap: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 8, marginTop: 6 },
   pickerDone: { alignSelf: "flex-end", paddingHorizontal: 16, paddingVertical: 10 },
-  pickerDoneText: { color: NIGHT.live, fontSize: 15, fontWeight: "600" },
-  note: { color: NIGHT.textDim, fontSize: 12, marginTop: 10, lineHeight: 17 },
+  pickerDoneText: { color: p.live, fontSize: 15, fontWeight: "600" },
+  note: { color: p.textDim, fontSize: 12, marginTop: 10, lineHeight: 17 },
 });

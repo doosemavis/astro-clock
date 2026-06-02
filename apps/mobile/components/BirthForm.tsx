@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Modal, View, Text, TextInput, Pressable, ScrollView,
   ActivityIndicator, StyleSheet, Platform, KeyboardAvoidingView, Animated,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { NIGHT } from "@astro/engine";
-import type { BirthData } from "@astro/engine";
+import type { BirthData, Palette } from "@astro/engine";
+import { useTheme } from "../lib/theme";
 import { searchPlaces } from "../lib/geocode";
 import type { PlaceResult } from "../lib/geocode";
 import { offsetHoursAt } from "../lib/timezone";
@@ -30,6 +30,8 @@ const strToDate = (date: string, time: string) => {
 };
 
 export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
+  const { palette: p } = useTheme();
+  const styles = useMemo(() => makeStyles(p), [p]);
   const [name, setName] = useState(initial.name ?? "");
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
@@ -146,7 +148,7 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
             <Text style={styles.label}>Name</Text>
             <TextInput style={styles.input} value={name} onChangeText={setName}
-              placeholder="You" placeholderTextColor={NIGHT.textDim} />
+              placeholder="You" placeholderTextColor={p.textDim} />
 
             <Text style={styles.label}>Birth date</Text>
             <Pressable style={styles.input} onPress={() => { setShowTime(false); setShowDate((s) => !s); }}>
@@ -157,7 +159,7 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
                 <DateTimePicker
                   value={strToDate(date, time)} mode="date"
                   display={iosPicker ? "spinner" : "default"}
-                  textColor={NIGHT.text}
+                  textColor={p.text}
                   onChange={(_e: DateTimePickerEvent, d?: Date) => { if (!iosPicker) setShowDate(false); if (d) setDate(dateToStr(d)); }}
                 />
                 {iosPicker ? (
@@ -177,7 +179,7 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
                 <DateTimePicker
                   value={strToDate(date, time)} mode="time"
                   display={iosPicker ? "spinner" : "default"}
-                  textColor={NIGHT.text}
+                  textColor={p.text}
                   onChange={(_e: DateTimePickerEvent, d?: Date) => { if (!iosPicker) setShowTime(false); if (d) setTime(timeToStr(d)); }}
                 />
                 {iosPicker ? (
@@ -193,8 +195,8 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
               <Text style={styles.resolved}>📍 {placeLabel}{ianaTz ? `  ·  ${ianaTz}` : ""}</Text>
             ) : null}
             <TextInput style={styles.input} value={query} onChangeText={setQuery}
-              placeholder="Search a city…" placeholderTextColor={NIGHT.textDim} autoCorrect={false} />
-            {searching ? <ActivityIndicator color={NIGHT.live} style={styles.spinner} /> : null}
+              placeholder="Search a city…" placeholderTextColor={p.textDim} autoCorrect={false} />
+            {searching ? <ActivityIndicator color={p.live} style={styles.spinner} /> : null}
             {searchError ? <Text style={styles.hint}>{searchError}</Text> : null}
             {results.map((r, i) => (
               <Pressable key={`${r.lat},${r.lon},${i}`} style={styles.result} onPress={() => pickPlace(r)}>
@@ -211,12 +213,12 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
                 <TextInput style={styles.input} keyboardType="numbers-and-punctuation"
                   value={lat === null ? "" : String(lat)}
                   onChangeText={(t) => setLat(t === "" || t === "-" ? null : Number(t))}
-                  placeholder="-90 to 90" placeholderTextColor={NIGHT.textDim} />
+                  placeholder="-90 to 90" placeholderTextColor={p.textDim} />
                 <Text style={styles.label}>Longitude</Text>
                 <TextInput style={styles.input} keyboardType="numbers-and-punctuation"
                   value={lon === null ? "" : String(lon)}
                   onChangeText={(t) => setLon(t === "" || t === "-" ? null : Number(t))}
-                  placeholder="-180 to 180" placeholderTextColor={NIGHT.textDim} />
+                  placeholder="-180 to 180" placeholderTextColor={p.textDim} />
                 <Text style={styles.label}>Birth timezone</Text>
                 <OffsetSelect valueZone={ianaTz} date={date} time={time} onChange={setIanaTz} />
               </View>
@@ -238,11 +240,11 @@ export function BirthForm({ visible, initial, onSave, onCancel }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (p: Palette) => StyleSheet.create({
   root: { flex: 1, justifyContent: "flex-start" },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.55)" },
   sheet: {
-    backgroundColor: NIGHT.panel,
+    backgroundColor: p.panel,
     borderBottomLeftRadius: 18, borderBottomRightRadius: 18,
     paddingHorizontal: 18,
     paddingTop: Platform.OS === "ios" ? 54 : 28,
@@ -250,24 +252,24 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
   },
   scroll: { marginBottom: 12 },
-  title: { color: NIGHT.text, fontSize: 20, fontWeight: "600", marginBottom: 10 },
-  label: { color: NIGHT.seclabel, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginTop: 12, marginBottom: 4 },
-  input: { backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: NIGHT.text, fontSize: 16, justifyContent: "center" },
-  inputText: { color: NIGHT.text, fontSize: 16 },
-  pickerWrap: { backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1, borderRadius: 8, marginTop: 6 },
+  title: { color: p.text, fontSize: 20, fontWeight: "600", marginBottom: 10 },
+  label: { color: p.seclabel, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginTop: 12, marginBottom: 4 },
+  input: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: p.text, fontSize: 16, justifyContent: "center" },
+  inputText: { color: p.text, fontSize: 16 },
+  pickerWrap: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 8, marginTop: 6 },
   pickerDone: { alignSelf: "flex-end", paddingHorizontal: 16, paddingVertical: 10 },
-  pickerDoneText: { color: NIGHT.live, fontSize: 15, fontWeight: "600" },
-  resolved: { color: NIGHT.live, fontSize: 13, marginBottom: 6 },
+  pickerDoneText: { color: p.live, fontSize: 15, fontWeight: "600" },
+  resolved: { color: p.live, fontSize: 13, marginBottom: 6 },
   spinner: { marginVertical: 6 },
-  hint: { color: NIGHT.textDim, fontSize: 13, marginTop: 6 },
-  result: { paddingVertical: 10, paddingHorizontal: 8, borderBottomColor: NIGHT.border, borderBottomWidth: 1 },
-  resultText: { color: NIGHT.text, fontSize: 15 },
+  hint: { color: p.textDim, fontSize: 13, marginTop: 6 },
+  result: { paddingVertical: 10, paddingHorizontal: 8, borderBottomColor: p.border, borderBottomWidth: 1 },
+  resultText: { color: p.text, fontSize: 15 },
   advancedToggle: { marginTop: 16, paddingVertical: 6 },
-  advancedText: { color: NIGHT.textDim, fontSize: 14 },
+  advancedText: { color: p.textDim, fontSize: 14 },
   error: { color: "#ff6b6b", fontSize: 14, marginTop: 12 },
   footer: { flexDirection: "row", gap: 12 },
   btn: { flex: 1, paddingVertical: 13, borderRadius: 10, alignItems: "center" },
-  cancel: { backgroundColor: NIGHT.bg, borderColor: NIGHT.border, borderWidth: 1 },
-  save: { backgroundColor: NIGHT.border },
-  btnText: { color: NIGHT.text, fontSize: 16, fontWeight: "600" },
+  cancel: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1 },
+  save: { backgroundColor: p.border },
+  btnText: { color: p.text, fontSize: 16, fontWeight: "600" },
 });
