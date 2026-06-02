@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import type { Palette } from "@astro/engine";
 import { GLYPH_FONT } from "./chart/palette";
 import { useTheme } from "../lib/theme";
@@ -10,21 +10,29 @@ interface Props {
   size?: number;
 }
 
-/** A circular avatar. Default content is the user's sign glyph; a future `imageUri` could
- *  render an <Image> instead. Themed via useTheme. */
+/** A circular avatar. Default content is the user's sign glyph, centered with the same
+ *  baseline trick the chart layers use (textAnchor="middle" + dy ≈ 0.35·fontSize) so the
+ *  symbol sits dead-center on web and device. A future `imageUri` could render an image. */
 function AvatarBase({ glyph, size = 42 }: Props) {
   const { palette: p } = useTheme();
-  const s = styles(p);
+  const r = size / 2;
+  const fs = size * 0.5;
   return (
-    <View style={[s.circle, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Text style={[s.glyph, { fontSize: size * 0.5 }]}>{glyph}</Text>
-    </View>
+    <Svg width={size} height={size}>
+      <Circle cx={r} cy={r} r={r - 1} fill={p.panel} stroke={p.live} strokeWidth={1.5} />
+      <SvgText
+        x={r}
+        y={r}
+        dy={fs * 0.35}
+        fill={p.live}
+        fontFamily={GLYPH_FONT}
+        fontSize={fs}
+        textAnchor="middle"
+      >
+        {glyph}
+      </SvgText>
+    </Svg>
   );
 }
 
 export const Avatar = memo(AvatarBase);
-
-const styles = (p: Palette) => StyleSheet.create({
-  circle: { borderWidth: 1.5, borderColor: p.live, backgroundColor: p.panel, alignItems: "center", justifyContent: "center" },
-  glyph: { fontFamily: GLYPH_FONT, color: p.live },
-});
