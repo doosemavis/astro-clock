@@ -12,3 +12,9 @@ export function validatePassword(pw: string): PasswordCheck {
   if (!/[0-9]/.test(pw)) problems.push("a number");
   return { ok: problems.length === 0, problems };
 }
+
+/** True only when both fields are non-empty and identical. Pure; used by the signup form's
+ *  confirm-password gate (client-side UX — Supabase only stores one password). */
+export function passwordsMatch(password: string, confirm: string): boolean {
+  return password.length > 0 && password === confirm;
+}
