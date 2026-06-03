@@ -15,10 +15,10 @@ export const CHART = {
   tickLength: 8,
   tokenStroke: 2.1,
   wheelPadding: 24,
-  signFontSize: 17,
+  signFontSize: 22,
   signLetterSpacing: 2.5,
   signSpan: 28,
-  natalGlyphSize: 22,
+  natalGlyphSize: 24,
   natalTokenR: 16,
-  liveGlyphSize: 31,
+  liveGlyphSize: 33,
 } as const;
