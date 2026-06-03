@@ -7,13 +7,16 @@ import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { useAuth } from "../../lib/auth";
 import { validatePassword } from "../../lib/password";
+import { useEffect } from "react";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { passwordsMatch } from "../../lib/password";
 
 type Mode = "signin" | "signup";
 
 export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { palette: p } = useTheme();
+  const { palette: p, t } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
 
   const [mode, setMode] = useState<Mode>("signin");
   const [name, setName] = useState("");
@@ -22,37 +25,56 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState("");
+  const [showOAuthHint, setShowOAuthHint] = useState(false);
+  const [appleReady, setAppleReady] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    let active = true;
+    AppleAuthentication.isAvailableAsync()
+      .then((ok) => { if (active) setAppleReady(ok); })
+      .catch(() => { if (active) setAppleReady(false); });
+    return () => { active = false; };
+  }, []);
 
   const pw = validatePassword(password);
   const isIos = Platform.OS === "ios";
 
   function reset() {
-    setName(""); setEmail(""); setPassword("");
-    setError(null); setInfo(null); setBusy(false);
+    setName(""); setEmail(""); setPassword(""); setConfirm("");
+    setError(null); setInfo(null); setBusy(false); setShowOAuthHint(false);
   }
   function close() { reset(); onClose(); }
 
   async function onSubmit() {
-    setError(null); setInfo(null);
+    setError(null); setInfo(null); setShowOAuthHint(false);
     if (mode === "signup") {
       if (!pw.ok) { setError(`Password needs ${pw.problems.join(", ")}.`); return; }
+      if (!passwordsMatch(password, confirm)) { setError("Passwords don't match."); return; }
       setBusy(true);
       const r = await signUp(email.trim(), password, name.trim());
       setBusy(false);
       if (r.error) { setError(r.error); return; }
+      if (r.alreadyExists) {
+        setMode("signin");
+        setPassword(""); setConfirm("");
+        setError("An account with this email already exists. Sign in below — if you first used Google or Apple, use those buttons above.");
+        return;
+      }
       if (r.needsConfirm) {
         setInfo("Check your email to confirm your account, then sign in.");
         setMode("signin");
-        setPassword("");
+        setPassword(""); setConfirm("");
         return;
       }
-      close(); // confirmation off → session active → done
+      close();
       return;
     }
     setBusy(true);
     const r = await signIn(email.trim(), password);
     setBusy(false);
-    if (r.error) { setError(r.error); return; }
+    if (r.error) { setError(r.error); setShowOAuthHint(true); return; }
     close();
   }
 
@@ -65,7 +87,18 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
     close();
   }
 
-  const submitDisabled = busy || !email.trim() || !password || (mode === "signup" && !pw.ok);
+  async function onApple() {
+    setError(null); setInfo(null); setShowOAuthHint(false); setBusy(true);
+    const r = await signInWithApple();
+    setBusy(false);
+    if (r.error) { setError(r.error); return; }
+    if (r.cancelled) return;
+    close();
+  }
+
+  const submitDisabled =
+    busy || !email.trim() || !password ||
+    (mode === "signup" && (!pw.ok || !passwordsMatch(password, confirm)));
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={close}>
@@ -75,6 +108,19 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
           <Text style={styles.brand}>MoveStar</Text>
           <Text style={styles.title}>{mode === "signin" ? "Sign in" : "Create account"}</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
+            {appleReady && (
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                buttonStyle={
+                  t < 0.5
+                    ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                    : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                }
+                cornerRadius={10}
+                style={styles.apple}
+                onPress={onApple}
+              />
+            )}
             <Pressable style={styles.google} onPress={onGoogle} disabled={busy}>
               <Text style={styles.googleText}>Continue with Google</Text>
             </Pressable>
@@ -97,11 +143,24 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
             <TextInput style={styles.input} value={password} onChangeText={setPassword}
               placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
 
+            {mode === "signup" && (
+              <>
+                <Text style={styles.label}>Confirm password</Text>
+                <TextInput style={styles.input} value={confirm} onChangeText={setConfirm}
+                  placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
+                {confirm.length > 0 && confirm !== password && (
+                  <Text style={styles.hint}>Passwords don't match.</Text>
+                )}
+              </>
+            )}
             {mode === "signup" && password.length > 0 && !pw.ok && (
               <Text style={styles.hint}>Needs {pw.problems.join(", ")}.</Text>
             )}
             {error ? <Text style={styles.err}>{error}</Text> : null}
             {info ? <Text style={styles.ok}>{info}</Text> : null}
+            {mode === "signin" && showOAuthHint && (
+              <Text style={styles.hint}>Used Google or Apple before? Use the buttons above.</Text>
+            )}
           </ScrollView>
 
           <Pressable style={[styles.submit, submitDisabled && styles.submitOff]} onPress={onSubmit} disabled={submitDisabled}>
@@ -131,6 +190,7 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   brand: { color: p.text, fontSize: 18, letterSpacing: 3, fontWeight: "600", textAlign: "center" },
   title: { color: p.text, fontSize: 22, fontWeight: "700", textAlign: "center", marginTop: 4, marginBottom: 10 },
   scroll: { marginBottom: 12 },
+  apple: { height: 48, marginBottom: 10 },
   google: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 10, paddingVertical: 13, alignItems: "center" },
   googleText: { color: p.text, fontSize: 16, fontWeight: "600" },
   dividerRow: { flexDirection: "row", alignItems: "center", gap: 10, marginVertical: 14 },
