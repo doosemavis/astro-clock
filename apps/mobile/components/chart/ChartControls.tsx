@@ -191,7 +191,7 @@ function DateField({
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const d = new Date(valueMs);
-  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" });
   const timeOpts: Intl.DateTimeFormatOptions = timeFormat === "24h"
     ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
     : { hour: "2-digit", minute: "2-digit", hour12: true };

@@ -33,7 +33,7 @@ export function ZonedMomentField({ label, moment, onChange, timeFormat }: Props)
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const d = fromStr(moment.date, moment.time);
-  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" });
   const opts: Intl.DateTimeFormatOptions = timeFormat === "24h"
     ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
     : { hour: "2-digit", minute: "2-digit", hour12: true };
