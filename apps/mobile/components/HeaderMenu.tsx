@@ -23,10 +23,14 @@ export function HeaderMenu({ visible, signedIn, onClose, onAuth, onEditBirth }: 
         <Pressable style={styles.item} onPress={onAuth}>
           <Text style={styles.itemText}>{signedIn ? "Account" : "Sign in"}</Text>
         </Pressable>
-        <View style={styles.divider} />
-        <Pressable style={styles.item} onPress={onEditBirth}>
-          <Text style={styles.itemText}>Edit birth details</Text>
-        </Pressable>
+        {signedIn ? (
+          <>
+            <View style={styles.divider} />
+            <Pressable style={styles.item} onPress={onEditBirth}>
+              <Text style={styles.itemText}>Edit birth details</Text>
+            </Pressable>
+          </>
+        ) : null}
       </View>
     </Modal>
   );
