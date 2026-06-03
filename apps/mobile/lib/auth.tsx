@@ -4,6 +4,9 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { interpretSignUp } from "./authResult";
+import { buildAppleIdTokenParams, appleFullNameToString, isAppleCancel } from "./appleAuth";
 
 /** Result shape for the auth actions: `error` set on failure; `needsConfirm` set when
  *  signUp created an unconfirmed account (email confirmation is ON on the project). */
@@ -11,6 +14,7 @@ export interface AuthResult {
   error?: string;
   needsConfirm?: boolean;
   cancelled?: boolean;
+  alreadyExists?: boolean;
 }
 
 interface AuthValue {
@@ -20,6 +24,7 @@ interface AuthValue {
   signUp: (email: string, password: string, name: string) => Promise<AuthResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signInWithGoogle: () => Promise<AuthResult>;
+  signInWithApple: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
 }
 
@@ -45,8 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email, password, options: { data: { name } },
     });
     if (error) return { error: error.message };
-    // With email confirmation ON, signUp returns no session until the link is clicked.
-    return { needsConfirm: !data.session };
+    // Classify the (obfuscated) response: already-registered emails come back with an empty
+    // identities[] and no session; a new account has identities + no session (spec §3.3).
+    const outcome = interpretSignUp(data);
+    if (outcome === "already_exists") return { alreadyExists: true };
+    if (outcome === "needs_confirm") return { needsConfirm: true };
+    return {};
   }
 
   async function signIn(email: string, password: string): Promise<AuthResult> {
@@ -73,13 +82,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return exErr ? { error: exErr.message } : {};
   }
 
+  async function signInWithApple(): Promise<AuthResult> {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      const { error } = await supabase.auth.signInWithIdToken(
+        buildAppleIdTokenParams(credential.identityToken),
+      );
+      if (error) return { error: error.message };
+
+      // Apple returns the name ONLY on the first authorization — capture it best-effort into
+      // user_metadata.name (what AccountView reads). Must never fail the sign-in.
+      const name = appleFullNameToString(credential.fullName);
+      if (name) {
+        try {
+          await supabase.auth.updateUser({ data: { name } });
+        } catch (e) {
+          console.warn("Apple name capture failed (non-fatal):", e);
+        }
+      }
+      return {};
+    } catch (e) {
+      if (isAppleCancel(e)) return { cancelled: true }; // user dismissed the sheet — not an error
+      return { error: e instanceof Error ? e.message : "Apple sign-in failed." };
+    }
+  }
+
   async function signOut(): Promise<void> {
     await supabase.auth.signOut();
   }
 
   return (
     <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, loading, signUp, signIn, signInWithGoogle, signOut }}
+      value={{ session, user: session?.user ?? null, loading, signUp, signIn, signInWithGoogle, signInWithApple, signOut }}
     >
       {children}
     </AuthContext.Provider>
