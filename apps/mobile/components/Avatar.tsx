@@ -3,6 +3,7 @@ import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import type { Palette } from "@astro/engine";
 import { GLYPH_FONT } from "./chart/palette";
 import { useTheme } from "../lib/theme";
+import { textGlyph } from "../lib/glyph";
 
 interface Props {
   /** Glyph shown as the default avatar image (the user's sign). */
@@ -35,7 +36,7 @@ function AvatarBase({ glyph, size = 42 }: Props) {
     <Svg width={size} height={size}>
       <Circle cx={r} cy={r} r={r - 1} fill={p.panel} stroke={p.live} strokeWidth={1.5} />
       <SvgText x={r} y={baselineY} fill={p.live} fontFamily={GLYPH_FONT} fontSize={fs} textAnchor="middle">
-        {glyph}
+        {textGlyph(glyph)}
       </SvgText>
     </Svg>
   );

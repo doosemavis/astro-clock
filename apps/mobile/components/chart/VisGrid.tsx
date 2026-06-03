@@ -4,6 +4,7 @@ import { PLANET_KEYS, PLANET_GLYPH } from "@astro/engine";
 import type { Palette, PlanetKey } from "@astro/engine";
 import { GLYPH_FONT } from "./palette";
 import { useTheme } from "../../lib/theme";
+import { textGlyph } from "../../lib/glyph";
 import type { Vis, Layer } from "../../lib/chartModel";
 
 interface Props {
@@ -48,7 +49,7 @@ function VisGridBase({ vis, onToggle }: Props) {
       </View>
       {PLANET_KEYS.map((key) => (
         <View key={key} style={s.row}>
-          <Text style={s.name}><Text style={s.glyph}>{PLANET_GLYPH[key]}</Text>  {cap(key)}</Text>
+          <Text style={s.name}><Text style={s.glyph}>{textGlyph(PLANET_GLYPH[key])}</Text>  {cap(key)}</Text>
           <View style={s.col}><Check on={vis.natal[key]} onPress={() => onToggle(key, "natal")} /></View>
           <View style={s.col}><Check on={vis.live[key]} onPress={() => onToggle(key, "live")} /></View>
         </View>
