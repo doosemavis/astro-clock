@@ -47,8 +47,9 @@ the platform end-state is documented in §2 and memory `auth-provider-platform-m
   | Web app | yes (later slice) | yes | yes |
 
 - **Apple Sign-In = native, iOS-only.** `expo-apple-authentication` →
-  `supabase.auth.signInWithIdToken({ provider: 'apple', token, nonce })`. Requires a dev/standalone
-  build (Expo Go cannot do native Apple auth).
+  `supabase.auth.signInWithIdToken({ provider: 'apple', token })`. **No client nonce** — the
+  documented Supabase Expo flow relies on Apple-token *signature* verification, not a nonce.
+  Requires a dev/standalone build (Expo Go cannot do native Apple auth).
 - **"Add password to an OAuth account" = messaging only.** When an OAuth-only user tries to create
   a password account on the same email, we detect it and guide them to sign in, rather than build
   an add-password flow.
@@ -80,13 +81,15 @@ the behavior:
 
 - Add **`signInWithApple(): Promise<AuthResult>`** to the `AuthValue` interface, mirroring
   `signInWithGoogle` and returning the same envelope (`{ error? }`, `{ cancelled? }`).
-- **Flow** (extracted into a small `apps/mobile/lib/appleAuth.ts` for testability):
-  1. Generate a random nonce; SHA-256 hash it (`expo-crypto`).
-  2. `AppleAuthentication.signInAsync({ requestedScopes: [FULL_NAME, EMAIL], nonce: hashedNonce })`.
-  3. `supabase.auth.signInWithIdToken({ provider: 'apple', token: credential.identityToken,
-     nonce: rawNonce })` — Supabase validates the token + nonce and auto-links by verified email.
+- **Flow** (pure helpers extracted into `apps/mobile/lib/appleAuth.ts` for testability; the native
+  calls live in `auth.tsx`):
+  1. `AppleAuthentication.signInAsync({ requestedScopes: [FULL_NAME, EMAIL] })`.
+  2. `supabase.auth.signInWithIdToken({ provider: 'apple', token: credential.identityToken })` —
+     Supabase verifies the token signature against Apple's public keys and auto-links by verified
+     email.
 - **Name capture quirk:** Apple returns `fullName` **only on the first authorization**. On success,
-  if `fullName` is present and `profiles.display_name` is empty, write it (best-effort; §7).
+  if present, call `supabase.auth.updateUser({ data: { name } })` (best-effort; §7). This sets
+  `user_metadata.name`, which is exactly what `AccountView` already reads.
 - **Cancel:** `ERR_REQUEST_CANCELED` → `{ cancelled: true }` (sheet stays open), like Google.
 
 ### 3.3 Graceful messaging — `apps/mobile/lib/authResult.ts` + `auth.tsx` + `LoginScreen.tsx`
@@ -123,9 +126,10 @@ the behavior:
 
 | Unit | Responsibility | Depends on |
 |---|---|---|
-| `apps/mobile/lib/appleAuth.ts` | nonce + Apple credential → `signInWithIdToken` args (pure-ish, testable) | expo-apple-authentication, expo-crypto |
+| `apps/mobile/lib/appleAuth.ts` | pure helpers: `buildAppleIdTokenParams`, `appleFullNameToString`, `isAppleCancel` (local credential type — no native import) | — |
 | `apps/mobile/lib/authResult.ts` | pure `interpretSignUp(data)` classifier | — |
-| `apps/mobile/lib/auth.tsx` | add `signInWithApple`; map `signUp` via `interpretSignUp`; best-effort Apple name write | supabase client, appleAuth, authResult |
+| `apps/mobile/lib/password.ts` | add pure `passwordsMatch(a, b)` (lockstep file) | — |
+| `apps/mobile/lib/auth.tsx` | add `signInWithApple` (native calls here); map `signUp` via `interpretSignUp`; best-effort Apple name via `updateUser` | supabase client, expo-apple-authentication, appleAuth, authResult |
 | `apps/mobile/components/auth/LoginScreen.tsx` | Apple button (iOS-gated), confirm-password field, "already exists" + sign-in-fail messaging | auth, password, AppleAuthentication |
 | `supabase/migrations/<ts>_merge_duplicate_users.sql` | one-time idempotent dupe merge | — |
 
@@ -140,7 +144,7 @@ No changes to `supabase.ts`, `AccountView.tsx`, or the web app in this slice.
 - **Google/Apple first → tries password signup (same email):** `signUp` returns empty `identities`
   → `interpretSignUp` → `already_exists` → `LoginScreen` guides to sign in via the OAuth button.
 - **Apple first-time sign-in:** id-token exchange creates/links the user; `fullName` (first time
-  only) written to `profiles.display_name` if empty.
+  only) written to `user_metadata.name` via `updateUser` (best-effort).
 - **Cleanup (one-time):** migration finds same-email duplicate `auth.users`, picks canonical,
   re-points app data, deletes dupes; lost OAuth identities self-heal on next sign-in via auto-link.
 
@@ -180,11 +184,13 @@ Exact SQL is drafted in the implementation plan.
 
 ## 8. Testing
 
-- **Unit (Jest, mobile):**
+- **Unit (`node --test --experimental-strip-types "lib/*.test.ts"`, mobile — pure modules only,
+  no RN/native imports):**
   - `interpretSignUp`: empty `identities` → already_exists; non-empty + no session → needs_confirm;
     session → success.
-  - confirm-password matching + policy gating (with `validatePassword`).
-  - `appleAuth`: mocked `AppleAuthentication` credential + nonce → correct `signInWithIdToken` args.
+  - `passwordsMatch`: equal non-empty → true; mismatch / either empty → false.
+  - `appleAuth`: `buildAppleIdTokenParams` (token → args; null token throws), `appleFullNameToString`
+    (parts join / null), `isAppleCancel` (cancel code → true, else false).
 - **Manual QA (auto-link is server behavior — not unit-testable):**
   1. email/pw → confirm → Google same email → **same user id**.
   2. Google first → email/pw signup same email → **"already exists"** message.
@@ -209,8 +215,8 @@ Exact SQL is drafted in the implementation plan.
 
 - Linking relies on Supabase's verified-email precondition — the documented guard against
   pre-account-takeover. Email confirmation ON is therefore a security invariant, not just UX.
-- The Apple nonce (hashed in the request, raw to `signInWithIdToken`) binds the credential to this
-  client and prevents replay.
+- Supabase verifies the Apple identity token's **signature** against Apple's public keys server-side;
+  the documented Expo flow needs no client nonce. The token is short-lived and provider-issued.
 - The cleanup migration touches `auth.users` only at migration time with admin rights; no
   service-role key ships in the app (anon key only, per the accounts design).
 
