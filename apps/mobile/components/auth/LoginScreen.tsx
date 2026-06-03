@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import {
   Modal, View, Text, TextInput, Pressable, ScrollView,
-  Keyboard, Platform, StyleSheet,
+  KeyboardAvoidingView, Platform, StyleSheet,
 } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
@@ -26,7 +26,6 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
   const [confirm, setConfirm] = useState("");
   const [showOAuthHint, setShowOAuthHint] = useState(false);
   const [appleReady, setAppleReady] = useState(false);
-  const [kbHeight, setKbHeight] = useState(0);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
@@ -35,17 +34,6 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
       .then((ok) => { if (active) setAppleReady(ok); })
       .catch(() => { if (active) setAppleReady(false); });
     return () => { active = false; };
-  }, []);
-
-  // Lift the sheet above the keyboard. KeyboardAvoidingView is unreliable inside a Modal on
-  // Android, so we track the keyboard height and pad the container's bottom manually.
-  useEffect(() => {
-    const ios = Platform.OS === "ios";
-    const onShow = Keyboard.addListener(ios ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => setKbHeight(e.endCoordinates?.height ?? 0));
-    const onHide = Keyboard.addListener(ios ? "keyboardWillHide" : "keyboardDidHide",
-      () => setKbHeight(0));
-    return () => { onShow.remove(); onHide.remove(); };
   }, []);
 
   const pw = validatePassword(password);
@@ -112,7 +100,11 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={close}>
-      <View style={[styles.root, { paddingBottom: kbHeight }]}>
+      <KeyboardAvoidingView
+        style={styles.root}
+        behavior="padding"
+        keyboardVerticalOffset={0}
+      >
         <View style={styles.backdrop} />
         <View style={styles.sheet}>
           <Text style={styles.brand}>MoveStar</Text>
@@ -177,7 +169,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
             <Text style={styles.cancelText}>Cancel</Text>
           </Pressable>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
