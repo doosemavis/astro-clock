@@ -21,6 +21,7 @@ export function useEntitlement(session: Session | null): { isPro: boolean } {
   const [isPro, setIsPro] = useState(false);
   useEffect(() => {
     if (!session) { setIsPro(false); return; }
+    setIsPro(false); // reset while the new user's entitlement fetch is in flight
     let active = true;
     fetchIsPro()
       .then((v) => { if (active) setIsPro(v); })
