@@ -12,7 +12,7 @@ import * as AppleAuthentication from "expo-apple-authentication";
 type Mode = "signin" | "signup";
 
 export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { palette: p, t } = useTheme();
+  const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
   const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
 
@@ -108,18 +108,9 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
           <Text style={styles.title}>{mode === "signin" ? "Sign in" : "Create account"}</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
             {appleReady && (
-              /* t: 0=night…1=day. Dark UI (t<0.5) → WHITE button for contrast; light UI → BLACK. */
-              <AppleAuthentication.AppleAuthenticationButton
-                buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-                buttonStyle={
-                  t < 0.5
-                    ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                    : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-                }
-                cornerRadius={10}
-                style={styles.apple}
-                onPress={onApple}
-              />
+              <Pressable style={[styles.google, styles.apple]} onPress={onApple} disabled={busy}>
+                <Text style={styles.googleText}>Continue with Apple</Text>
+              </Pressable>
             )}
             <Pressable style={styles.google} onPress={onGoogle} disabled={busy}>
               <Text style={styles.googleText}>Continue with Google</Text>
@@ -190,7 +181,7 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   brand: { color: p.text, fontSize: 18, letterSpacing: 3, fontWeight: "600", textAlign: "center" },
   title: { color: p.text, fontSize: 22, fontWeight: "700", textAlign: "center", marginTop: 4, marginBottom: 10 },
   scroll: { marginBottom: 12 },
-  apple: { height: 48, marginBottom: 10 },
+  apple: { marginBottom: 10 },
   google: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 10, paddingVertical: 13, alignItems: "center" },
   googleText: { color: p.text, fontSize: 16, fontWeight: "600" },
   dividerRow: { flexDirection: "row", alignItems: "center", gap: 10, marginVertical: 14 },
