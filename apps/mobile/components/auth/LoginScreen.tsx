@@ -86,6 +86,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
   }
 
   async function onApple() {
+    if (busy) return;
     setError(null); setInfo(null); setShowOAuthHint(false); setBusy(true);
     const r = await signInWithApple();
     setBusy(false);
@@ -107,6 +108,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
           <Text style={styles.title}>{mode === "signin" ? "Sign in" : "Create account"}</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
             {appleReady && (
+              /* t: 0=night…1=day. Dark UI (t<0.5) → WHITE button for contrast; light UI → BLACK. */
               <AppleAuthentication.AppleAuthenticationButton
                 buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
                 buttonStyle={
