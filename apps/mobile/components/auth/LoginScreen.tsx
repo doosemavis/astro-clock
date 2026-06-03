@@ -102,8 +102,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={close}>
       <KeyboardAvoidingView
         style={styles.root}
-        behavior="padding"
-        keyboardVerticalOffset={0}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.backdrop} />
         <View style={styles.sheet}>
