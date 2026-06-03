@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Modal, View, Text, TextInput, Pressable, ScrollView,
   KeyboardAvoidingView, Platform, StyleSheet,
@@ -6,10 +6,8 @@ import {
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { useAuth } from "../../lib/auth";
-import { validatePassword } from "../../lib/password";
-import { useEffect } from "react";
+import { validatePassword, passwordsMatch } from "../../lib/password";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { passwordsMatch } from "../../lib/password";
 
 type Mode = "signin" | "signup";
 
@@ -79,7 +77,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
   }
 
   async function onGoogle() {
-    setError(null); setInfo(null); setBusy(true);
+    setError(null); setInfo(null); setShowOAuthHint(false); setBusy(true);
     const r = await signInWithGoogle();
     setBusy(false);
     if (r.error) { setError(r.error); return; }
@@ -166,7 +164,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
           <Pressable style={[styles.submit, submitDisabled && styles.submitOff]} onPress={onSubmit} disabled={submitDisabled}>
             <Text style={styles.submitText}>{busy ? "…" : mode === "signin" ? "Sign in" : "Create account"}</Text>
           </Pressable>
-          <Pressable style={styles.toggle} onPress={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); setInfo(null); }}>
+          <Pressable style={styles.toggle} onPress={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); setInfo(null); setConfirm(""); setShowOAuthHint(false); }}>
             <Text style={styles.toggleText}>
               {mode === "signin" ? "Need an account? Create one" : "Have an account? Sign in"}
             </Text>
