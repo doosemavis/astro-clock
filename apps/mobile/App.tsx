@@ -23,6 +23,7 @@ import { allVisible, toggleVis } from "./lib/chartModel";
 import type { Mode, TimeFormat, ThemeMode, Vis, Layer } from "./lib/chartModel";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
 import { loadBirth, saveBirth } from "./lib/birthStore";
+import { useEntitlement } from "./hooks/useEntitlement";
 
 const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "Date", range: "Range", compare: "Compare" };
 
@@ -39,6 +40,7 @@ function AppInner() {
   const [birth, setBirth] = useState<BirthData>(DEFAULT_BIRTH);
   const [editing, setEditing] = useState(false);
   const { session } = useAuth();
+  const { isPro } = useEntitlement(session);
   const [authView, setAuthView] = useState<null | "login" | "account">(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
@@ -137,6 +139,7 @@ function AppInner() {
       <BottomSheet onExpandedChange={setSheetExpanded}>
         <ChartControls
           clock={clock}
+          isPro={isPro}
           timeFormat={timeFormat}
           onTimeFormat={setTimeFormat}
           themeMode={themeMode}

@@ -11,10 +11,12 @@ import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
 import { VisGrid } from "./VisGrid";
+import { ProLockSheet } from "../ProLockSheet";
 import { ZonedMomentField } from "./ZonedMomentField";
 
 interface Props {
   clock: ChartClock;
+  isPro: boolean;
   timeFormat: TimeFormat;
   onTimeFormat: (f: TimeFormat) => void;
   showMajor: boolean;
@@ -64,7 +66,7 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export function ChartControls({
-  clock, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
+  clock, isPro, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
   themeMode, onTheme, vis, onToggleVis,
 }: Props) {
   const { palette: pal } = useTheme();
@@ -76,10 +78,20 @@ export function ChartControls({
     compareA, setCompareA, compareB, setCompareB, compareView, setCompareView,
   } = clock;
 
+  const [proLock, setProLock] = useState(false);
+  const PRO_MODES: Mode[] = ["moment", "range", "compare"];
+  const modeOptions = MODES.map((m) =>
+    !isPro && PRO_MODES.includes(m.key) ? { key: m.key, label: `${m.label} 🔒` } : m,
+  );
+  const onModeChange = (m: Mode) => {
+    if (!isPro && PRO_MODES.includes(m)) { setProLock(true); return; }
+    setMode(m);
+  };
+
   return (
     <View>
       <Section label="View">
-        <Segmented options={MODES} value={mode} onChange={setMode} wrap />
+        <Segmented options={modeOptions} value={mode} onChange={onModeChange} wrap />
       </Section>
 
       {mode === "moment" ? (
@@ -138,7 +150,13 @@ export function ChartControls({
       </Section>
 
       <Section label="Glyphs">
-        <VisGrid vis={vis} onToggle={onToggleVis} />
+        {isPro ? (
+          <VisGrid vis={vis} onToggle={onToggleVis} />
+        ) : (
+          <Pressable style={styles.locked} onPress={() => setProLock(true)}>
+            <Text style={styles.lockedText}>🔒 Glyph customization is a Pro feature</Text>
+          </Pressable>
+        )}
       </Section>
 
       <Section label="Aspects">
@@ -151,6 +169,8 @@ export function ChartControls({
           </Pressable>
         </View>
       </Section>
+
+      <ProLockSheet visible={proLock} onClose={() => setProLock(false)} />
     </View>
   );
 }
@@ -268,4 +288,6 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   pickerDone: { alignSelf: "flex-end", paddingHorizontal: 16, paddingVertical: 10 },
   pickerDoneText: { color: p.live, fontSize: 15, fontWeight: "600" },
   note: { color: p.textDim, fontSize: 12, marginTop: 10, lineHeight: 17 },
+  locked: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 8, paddingVertical: 14, alignItems: "center" },
+  lockedText: { color: p.textDim, fontSize: 13 },
 });
