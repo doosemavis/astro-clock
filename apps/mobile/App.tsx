@@ -24,6 +24,8 @@ import type { Mode, TimeFormat, ThemeMode, Vis, Layer } from "./lib/chartModel";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
 import { loadBirth, saveBirth } from "./lib/birthStore";
 import { useEntitlement } from "./hooks/useEntitlement";
+import { SignInPrompt } from "./components/SignInPrompt";
+import { tierOf } from "./lib/entitlement";
 
 const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "Date", range: "Range", compare: "Compare" };
 
@@ -41,6 +43,8 @@ function AppInner() {
   const [editing, setEditing] = useState(false);
   const { session } = useAuth();
   const { isPro } = useEntitlement(session);
+  const tier = tierOf(!!session, isPro);
+  const anonymous = tier === "anonymous";
   const [authView, setAuthView] = useState<null | "login" | "account">(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
@@ -62,6 +66,11 @@ function AppInner() {
   const natalPos = useMemo(() => positions(new Date(birthMs)), [birthMs]);
   const clock = useChartClock(birthMs, birth);
   const livePos = useMemo(() => positions(clock.displayInstant), [clock.displayInstant]);
+
+  // Anonymous users only get the Now view.
+  useEffect(() => {
+    if (anonymous) clock.setMode("now");
+  }, [anonymous, clock.setMode]);
   const compareAPos = useMemo(() => positions(new Date(clock.compareAMs)), [clock.compareAMs]);
   const compareBPos = useMemo(() => positions(new Date(clock.compareBMs)), [clock.compareBMs]);
   const cmpA = cmpCaption(clock.compareA, timeFormat);
@@ -79,12 +88,18 @@ function AppInner() {
 
   // The chart's signature: Sun / Moon / Ascendant signs (mirrors the web bigThree).
   const bigThree = useMemo(() => {
+    if (anonymous) {
+      // Pre-birth placeholder: the current sky's Sun + Moon, tracking the Now moment.
+      // No Ascendant — it needs a birth time + place, which unlocks on sign-in.
+      return `☉ ${signOf(livePos.sun)}   ☽ ${signOf(livePos.moon)}`;
+    }
     const asc = ascendant(new Date(birthMs), birth.lat, birth.lon);
     return `☉ ${signOf(natalPos.sun)}   ☽ ${signOf(natalPos.moon)}   ↑ ${signOf(asc)}`;
-  }, [birthMs, birth.lat, birth.lon, natalPos]);
+  }, [anonymous, livePos, birthMs, birth.lat, birth.lon, natalPos]);
 
-  // The user's Sun sign, as a zodiac glyph, for the header avatar.
-  const sunGlyph = SIGN_GLYPH[signOf(natalPos.sun) as Sign];
+  // The header avatar's glyph: the current sky's Sun sign when signed out (tracks Now),
+  // the user's birth Sun sign once signed in.
+  const sunGlyph = SIGN_GLYPH[signOf(anonymous ? livePos.sun : natalPos.sun) as Sign];
 
   // Persistent readout of the moment on screen — which view + when (fixed vs. moveable).
   const moment =
@@ -128,30 +143,33 @@ function AppInner() {
           <Text style={styles.bigThree}>{bigThree}</Text>
           <View style={[styles.wheelBox, { width: wheelSize, height: wheelSize }]}>
             {fontsLoaded
-              ? <ChartWheel natalPositions={natalPos} livePositions={livePos} showMajor={showMajor} showMinor={showMinor} vis={vis} />
+              ? <ChartWheel natalPositions={natalPos} livePositions={livePos} showMajor={showMajor} showMinor={showMinor} vis={vis} showNatal={!anonymous} />
               : <Text style={styles.note}>loading…</Text>}
           </View>
+          {anonymous ? <SignInPrompt onPress={() => setAuthView("login")} /> : null}
         </View>
       )}
 
       {clock.mode === "range" && !sheetExpanded ? <RangeHud clock={clock} /> : null}
 
-      <BottomSheet onExpandedChange={setSheetExpanded}>
-        <ChartControls
-          clock={clock}
-          isPro={isPro}
-          timeFormat={timeFormat}
-          onTimeFormat={setTimeFormat}
-          themeMode={themeMode}
-          onTheme={setThemeMode}
-          showMajor={showMajor}
-          onToggleMajor={() => setShowMajor((v) => !v)}
-          showMinor={showMinor}
-          onToggleMinor={() => setShowMinor((v) => !v)}
-          vis={vis}
-          onToggleVis={onToggleVis}
-        />
-      </BottomSheet>
+      {session ? (
+        <BottomSheet onExpandedChange={setSheetExpanded}>
+          <ChartControls
+            clock={clock}
+            isPro={isPro}
+            timeFormat={timeFormat}
+            onTimeFormat={setTimeFormat}
+            themeMode={themeMode}
+            onTheme={setThemeMode}
+            showMajor={showMajor}
+            onToggleMajor={() => setShowMajor((v) => !v)}
+            showMinor={showMinor}
+            onToggleMinor={() => setShowMinor((v) => !v)}
+            vis={vis}
+            onToggleVis={onToggleVis}
+          />
+        </BottomSheet>
+      ) : null}
 
       <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} timeFormat={timeFormat} />
       <HeaderMenu
