@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import {
-  Modal, View, Text, TextInput, Pressable, ScrollView,
-  KeyboardAvoidingView, Platform, StyleSheet,
+  Modal, View, Text, TextInput, Pressable, ScrollView, Platform, StyleSheet,
 } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
@@ -99,12 +98,9 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
     (mode === "signup" && (!pw.ok || !passwordsMatch(password, confirm)));
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={close}>
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <View style={styles.backdrop} />
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={close} statusBarTranslucent>
+      {/* Top sheet: the form drops from the top so the keyboard (bottom) never covers it. */}
+      <View style={styles.root}>
         <View style={styles.sheet}>
           <Text style={styles.brand}>MoveStar</Text>
           <Text style={styles.title}>{mode === "signin" ? "Sign in" : "Create account"}</Text>
@@ -154,35 +150,35 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
             {mode === "signin" && showOAuthHint && (
               <Text style={styles.hint}>Used Google or Apple before? Use the buttons above.</Text>
             )}
-          </ScrollView>
 
-          <Pressable style={[styles.submit, submitDisabled && styles.submitOff]} onPress={onSubmit} disabled={submitDisabled}>
-            <Text style={styles.submitText}>{busy ? "…" : mode === "signin" ? "Sign in" : "Create account"}</Text>
-          </Pressable>
-          <Pressable style={styles.toggle} onPress={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); setInfo(null); setConfirm(""); setShowOAuthHint(false); }}>
-            <Text style={styles.toggleText}>
-              {mode === "signin" ? "Need an account? Create one" : "Have an account? Sign in"}
-            </Text>
-          </Pressable>
-          <Pressable style={styles.cancel} onPress={close}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </Pressable>
+            <Pressable style={[styles.submit, submitDisabled && styles.submitOff]} onPress={onSubmit} disabled={submitDisabled}>
+              <Text style={styles.submitText}>{busy ? "…" : mode === "signin" ? "Sign in" : "Create account"}</Text>
+            </Pressable>
+            <Pressable style={styles.toggle} onPress={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); setInfo(null); setConfirm(""); setShowOAuthHint(false); }}>
+              <Text style={styles.toggleText}>
+                {mode === "signin" ? "Need an account? Create one" : "Have an account? Sign in"}
+              </Text>
+            </Pressable>
+            <Pressable style={styles.cancel} onPress={close}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </Pressable>
+          </ScrollView>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
 
 const makeStyles = (p: Palette) => StyleSheet.create({
-  root: { flex: 1, justifyContent: "flex-end" },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.55)" },
+  root: { flex: 1, justifyContent: "flex-start" },
   sheet: {
-    backgroundColor: p.panel, borderTopLeftRadius: 18, borderTopRightRadius: 18,
-    paddingHorizontal: 18, paddingTop: 18, paddingBottom: 28, maxHeight: "92%", flexShrink: 1,
+    backgroundColor: p.panel, borderBottomLeftRadius: 18, borderBottomRightRadius: 18,
+    paddingHorizontal: 18, paddingBottom: 18, maxHeight: "92%", flexShrink: 1,
+    paddingTop: Platform.select({ ios: 56, default: 28 }),
   },
   brand: { color: p.text, fontSize: 18, letterSpacing: 3, fontWeight: "600", textAlign: "center" },
   title: { color: p.text, fontSize: 22, fontWeight: "700", textAlign: "center", marginTop: 4, marginBottom: 10 },
-  scroll: { marginBottom: 12, flexShrink: 1 },
+  scroll: { marginBottom: 0 },
   apple: { marginBottom: 10 },
   google: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 10, paddingVertical: 13, alignItems: "center" },
   googleText: { color: p.text, fontSize: 16, fontWeight: "600" },
@@ -194,7 +190,7 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   hint: { color: p.textDim, fontSize: 13, marginTop: 8 },
   err: { color: "#ff6b6b", fontSize: 14, marginTop: 12 },
   ok: { color: p.live, fontSize: 14, marginTop: 12 },
-  submit: { backgroundColor: p.live, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 4 },
+  submit: { backgroundColor: p.live, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 16 },
   submitOff: { opacity: 0.5 },
   submitText: { color: p.bg, fontSize: 16, fontWeight: "700" },
   toggle: { paddingVertical: 12, alignItems: "center" },
