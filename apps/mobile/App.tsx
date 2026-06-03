@@ -18,6 +18,7 @@ import { Avatar } from "./components/Avatar";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { LoginScreen } from "./components/auth/LoginScreen";
 import { AccountView } from "./components/auth/AccountView";
+import { HeaderMenu } from "./components/HeaderMenu";
 import { allVisible, toggleVis } from "./lib/chartModel";
 import type { Mode, TimeFormat, ThemeMode, Vis, Layer } from "./lib/chartModel";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
@@ -39,6 +40,7 @@ function AppInner() {
   const [editing, setEditing] = useState(false);
   const { session } = useAuth();
   const [authView, setAuthView] = useState<null | "login" | "account">(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
   const [showMajor, setShowMajor] = useState(true);
   const [showMinor, setShowMinor] = useState(false);
@@ -99,14 +101,9 @@ function AppInner() {
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Text style={styles.brand}>MoveStar</Text>
-          <View style={styles.headerRight}>
-            <Pressable onPress={() => setAuthView(session ? "account" : "login")} style={styles.authBtn} hitSlop={8}>
-              <Text style={styles.authText}>{session ? "Account" : "Sign in"}</Text>
-            </Pressable>
-            <Pressable onPress={() => setEditing(true)} style={styles.editBtn} hitSlop={8}>
-              <Avatar glyph={sunGlyph} />
-            </Pressable>
-          </View>
+          <Pressable onPress={() => setMenuOpen(true)} style={styles.editBtn} hitSlop={8}>
+            <Avatar glyph={sunGlyph} />
+          </Pressable>
         </View>
       </View>
 
@@ -154,6 +151,13 @@ function AppInner() {
       </BottomSheet>
 
       <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} timeFormat={timeFormat} />
+      <HeaderMenu
+        visible={menuOpen}
+        signedIn={!!session}
+        onClose={() => setMenuOpen(false)}
+        onAuth={() => { setMenuOpen(false); setAuthView(session ? "account" : "login"); }}
+        onEditBirth={() => { setMenuOpen(false); setEditing(true); }}
+      />
       <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
       <AccountView visible={authView === "account"} onClose={() => setAuthView(null)} />
       <StatusBar style="light" />
@@ -176,10 +180,6 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   brand: { color: p.text, fontSize: 24, letterSpacing: 4, fontWeight: "600" },
   editBtn: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4, paddingLeft: 12 },
-  headerRight: { flexDirection: "row", alignItems: "center", gap: 6 },
-  authBtn: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderColor: p.border, borderWidth: 1 },
-  authText: { color: p.live, fontSize: 13, letterSpacing: 0.5, fontWeight: "600" },
-  editText: { color: p.live, fontSize: 15, letterSpacing: 1, textAlign: "right" },
   bigThree: { color: p.textDim, fontSize: 14, letterSpacing: 1, textAlign: "center", marginBottom: 12 },
   stage: { flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: SHEET_COLLAPSED_HEIGHT },
   wheelBox: { alignItems: "center", justifyContent: "center" },
