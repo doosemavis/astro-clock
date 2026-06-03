@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import {
   Modal, View, Text, TextInput, Pressable, ScrollView,
-  KeyboardAvoidingView, Platform, StyleSheet,
+  Keyboard, Platform, StyleSheet,
 } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
@@ -26,6 +26,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
   const [confirm, setConfirm] = useState("");
   const [showOAuthHint, setShowOAuthHint] = useState(false);
   const [appleReady, setAppleReady] = useState(false);
+  const [kbHeight, setKbHeight] = useState(0);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
@@ -36,8 +37,18 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
     return () => { active = false; };
   }, []);
 
+  // Lift the sheet above the keyboard. KeyboardAvoidingView is unreliable inside a Modal on
+  // Android, so we track the keyboard height and pad the container's bottom manually.
+  useEffect(() => {
+    const ios = Platform.OS === "ios";
+    const onShow = Keyboard.addListener(ios ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => setKbHeight(e.endCoordinates?.height ?? 0));
+    const onHide = Keyboard.addListener(ios ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKbHeight(0));
+    return () => { onShow.remove(); onHide.remove(); };
+  }, []);
+
   const pw = validatePassword(password);
-  const isIos = Platform.OS === "ios";
 
   function reset() {
     setName(""); setEmail(""); setPassword(""); setConfirm("");
@@ -101,7 +112,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={close}>
-      <KeyboardAvoidingView style={styles.root} behavior={isIos ? "padding" : undefined}>
+      <View style={[styles.root, { paddingBottom: kbHeight }]}>
         <View style={styles.backdrop} />
         <View style={styles.sheet}>
           <Text style={styles.brand}>MoveStar</Text>
@@ -166,7 +177,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
             <Text style={styles.cancelText}>Cancel</Text>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -176,11 +187,11 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.55)" },
   sheet: {
     backgroundColor: p.panel, borderTopLeftRadius: 18, borderTopRightRadius: 18,
-    paddingHorizontal: 18, paddingTop: 18, paddingBottom: 28, maxHeight: "92%",
+    paddingHorizontal: 18, paddingTop: 18, paddingBottom: 28, maxHeight: "92%", flexShrink: 1,
   },
   brand: { color: p.text, fontSize: 18, letterSpacing: 3, fontWeight: "600", textAlign: "center" },
   title: { color: p.text, fontSize: 22, fontWeight: "700", textAlign: "center", marginTop: 4, marginBottom: 10 },
-  scroll: { marginBottom: 12 },
+  scroll: { marginBottom: 12, flexShrink: 1 },
   apple: { marginBottom: 10 },
   google: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 10, paddingVertical: 13, alignItems: "center" },
   googleText: { color: p.text, fontSize: 16, fontWeight: "600" },
