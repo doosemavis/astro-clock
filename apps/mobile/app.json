@@ -30,8 +30,7 @@
       "expo-font",
       "@react-native-community/datetimepicker",
       "expo-web-browser",
-      "expo-apple-authentication",
-      "react-native-purchases"
+      "expo-apple-authentication"
     ],
     "extra": {
       "revenueCatAndroidKey": "test_bWUBDRvMQHIlTkZvZzFAofTJoLo",
