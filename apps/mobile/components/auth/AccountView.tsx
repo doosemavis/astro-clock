@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
-import { Modal, View, Text, Pressable, StyleSheet, TextInput } from "react-native";
+import { Modal, View, Text, Pressable, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { useAuth } from "../../lib/auth";
 import { useEntitlement } from "../../hooks/useEntitlement";
 import { presentProPaywall, restorePurchases, showManageSubscriptions } from "../../lib/purchases";
 import { validatePassword, passwordsMatch } from "../../lib/password";
+
+type Screen = "main" | "password";
 
 export function AccountView({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { palette: p } = useTheme();
@@ -15,27 +17,53 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
   const [busy, setBusy] = useState(false);
   const [acting, setActing] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const [pwOpen, setPwOpen] = useState(false);
+  const [screen, setScreen] = useState<Screen>("main");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
 
+  // A signed-in OAuth user has no "email" identity until they set a password.
   const hasPassword = user?.identities?.some((i) => i.provider === "email") ?? false;
-
   const name = (user?.user_metadata?.name as string | undefined) ?? null;
   const email = user?.email ?? "—";
+
+  function resetPwFields() {
+    setNewPw("");
+    setConfirmPw("");
+  }
+
+  // Leave the sheet in a clean state so the next open always starts on the main screen.
+  function close() {
+    setScreen("main");
+    resetPwFields();
+    setMsg(null);
+    onClose();
+  }
+
+  function openPassword() {
+    setMsg(null);
+    resetPwFields();
+    setScreen("password");
+  }
+
+  function backToMain() {
+    setMsg(null);
+    resetPwFields();
+    setScreen("main");
+  }
 
   async function onSignOut() {
     setBusy(true);
     try {
       await signOut();
-      onClose();
+      close();
     } finally {
       setBusy(false);
     }
   }
 
   async function onRestore() {
-    setMsg(null); setActing(true);
+    setMsg(null);
+    setActing(true);
     const restored = await restorePurchases();
     setActing(false);
     setMsg(restored ? "Purchases restored." : "No active purchases found to restore.");
@@ -51,51 +79,82 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
     const v = validatePassword(newPw);
     if (!v.ok) { setMsg(`Password needs ${v.problems.join(", ")}.`); return; }
     if (!passwordsMatch(newPw, confirmPw)) { setMsg("Passwords don't match."); return; }
-    setMsg(null); setActing(true);
+    setMsg(null);
+    setActing(true);
+    const wasSet = !hasPassword;
     const r = await setAccountPassword(newPw);
     setActing(false);
     if (r.error) { setMsg(r.error); return; }
-    setNewPw(""); setConfirmPw(""); setPwOpen(false);
-    setMsg(hasPassword ? "Password updated." : "Password set — you can now sign in with email + password too.");
+    // Success: return to the main screen and surface the outcome there.
+    resetPwFields();
+    setScreen("main");
+    setMsg(wasSet ? "Password set — you can now sign in with email + password too." : "Password updated.");
   }
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.root}>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={close} statusBarTranslucent>
+      <KeyboardAvoidingView
+        style={styles.root}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <View style={styles.backdrop} />
         <View style={styles.sheet}>
-          <Text style={styles.title}>Account</Text>
-          {name ? (
+          {screen === "main" ? (
             <>
-              <Text style={styles.label}>Name</Text>
-              <Text style={styles.value}>{name}</Text>
-            </>
-          ) : null}
-          <Text style={styles.label}>Email</Text>
-          <Text style={styles.value}>{email}</Text>
+              <Text style={styles.title}>Account</Text>
+              {name ? (
+                <>
+                  <Text style={styles.label}>Name</Text>
+                  <Text style={styles.value}>{name}</Text>
+                </>
+              ) : null}
+              <Text style={styles.label}>Email</Text>
+              <Text style={styles.value}>{email}</Text>
 
-          {!isPro ? (
-            <Pressable style={styles.action} onPress={() => void presentProPaywall()}>
-              <Text style={styles.actionText}>Upgrade to Pro</Text>
-            </Pressable>
+              {!isPro ? (
+                <Pressable style={styles.action} onPress={() => void presentProPaywall()}>
+                  <Text style={styles.actionText}>Upgrade to Pro</Text>
+                </Pressable>
+              ) : (
+                <Pressable style={styles.action} onPress={() => void onManage()}>
+                  <Text style={styles.actionText}>Manage subscription</Text>
+                </Pressable>
+              )}
+              <Pressable style={styles.action} onPress={() => void onRestore()} disabled={acting}>
+                <Text style={styles.actionText}>{acting ? "…" : "Restore purchases"}</Text>
+              </Pressable>
+              <Pressable style={[styles.action, styles.rowAction]} onPress={openPassword}>
+                <Text style={styles.actionText}>{hasPassword ? "Change password" : "Set a password"}</Text>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+              {msg ? <Text style={styles.msg}>{msg}</Text> : null}
+              <Pressable style={[styles.signout, busy && styles.signoutOff]} onPress={onSignOut} disabled={busy}>
+                <Text style={styles.signoutText}>{busy ? "…" : "Sign out"}</Text>
+              </Pressable>
+              <Pressable style={styles.cancel} onPress={close}>
+                <Text style={styles.cancelText}>Close</Text>
+              </Pressable>
+            </>
           ) : (
-            <Pressable style={styles.action} onPress={() => void onManage()}>
-              <Text style={styles.actionText}>Manage subscription</Text>
-            </Pressable>
-          )}
-          <Pressable style={styles.action} onPress={() => void onRestore()} disabled={acting}>
-            <Text style={styles.actionText}>{acting ? "…" : "Restore purchases"}</Text>
-          </Pressable>
-          <Pressable style={styles.action} onPress={() => setPwOpen((v) => !v)}>
-            <Text style={styles.actionText}>{hasPassword ? "Change password" : "Set a password"}</Text>
-          </Pressable>
-          {pwOpen ? (
             <>
+              <View style={styles.headerRow}>
+                <Pressable style={styles.backRow} hitSlop={10} onPress={backToMain}>
+                  <Text style={styles.backChevron}>‹</Text>
+                  <Text style={styles.backText}>Account</Text>
+                </Pressable>
+                <Text style={styles.headerTitle}>Password</Text>
+              </View>
+              {!hasPassword ? (
+                <Text style={styles.hint}>
+                  Add a password so you can sign in with your email too — not just Google.
+                </Text>
+              ) : null}
               <TextInput
                 style={styles.input}
                 placeholder="New password"
                 placeholderTextColor={p.textDim}
                 secureTextEntry
+                autoCapitalize="none"
                 value={newPw}
                 onChangeText={setNewPw}
               />
@@ -104,23 +163,21 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
                 placeholder="Confirm password"
                 placeholderTextColor={p.textDim}
                 secureTextEntry
+                autoCapitalize="none"
                 value={confirmPw}
                 onChangeText={setConfirmPw}
               />
               <Pressable style={styles.action} onPress={() => void onSavePassword()} disabled={acting}>
                 <Text style={styles.actionText}>{acting ? "…" : "Save password"}</Text>
               </Pressable>
+              {msg ? <Text style={styles.msg}>{msg}</Text> : null}
+              <Pressable style={styles.cancel} onPress={backToMain}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </Pressable>
             </>
-          ) : null}
-          {msg ? <Text style={styles.msg}>{msg}</Text> : null}
-          <Pressable style={[styles.signout, busy && styles.signoutOff]} onPress={onSignOut} disabled={busy}>
-            <Text style={styles.signoutText}>{busy ? "…" : "Sign out"}</Text>
-          </Pressable>
-          <Pressable style={styles.cancel} onPress={onClose}>
-            <Text style={styles.cancelText}>Close</Text>
-          </Pressable>
+          )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -137,10 +194,18 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   value: { color: p.text, fontSize: 16 },
   action: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 12 },
   actionText: { color: p.live, fontSize: 16, fontWeight: "700" },
+  rowAction: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 18 },
+  chevron: { color: p.live, fontSize: 22, fontWeight: "700", marginTop: -2 },
+  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
+  headerTitle: { color: p.text, fontSize: 22, fontWeight: "700" },
+  backRow: { flexDirection: "row", alignItems: "center" },
+  backChevron: { color: p.live, fontSize: 26, fontWeight: "700", marginRight: 4, marginTop: -2 },
+  backText: { color: p.live, fontSize: 16, fontWeight: "600" },
+  hint: { color: p.textDim, fontSize: 13, lineHeight: 18, marginTop: 2, marginBottom: 2 },
   signout: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 22 },
   signoutOff: { opacity: 0.5 },
   signoutText: { color: "#ff6b6b", fontSize: 16, fontWeight: "700" },
-  cancel: { paddingVertical: 12, alignItems: "center" },
+  cancel: { paddingVertical: 12, alignItems: "center", marginTop: 4 },
   cancelText: { color: p.textDim, fontSize: 14 },
   msg: { color: p.textDim, fontSize: 13, marginTop: 10, lineHeight: 18 },
   input: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 11, color: p.text, fontSize: 16, marginTop: 10 },
