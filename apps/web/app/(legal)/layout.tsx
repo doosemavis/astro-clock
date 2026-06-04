@@ -22,6 +22,8 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
         <a href="/privacy" style={{ color: "#c7b3ff" }}>Privacy Policy</a>
         {"  ·  "}
         <a href="/terms" style={{ color: "#c7b3ff" }}>Terms of Service</a>
+        {"  ·  "}
+        <a href="/delete-account" style={{ color: "#c7b3ff" }}>Delete account</a>
       </p>
     </main>
   );
