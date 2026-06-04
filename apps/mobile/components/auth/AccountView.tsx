@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Modal, View, Text, Pressable, StyleSheet, TextInput, Keyboard } from "react-native";
+import { Modal, View, Text, Pressable, StyleSheet, TextInput, Keyboard, Linking } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { useAuth } from "../../lib/auth";
@@ -8,6 +8,10 @@ import { presentProPaywall, restorePurchases, showManageSubscriptions } from "..
 import { validatePassword, passwordsMatch } from "../../lib/password";
 
 type Screen = "main" | "password";
+
+// Account/data deletion is handled on the web (a server endpoint with the service role).
+// The app links out to that page rather than deleting from the client.
+const DELETE_ACCOUNT_URL = "https://movestar-web.vercel.app/delete-account";
 
 export function AccountView({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { palette: p } = useTheme();
@@ -138,6 +142,16 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
               <Pressable style={[styles.signout, busy && styles.signoutOff]} onPress={onSignOut} disabled={busy}>
                 <Text style={styles.signoutText}>{busy ? "…" : "Sign out"}</Text>
               </Pressable>
+              <Pressable
+                style={styles.manageData}
+                onPress={() =>
+                  void Linking.openURL(DELETE_ACCOUNT_URL).catch(() =>
+                    setMsg("Couldn't open the browser. Visit movestar-web.vercel.app/delete-account."),
+                  )
+                }
+              >
+                <Text style={styles.manageDataText}>Delete account or data ↗</Text>
+              </Pressable>
               <Pressable style={styles.cancel} onPress={close}>
                 <Text style={styles.cancelText}>Close</Text>
               </Pressable>
@@ -214,6 +228,8 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   signoutText: { color: "#ff6b6b", fontSize: 16, fontWeight: "700" },
   cancel: { paddingVertical: 12, alignItems: "center", marginTop: 4 },
   cancelText: { color: p.textDim, fontSize: 14 },
+  manageData: { paddingVertical: 8, alignItems: "center", marginTop: 6 },
+  manageDataText: { color: p.textDim, fontSize: 13, textDecorationLine: "underline" },
   msg: { color: p.textDim, fontSize: 13, marginTop: 10, lineHeight: 18 },
   input: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 11, color: p.text, fontSize: 16, marginTop: 10 },
 });
