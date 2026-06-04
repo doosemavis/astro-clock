@@ -7,6 +7,7 @@ import { supabase } from "./supabase";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { interpretSignUp } from "./authResult";
 import { buildAppleIdTokenParams, appleFullNameToString, isAppleCancel } from "./appleAuth";
+import { configurePurchases, loginPurchases, logoutPurchases } from "./purchases";
 
 /** Result shape for the auth actions: `error` set on failure; `needsConfirm` set when
  *  signUp created an unconfirmed account (email confirmation is ON on the project). */
@@ -35,13 +36,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    configurePurchases();
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       setSession(data.session);
       setLoading(false);
+      if (data.session?.user?.id) loginPurchases(data.session.user.id);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      if (s?.user?.id) loginPurchases(s.user.id);
+      else logoutPurchases();
+    });
     return () => { active = false; sub.subscription.unsubscribe(); };
   }, []);
 
