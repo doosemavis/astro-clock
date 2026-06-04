@@ -29,6 +29,7 @@ interface AuthValue {
   signOut: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<AuthResult>;
   confirmPasswordReset: (email: string, token: string, newPassword: string) => Promise<AuthResult>;
+  setAccountPassword: (password: string) => Promise<AuthResult>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -137,9 +138,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return uErr ? { error: uErr.message } : {};
   }
 
+  async function setAccountPassword(password: string): Promise<AuthResult> {
+    const { error } = await supabase.auth.updateUser({ password });
+    return error ? { error: error.message } : {};
+  }
+
   return (
     <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, loading, signUp, signIn, signInWithGoogle, signInWithApple, signOut, requestPasswordReset, confirmPasswordReset }}
+      value={{ session, user: session?.user ?? null, loading, signUp, signIn, signInWithGoogle, signInWithApple, signOut, requestPasswordReset, confirmPasswordReset, setAccountPassword }}
     >
       {children}
     </AuthContext.Provider>
