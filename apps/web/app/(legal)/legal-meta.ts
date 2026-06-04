@@ -4,7 +4,7 @@
 //
 // TODO(launch): confirm every value below before publishing.
 export const APP_NAME = "MoveStar";
-export const PROVIDER = "Moose Davis"; // TODO: an individual developer, or a registered company name?
+export const PROVIDER = "Mavis Industries";
 export const CONTACT_EMAIL = "moosedavis2011@gmail.com"; // TODO: a dedicated support/privacy address is recommended
 export const JURISDICTION = "the State of [STATE], United States"; // TODO: your governing-law jurisdiction
 export const WEBSITE = "https://movestar.app"; // TODO: confirm your canonical domain
