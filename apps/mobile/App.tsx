@@ -26,6 +26,7 @@ import { loadBirth, saveBirth } from "./lib/birthStore";
 import { useEntitlement } from "./hooks/useEntitlement";
 import { SignInPrompt } from "./components/SignInPrompt";
 import { tierOf } from "./lib/entitlement";
+import { clampMode } from "./lib/proMode";
 
 const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "Date", range: "Range", compare: "Compare" };
 
@@ -71,6 +72,14 @@ function AppInner() {
   useEffect(() => {
     if (anonymous) clock.setMode("now");
   }, [anonymous, clock.setMode]);
+
+  // Lost-Pro clamp: if entitlement drops while in a Pro mode, snap back; drop Glyph customization.
+  useEffect(() => {
+    if (anonymous) return; // anonymous is already handled above
+    const clamped = clampMode(clock.mode, isPro);
+    if (clamped !== clock.mode) clock.setMode(clamped);
+    if (!isPro) setVis({ natal: allVisible(PLANET_KEYS), live: allVisible(PLANET_KEYS) });
+  }, [isPro, anonymous, clock.mode, clock.setMode]);
   const compareAPos = useMemo(() => positions(new Date(clock.compareAMs)), [clock.compareAMs]);
   const compareBPos = useMemo(() => positions(new Date(clock.compareBMs)), [clock.compareBMs]);
   const cmpA = cmpCaption(clock.compareA, timeFormat);
