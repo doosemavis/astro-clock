@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Modal, View, Text, Pressable, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { useMemo, useState, useEffect } from "react";
+import { Modal, View, Text, Pressable, StyleSheet, TextInput, Keyboard } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { useAuth } from "../../lib/auth";
@@ -20,6 +20,16 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
   const [screen, setScreen] = useState<Screen>("main");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
+  const [kbHeight, setKbHeight] = useState(0);
+
+  // This is a bottom-anchored sheet, so the soft keyboard would cover its inputs. Lift the sheet
+  // by the keyboard height while it's open, and reset to exactly 0 on hide so it drops flush again
+  // (KeyboardAvoidingView leaves a residual inset inside a Modal on Android — this does not).
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", (e) => setKbHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKbHeight(0));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   // A signed-in OAuth user has no "email" identity until they set a password.
   const hasPassword = user?.identities?.some((i) => i.provider === "email") ?? false;
@@ -93,12 +103,9 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={close} statusBarTranslucent>
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
+      <View style={styles.root}>
         <View style={styles.backdrop} />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { marginBottom: kbHeight }]}>
           {screen === "main" ? (
             <>
               <Text style={styles.title}>Account</Text>
@@ -177,7 +184,7 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
             </>
           )}
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
