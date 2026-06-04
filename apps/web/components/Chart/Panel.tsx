@@ -51,6 +51,7 @@ interface Props {
   onCompareA: (ms: number) => void;
   onCompareB: (ms: number) => void;
   onCompareLayout: (l: CompareLayout) => void;
+  locked?: boolean;
 }
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -96,7 +97,7 @@ export function Panel(props: Props) {
     rangeStartMs, rangeEndMs, momentMs, compareAMs, compareBMs, compareLayout,
     onMode, onTheme, onTimeFormat, onToggleMajor, onToggleMinor, onToggleGlyphPanel, onToggleVis,
     onEditing, onApplyBirth, onPlay, onLoop, onReset, onRate, onRangeStart, onRangeEnd, onMoment,
-    onCompareA, onCompareB, onCompareLayout,
+    onCompareA, onCompareB, onCompareLayout, locked = false,
   } = props;
 
   const paceNote = PACES.find((p) => p.rate === rate)?.note ?? "—";
@@ -115,6 +116,8 @@ export function Panel(props: Props) {
         <div className="you">{name}</div>
         <div className="sig">{bigThree}</div>
       </div>
+
+      <div className={locked ? "ac-panel-locked" : undefined}>
 
       <div className="block">
         <ToggleButton className="editbtn" isSelected={editing} onChange={onEditing}>
@@ -260,6 +263,8 @@ export function Panel(props: Props) {
         </ToggleButtonGroup>
         <div className="theme-note">{themeNote(themeMode, mode, placeLabel)}</div>
       </fieldset>
+
+      </div>{/* end ac-panel-locked */}
 
       <div className="block">
         <div className="legend">

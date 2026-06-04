@@ -44,6 +44,8 @@ interface ChartProps {
 }
 
 export default function Chart({ userId = null, userEmail = null, userName = null, initialBirth = null }: ChartProps) {
+  const anonymous = userId == null;
+
   // --- birth + derived natal data ---
   const [birth, setBirth] = useState<BirthData>(initialBirth ?? DEFAULT_BIRTH);
   const birthMs = useMemo(() => birthInstant(birth).getTime(), [birth]);
@@ -54,7 +56,7 @@ export default function Chart({ userId = null, userEmail = null, userName = null
   }, [birthMs, birth.lat, birth.lon, natalPos]);
 
   // --- control state ---
-  const [mode, setMode] = useState<Mode>("now");
+  const [mode, setMode] = useState<Mode>(userId && initialBirth ? "birth" : "now");
   const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
   // Global time format (12h default, persisted). SSR + first client render always use the
   // default to avoid a hydration mismatch; the mount effect below corrects from storage.
@@ -229,7 +231,7 @@ export default function Chart({ userId = null, userEmail = null, userName = null
     : null;
 
   // --- control handlers ---
-  const applyMode = useCallback((m: Mode) => { setMode(m); setPlaying(false); }, []);
+  const applyMode = useCallback((m: Mode) => { if (anonymous) return; setMode(m); setPlaying(false); }, [anonymous]);
   // Persist on change only — NOT via a [timeFormat] effect, which would fire on mount with
   // the default and clobber the stored value before the mount read applies it.
   const changeTimeFormat = useCallback((f: TimeFormat) => {
@@ -348,6 +350,7 @@ export default function Chart({ userId = null, userEmail = null, userName = null
         onCompareA={setCompareAMs}
         onCompareB={setCompareBMs}
         onCompareLayout={setCompareLayout}
+        locked={anonymous}
       />
       <div className={`ac-stage${mode === "compare" ? " is-compare" : ""}`} ref={stageRef}>
         {mode === "compare" ? (
@@ -358,7 +361,7 @@ export default function Chart({ userId = null, userEmail = null, userName = null
         ) : (
           <svg className="ac-chart" viewBox="0 0 1000 1000" aria-label="living astrological chart">
             <Dial />
-            <NatalLayer natalPos={natalPos} vis={vis.natal} mode={mode} onEnter={onEnter} onMove={onMove} onLeave={onLeave} />
+            {!anonymous && <NatalLayer natalPos={natalPos} vis={vis.natal} mode={mode} onEnter={onEnter} onMove={onMove} onLeave={onLeave} />}
             {frame && <AspectLayer pos={livePos} visLive={vis.live} showMajor={showMajor} showMinor={showMinor} themeT={themeT} />}
             {frame && <LiveLayer pos={livePos} vis={vis.live} onEnter={onEnter} onMove={onMove} onLeave={onLeave} />}
           </svg>
