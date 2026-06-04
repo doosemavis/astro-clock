@@ -11,8 +11,9 @@ import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
 import { VisGrid } from "./VisGrid";
-import { ProLockSheet } from "../ProLockSheet";
 import { ZonedMomentField } from "./ZonedMomentField";
+import { presentProPaywall } from "../../lib/purchases";
+import { isProMode } from "../../lib/proMode";
 
 interface Props {
   clock: ChartClock;
@@ -78,13 +79,11 @@ export function ChartControls({
     compareA, setCompareA, compareB, setCompareB, compareView, setCompareView,
   } = clock;
 
-  const [proLock, setProLock] = useState(false);
-  const PRO_MODES: Mode[] = ["moment", "range", "compare"];
   const modeOptions = MODES.map((m) =>
-    !isPro && PRO_MODES.includes(m.key) ? { key: m.key, label: `${m.label} 🔒` } : m,
+    !isPro && isProMode(m.key) ? { key: m.key, label: `${m.label} 🔒` } : m,
   );
   const onModeChange = (m: Mode) => {
-    if (!isPro && PRO_MODES.includes(m)) { setProLock(true); return; }
+    if (!isPro && isProMode(m)) { void presentProPaywall(); return; }
     setMode(m);
   };
 
@@ -153,7 +152,7 @@ export function ChartControls({
         {isPro ? (
           <VisGrid vis={vis} onToggle={onToggleVis} />
         ) : (
-          <Pressable style={styles.locked} onPress={() => setProLock(true)}>
+          <Pressable style={styles.locked} onPress={() => void presentProPaywall()}>
             <Text style={styles.lockedText}>🔒 Glyph customization is a Pro feature</Text>
           </Pressable>
         )}
@@ -170,7 +169,6 @@ export function ChartControls({
         </View>
       </Section>
 
-      <ProLockSheet visible={proLock} onClose={() => setProLock(false)} />
     </View>
   );
 }
