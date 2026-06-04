@@ -38,8 +38,14 @@ Deno.serve(async (req) => {
 
   const { error } = await supabase.from("subscriptions").upsert(row, { onConflict: "user_id" });
   if (error) {
+    // 23503 = foreign-key violation: row.user_id is not a real auth.users id (a RevenueCat test
+    // event, or an event for a user that doesn't belong to this project). Acknowledge so
+    // RevenueCat stops retrying — there's nothing for us to write.
+    if (error.code === "23503") {
+      return new Response(JSON.stringify({ ok: true, skipped: "unknown user" }), { status: 200 });
+    }
     console.error("subscriptions upsert failed:", error.message);
-    return new Response("DB error", { status: 500 }); // non-2xx → RevenueCat retries
+    return new Response("DB error", { status: 500 }); // transient → RevenueCat retries
   }
   return new Response(JSON.stringify({ ok: true }), { status: 200 });
 });
