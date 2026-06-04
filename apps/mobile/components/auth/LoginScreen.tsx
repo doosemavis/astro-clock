@@ -1,6 +1,7 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
-  Modal, View, Text, TextInput, Pressable, ScrollView, Platform, StyleSheet,
+  Modal, View, Text, TextInput, Pressable, ScrollView, Animated,
+  Platform, StyleSheet, useWindowDimensions,
 } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
@@ -14,6 +15,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
   const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
+  const { height: screenH } = useWindowDimensions();
 
   const [mode, setMode] = useState<Mode>("signin");
   const [name, setName] = useState("");
@@ -25,6 +27,22 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
   const [confirm, setConfirm] = useState("");
   const [showOAuthHint, setShowOAuthHint] = useState(false);
   const [appleReady, setAppleReady] = useState(false);
+
+  // Slide animation: 0 = off-screen above (closed), 1 = in place (open). `rendered` keeps the
+  // Modal mounted through the slide-up exit before unmounting.
+  const anim = useRef(new Animated.Value(0)).current;
+  const [rendered, setRendered] = useState(visible);
+
+  useEffect(() => {
+    if (visible) {
+      setRendered(true);
+      Animated.timing(anim, { toValue: 1, duration: 260, useNativeDriver: true }).start();
+    } else {
+      Animated.timing(anim, { toValue: 0, duration: 200, useNativeDriver: true }).start(({ finished }) => {
+        if (finished) setRendered(false);
+      });
+    }
+  }, [visible, anim]);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
@@ -97,11 +115,17 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
     busy || !email.trim() || !password ||
     (mode === "signup" && (!pw.ok || !passwordsMatch(password, confirm)));
 
+  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [-screenH, 0] });
+  const backdropOpacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
+
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={close} statusBarTranslucent>
-      {/* Top sheet: the form drops from the top so the keyboard (bottom) never covers it. */}
+    <Modal visible={rendered} animationType="none" transparent onRequestClose={close} statusBarTranslucent>
+      {/* Top sheet: slides down from the top on open, up on close; keyboard (bottom) never covers it. */}
       <View style={styles.root}>
-        <View style={styles.sheet}>
+        <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={close} />
+        </Animated.View>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
           <Text style={styles.brand}>MoveStar</Text>
           <Text style={styles.title}>{mode === "signin" ? "Sign in" : "Create account"}</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
@@ -163,7 +187,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
               <Text style={styles.cancelText}>Cancel</Text>
             </Pressable>
           </ScrollView>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -171,6 +195,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
 
 const makeStyles = (p: Palette) => StyleSheet.create({
   root: { flex: 1, justifyContent: "flex-start" },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.55)" },
   sheet: {
     backgroundColor: p.panel, borderBottomLeftRadius: 18, borderBottomRightRadius: 18,
     paddingHorizontal: 18, paddingBottom: 18, maxHeight: "92%", flexShrink: 1,
