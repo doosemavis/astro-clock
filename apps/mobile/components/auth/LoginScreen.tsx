@@ -119,7 +119,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
     const r = await requestPasswordReset(email);
     setBusy(false);
     if (r.error) { setError(r.error); return; }
-    setInfo("We emailed you a 6-digit code. Enter it below with your new password.");
+    setInfo("We emailed you an 8-digit code. Enter it below with your new password.");
     setResetStep("code");
   }
 
@@ -164,7 +164,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
                   <>
                     <Text style={styles.label}>Code</Text>
                     <TextInput style={styles.input} value={code} onChangeText={setCode}
-                      placeholder="123456" placeholderTextColor={p.textDim}
+                      placeholder="12345678" placeholderTextColor={p.textDim}
                       keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} />
                     <Text style={styles.label}>New password</Text>
                     <TextInput style={styles.input} value={password} onChangeText={setPassword}
