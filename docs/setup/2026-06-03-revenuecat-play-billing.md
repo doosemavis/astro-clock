@@ -141,7 +141,7 @@
 - [ ] Replace the placeholder value in:
   ```json
   "extra": {
-    "revenueCatAndroidKey": "test_placeholder"
+    "revenueCatAndroidKey": "test_bWUBDRvMQHIlTkZvZzFAofTJoLo"
   }
   ```
   with the real `goog_…` public key you copied in step 2.5.
