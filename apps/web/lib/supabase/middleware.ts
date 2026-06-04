@@ -6,9 +6,17 @@ const PROTECTED = ["/account"];
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // If Supabase isn't configured (env vars unset in this deploy), skip the session refresh
+  // instead of constructing a client with undefined values and throwing — that surfaces as
+  // MIDDLEWARE_INVOCATION_FAILED (a 500 on every route). Degrade gracefully: public pages
+  // keep serving; auth-gated routes simply won't have a session.
+  if (!supabaseUrl || !supabaseKey) return response;
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
