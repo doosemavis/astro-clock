@@ -3,11 +3,14 @@ import { Modal, View, Text, Pressable, StyleSheet } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { useAuth } from "../../lib/auth";
+import { useEntitlement } from "../../hooks/useEntitlement";
+import { presentProPaywall, restorePurchases, showManageSubscriptions } from "../../lib/purchases";
 
 export function AccountView({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
-  const { user, signOut } = useAuth();
+  const { user, signOut, session } = useAuth();
+  const { isPro } = useEntitlement(session);
   const [busy, setBusy] = useState(false);
 
   const name = (user?.user_metadata?.name as string | undefined) ?? null;
@@ -38,6 +41,18 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
           <Text style={styles.label}>Email</Text>
           <Text style={styles.value}>{email}</Text>
 
+          {!isPro ? (
+            <Pressable style={styles.action} onPress={() => void presentProPaywall()}>
+              <Text style={styles.actionText}>Upgrade to Pro</Text>
+            </Pressable>
+          ) : (
+            <Pressable style={styles.action} onPress={() => void showManageSubscriptions()}>
+              <Text style={styles.actionText}>Manage subscription</Text>
+            </Pressable>
+          )}
+          <Pressable style={styles.action} onPress={() => void restorePurchases()}>
+            <Text style={styles.actionText}>Restore purchases</Text>
+          </Pressable>
           <Pressable style={[styles.signout, busy && styles.signoutOff]} onPress={onSignOut} disabled={busy}>
             <Text style={styles.signoutText}>{busy ? "…" : "Sign out"}</Text>
           </Pressable>
@@ -60,6 +75,8 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   title: { color: p.text, fontSize: 22, fontWeight: "700", marginBottom: 8 },
   label: { color: p.seclabel, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginTop: 14, marginBottom: 2 },
   value: { color: p.text, fontSize: 16 },
+  action: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 12 },
+  actionText: { color: p.live, fontSize: 16, fontWeight: "700" },
   signout: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 22 },
   signoutOff: { opacity: 0.5 },
   signoutText: { color: "#ff6b6b", fontSize: 16, fontWeight: "700" },
