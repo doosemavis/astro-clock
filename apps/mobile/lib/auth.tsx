@@ -27,6 +27,8 @@ interface AuthValue {
   signInWithGoogle: () => Promise<AuthResult>;
   signInWithApple: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<AuthResult>;
+  confirmPasswordReset: (email: string, token: string, newPassword: string) => Promise<AuthResult>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -123,9 +125,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }
 
+  async function requestPasswordReset(email: string): Promise<AuthResult> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    return error ? { error: error.message } : {};
+  }
+
+  async function confirmPasswordReset(email: string, token: string, newPassword: string): Promise<AuthResult> {
+    const { error: vErr } = await supabase.auth.verifyOtp({ email: email.trim(), token: token.trim(), type: "recovery" });
+    if (vErr) return { error: "Invalid or expired code." };
+    const { error: uErr } = await supabase.auth.updateUser({ password: newPassword });
+    return uErr ? { error: uErr.message } : {};
+  }
+
   return (
     <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, loading, signUp, signIn, signInWithGoogle, signInWithApple, signOut }}
+      value={{ session, user: session?.user ?? null, loading, signUp, signIn, signInWithGoogle, signInWithApple, signOut, requestPasswordReset, confirmPasswordReset }}
     >
       {children}
     </AuthContext.Provider>

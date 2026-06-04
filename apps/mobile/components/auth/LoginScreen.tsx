@@ -9,12 +9,12 @@ import { useAuth } from "../../lib/auth";
 import { validatePassword, passwordsMatch } from "../../lib/password";
 import * as AppleAuthentication from "expo-apple-authentication";
 
-type Mode = "signin" | "signup";
+type Mode = "signin" | "signup" | "reset";
 
 export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
-  const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInWithApple, requestPasswordReset, confirmPasswordReset } = useAuth();
   const { height: screenH } = useWindowDimensions();
 
   const [mode, setMode] = useState<Mode>("signin");
@@ -27,6 +27,8 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
   const [confirm, setConfirm] = useState("");
   const [showOAuthHint, setShowOAuthHint] = useState(false);
   const [appleReady, setAppleReady] = useState(false);
+  const [resetStep, setResetStep] = useState<"email" | "code">("email");
+  const [code, setCode] = useState("");
 
   // Slide animation: 0 = off-screen above (closed), 1 = in place (open). `rendered` keeps the
   // Modal mounted through the slide-up exit before unmounting.
@@ -56,8 +58,9 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
   const pw = validatePassword(password);
 
   function reset() {
-    setName(""); setEmail(""); setPassword(""); setConfirm("");
+    setName(""); setEmail(""); setPassword(""); setConfirm(""); setCode("");
     setError(null); setInfo(null); setBusy(false); setShowOAuthHint(false);
+    setResetStep("email");
   }
   function close() { reset(); onClose(); }
 
@@ -111,6 +114,25 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
     close();
   }
 
+  async function onSendCode() {
+    setError(null); setInfo(null); setBusy(true);
+    const r = await requestPasswordReset(email);
+    setBusy(false);
+    if (r.error) { setError(r.error); return; }
+    setInfo("We emailed you a 6-digit code. Enter it below with your new password.");
+    setResetStep("code");
+  }
+
+  async function onConfirmReset() {
+    if (!pw.ok) { setError(`Password needs ${pw.problems.join(", ")}.`); return; }
+    if (!passwordsMatch(password, confirm)) { setError("Passwords don't match."); return; }
+    setError(null); setBusy(true);
+    const r = await confirmPasswordReset(email, code, password);
+    setBusy(false);
+    if (r.error) { setError(r.error); return; }
+    close();
+  }
+
   const submitDisabled =
     busy || !email.trim() || !password ||
     (mode === "signup" && (!pw.ok || !passwordsMatch(password, confirm)));
@@ -127,65 +149,119 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
         </Animated.View>
         <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
           <Text style={styles.brand}>MoveStar</Text>
-          <Text style={styles.title}>{mode === "signin" ? "Sign in" : "Create account"}</Text>
+          <Text style={styles.title}>{mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Reset password"}</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
-            {appleReady && (
-              <Pressable style={[styles.google, styles.apple]} onPress={onApple} disabled={busy}>
-                <Text style={styles.googleText}>Continue with Apple</Text>
-              </Pressable>
-            )}
-            <Pressable style={styles.google} onPress={onGoogle} disabled={busy}>
-              <Text style={styles.googleText}>Continue with Google</Text>
-            </Pressable>
-            <View style={styles.dividerRow}>
-              <View style={styles.divider} /><Text style={styles.or}>or</Text><View style={styles.divider} />
-            </View>
-
-            {mode === "signup" && (
+            {mode === "reset" ? (
               <>
-                <Text style={styles.label}>Name</Text>
-                <TextInput style={styles.input} value={name} onChangeText={setName}
-                  placeholder="You" placeholderTextColor={p.textDim} autoCapitalize="words" />
-              </>
-            )}
-            <Text style={styles.label}>Email</Text>
-            <TextInput style={styles.input} value={email} onChangeText={setEmail}
-              placeholder="you@example.com" placeholderTextColor={p.textDim}
-              keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
-            <Text style={styles.label}>Password</Text>
-            <TextInput style={styles.input} value={password} onChangeText={setPassword}
-              placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
-
-            {mode === "signup" && (
-              <>
-                <Text style={styles.label}>Confirm password</Text>
-                <TextInput style={styles.input} value={confirm} onChangeText={setConfirm}
-                  placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
-                {confirm.length > 0 && confirm !== password && (
-                  <Text style={styles.hint}>Passwords don't match.</Text>
+                {resetStep === "email" ? (
+                  <>
+                    <Text style={styles.label}>Email</Text>
+                    <TextInput style={styles.input} value={email} onChangeText={setEmail}
+                      placeholder="you@example.com" placeholderTextColor={p.textDim}
+                      keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.label}>Code</Text>
+                    <TextInput style={styles.input} value={code} onChangeText={setCode}
+                      placeholder="123456" placeholderTextColor={p.textDim}
+                      keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} />
+                    <Text style={styles.label}>New password</Text>
+                    <TextInput style={styles.input} value={password} onChangeText={setPassword}
+                      placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
+                    <Text style={styles.label}>Confirm new password</Text>
+                    <TextInput style={styles.input} value={confirm} onChangeText={setConfirm}
+                      placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
+                    {confirm.length > 0 && confirm !== password && (
+                      <Text style={styles.hint}>Passwords don't match.</Text>
+                    )}
+                    {password.length > 0 && !pw.ok && (
+                      <Text style={styles.hint}>Needs {pw.problems.join(", ")}.</Text>
+                    )}
+                  </>
                 )}
+                {error ? <Text style={styles.err}>{error}</Text> : null}
+                {info ? <Text style={styles.ok}>{info}</Text> : null}
+                <Pressable
+                  style={[styles.submit, (busy || !email.trim() || (resetStep === "code" && (!code.trim() || !password || !confirm))) && styles.submitOff]}
+                  onPress={resetStep === "email" ? onSendCode : onConfirmReset}
+                  disabled={busy || !email.trim() || (resetStep === "code" && (!code.trim() || !password || !confirm))}
+                >
+                  <Text style={styles.submitText}>{busy ? "…" : resetStep === "email" ? "Send reset code" : "Reset password"}</Text>
+                </Pressable>
+                <Pressable style={styles.toggle} onPress={() => { setMode("signin"); setResetStep("email"); setCode(""); setError(null); setInfo(null); }}>
+                  <Text style={styles.toggleText}>Back to sign in</Text>
+                </Pressable>
+                <Pressable style={styles.cancel} onPress={close}>
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                {appleReady && (
+                  <Pressable style={[styles.google, styles.apple]} onPress={onApple} disabled={busy}>
+                    <Text style={styles.googleText}>Continue with Apple</Text>
+                  </Pressable>
+                )}
+                <Pressable style={styles.google} onPress={onGoogle} disabled={busy}>
+                  <Text style={styles.googleText}>Continue with Google</Text>
+                </Pressable>
+                <View style={styles.dividerRow}>
+                  <View style={styles.divider} /><Text style={styles.or}>or</Text><View style={styles.divider} />
+                </View>
+
+                {mode === "signup" && (
+                  <>
+                    <Text style={styles.label}>Name</Text>
+                    <TextInput style={styles.input} value={name} onChangeText={setName}
+                      placeholder="You" placeholderTextColor={p.textDim} autoCapitalize="words" />
+                  </>
+                )}
+                <Text style={styles.label}>Email</Text>
+                <TextInput style={styles.input} value={email} onChangeText={setEmail}
+                  placeholder="you@example.com" placeholderTextColor={p.textDim}
+                  keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
+                <Text style={styles.label}>Password</Text>
+                <TextInput style={styles.input} value={password} onChangeText={setPassword}
+                  placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
+
+                {mode === "signup" && (
+                  <>
+                    <Text style={styles.label}>Confirm password</Text>
+                    <TextInput style={styles.input} value={confirm} onChangeText={setConfirm}
+                      placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
+                    {confirm.length > 0 && confirm !== password && (
+                      <Text style={styles.hint}>Passwords don't match.</Text>
+                    )}
+                  </>
+                )}
+                {mode === "signup" && password.length > 0 && !pw.ok && (
+                  <Text style={styles.hint}>Needs {pw.problems.join(", ")}.</Text>
+                )}
+                {error ? <Text style={styles.err}>{error}</Text> : null}
+                {info ? <Text style={styles.ok}>{info}</Text> : null}
+                {mode === "signin" && showOAuthHint && (
+                  <Text style={styles.hint}>Used Google or Apple before? Use the buttons above.</Text>
+                )}
+
+                <Pressable style={[styles.submit, submitDisabled && styles.submitOff]} onPress={onSubmit} disabled={submitDisabled}>
+                  <Text style={styles.submitText}>{busy ? "…" : mode === "signin" ? "Sign in" : "Create account"}</Text>
+                </Pressable>
+                {mode === "signin" && (
+                  <Pressable style={styles.forgot} onPress={() => { setMode("reset"); setResetStep("email"); setError(null); setInfo(null); }}>
+                    <Text style={styles.forgotText}>Forgot password?</Text>
+                  </Pressable>
+                )}
+                <Pressable style={styles.toggle} onPress={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); setInfo(null); setConfirm(""); setShowOAuthHint(false); }}>
+                  <Text style={styles.toggleText}>
+                    {mode === "signin" ? "Need an account? Create one" : "Have an account? Sign in"}
+                  </Text>
+                </Pressable>
+                <Pressable style={styles.cancel} onPress={close}>
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </Pressable>
               </>
             )}
-            {mode === "signup" && password.length > 0 && !pw.ok && (
-              <Text style={styles.hint}>Needs {pw.problems.join(", ")}.</Text>
-            )}
-            {error ? <Text style={styles.err}>{error}</Text> : null}
-            {info ? <Text style={styles.ok}>{info}</Text> : null}
-            {mode === "signin" && showOAuthHint && (
-              <Text style={styles.hint}>Used Google or Apple before? Use the buttons above.</Text>
-            )}
-
-            <Pressable style={[styles.submit, submitDisabled && styles.submitOff]} onPress={onSubmit} disabled={submitDisabled}>
-              <Text style={styles.submitText}>{busy ? "…" : mode === "signin" ? "Sign in" : "Create account"}</Text>
-            </Pressable>
-            <Pressable style={styles.toggle} onPress={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); setInfo(null); setConfirm(""); setShowOAuthHint(false); }}>
-              <Text style={styles.toggleText}>
-                {mode === "signin" ? "Need an account? Create one" : "Have an account? Sign in"}
-              </Text>
-            </Pressable>
-            <Pressable style={styles.cancel} onPress={close}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
           </ScrollView>
         </Animated.View>
       </View>
@@ -222,4 +298,6 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   toggleText: { color: p.live, fontSize: 14 },
   cancel: { paddingVertical: 6, alignItems: "center" },
   cancelText: { color: p.textDim, fontSize: 14 },
+  forgot: { paddingVertical: 8, alignItems: "center" },
+  forgotText: { color: p.live, fontSize: 14 },
 });
