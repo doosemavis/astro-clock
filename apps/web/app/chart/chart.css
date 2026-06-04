@@ -77,6 +77,10 @@
 .ac-panel .legend .dot.live { background: var(--live); }
 .ac-panel .ephem-note { font-size: 9.5px; color: var(--seclabel); letter-spacing: .14em; text-transform: uppercase; opacity: .8; }
 .ac-panel .theme-note, .ac-panel .pace-note { font-size: 11px; color: var(--text-dim); margin-top: 8px; letter-spacing: .06em; }
+.ac-panel .ac-panel-footer { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); letter-spacing: .04em; }
+.ac-panel .ac-panel-footer a { color: var(--text-dim); text-decoration: none; }
+.ac-panel .ac-panel-footer a:hover { color: var(--text); text-decoration: underline; }
+.ac-panel .ac-panel-footer .sep { margin: 0 8px; opacity: .5; }
 
 .ac-panel .segmented { display: flex; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
 .ac-panel .segmented button { flex: 1; min-width: 0; border: none; border-right: 1px solid var(--border); border-radius: 0; padding: 9px 3px; font-size: 10px; letter-spacing: .03em; white-space: nowrap; }

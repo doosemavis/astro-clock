@@ -268,6 +268,12 @@ export function Panel(props: Props) {
         </div>
         <div className="ephem-note">Positions via live ephemeris</div>
       </div>
+
+      <div className="ac-panel-footer">
+        <a href="/terms">Terms</a>
+        <span className="sep" aria-hidden="true">·</span>
+        <a href="/privacy">Privacy</a>
+      </div>
       </div>
     </aside>
   );
