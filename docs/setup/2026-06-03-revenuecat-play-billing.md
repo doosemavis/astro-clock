@@ -145,6 +145,7 @@
   }
   ```
   with the real `goog_…` public key you copied in step 2.5.
+- [ ] Leave `revenueCatIosKey` on its `test_…` placeholder for now — iOS billing is deferred (Android-first launch). Replace it with the real `appl_…` key only when App Store billing is enabled.
 - [ ] Rebuild the native Android app so the config plugin picks up the new key:
   ```bash
   npx expo run:android
@@ -164,7 +165,7 @@ Run each scenario on a physical Android device signed in with a license-tester G
 ### 6.1 Monthly purchase
 - [ ] Open the paywall; purchase the **monthly** plan.
 - [ ] Confirm `isPro` (derived from `isProFromCustomerInfo`) flips to `true` in the app.
-- [ ] In Supabase → `public.subscriptions`: confirm a row exists with `provider = 'google_play'`, `product_id = 'pro_monthly'`, `status = 'active'`.
+- [ ] In Supabase → `public.subscriptions`: confirm a row exists with `provider = 'play'`, `product_id = 'pro_monthly'`, `status = 'active'`.
 
 ### 6.2 Yearly purchase
 - [ ] (Refund/cancel the monthly first if needed via Play Console → **Order management**.)
@@ -175,12 +176,12 @@ Run each scenario on a physical Android device signed in with a license-tester G
 - [ ] If the license-tester account has not previously subscribed, the trial offer should appear on the paywall.
 - [ ] Start the free trial for either product.
 - [ ] Confirm `isPro` is `true` during the trial period.
-- [ ] In the subscription row, confirm `status = 'active'` (or a trial-specific status, depending on your webhook handler).
+- [ ] In the subscription row, confirm `status = 'trialing'` (the webhook mapper sets this when the event's `period_type` is `TRIAL` or `INTRO`).
 
 ### 6.4 Cancellation
 - [ ] Cancel the subscription via Play Store → **Subscriptions** (the subscription stays active until the period ends).
 - [ ] Use RevenueCat → **Customer view** → **Send test webhook** → `CANCELLATION` event to trigger the webhook immediately without waiting.
-- [ ] Confirm `isPro` remains `true` until period end (grace behaviour), or `false` if the webhook sets `status = 'cancelled'` — verify this matches your intended UX.
+- [ ] Confirm `isPro` remains `true` until period end. The webhook mapper keeps `status = 'active'` for a `CANCELLATION` whose `expiration_at_ms` is still in the future (access continues until the period ends); it never writes a `'cancelled'` status. The row flips to `'expired'` only on the later `EXPIRATION` event (§6.5).
 
 ### 6.5 Expiration
 - [ ] Use RevenueCat **Send test webhook** → `EXPIRATION` event.
