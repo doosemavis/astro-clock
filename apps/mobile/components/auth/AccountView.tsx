@@ -12,6 +12,8 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
   const { user, signOut, session } = useAuth();
   const { isPro } = useEntitlement(session);
   const [busy, setBusy] = useState(false);
+  const [acting, setActing] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
 
   const name = (user?.user_metadata?.name as string | undefined) ?? null;
   const email = user?.email ?? "—";
@@ -24,6 +26,19 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
     } finally {
       setBusy(false);
     }
+  }
+
+  async function onRestore() {
+    setMsg(null); setActing(true);
+    const restored = await restorePurchases();
+    setActing(false);
+    setMsg(restored ? "Purchases restored." : "No active purchases found to restore.");
+  }
+
+  async function onManage() {
+    setMsg(null);
+    const opened = await showManageSubscriptions();
+    if (!opened) setMsg("No store subscription to manage yet. In production this opens the Play subscriptions screen.");
   }
 
   return (
@@ -46,13 +61,14 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
               <Text style={styles.actionText}>Upgrade to Pro</Text>
             </Pressable>
           ) : (
-            <Pressable style={styles.action} onPress={() => void showManageSubscriptions()}>
+            <Pressable style={styles.action} onPress={() => void onManage()}>
               <Text style={styles.actionText}>Manage subscription</Text>
             </Pressable>
           )}
-          <Pressable style={styles.action} onPress={() => void restorePurchases()}>
-            <Text style={styles.actionText}>Restore purchases</Text>
+          <Pressable style={styles.action} onPress={() => void onRestore()} disabled={acting}>
+            <Text style={styles.actionText}>{acting ? "…" : "Restore purchases"}</Text>
           </Pressable>
+          {msg ? <Text style={styles.msg}>{msg}</Text> : null}
           <Pressable style={[styles.signout, busy && styles.signoutOff]} onPress={onSignOut} disabled={busy}>
             <Text style={styles.signoutText}>{busy ? "…" : "Sign out"}</Text>
           </Pressable>
@@ -82,4 +98,5 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   signoutText: { color: "#ff6b6b", fontSize: 16, fontWeight: "700" },
   cancel: { paddingVertical: 12, alignItems: "center" },
   cancelText: { color: p.textDim, fontSize: 14 },
+  msg: { color: p.textDim, fontSize: 13, marginTop: 10, lineHeight: 18 },
 });

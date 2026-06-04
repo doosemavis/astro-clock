@@ -100,10 +100,13 @@ export async function restorePurchases(): Promise<boolean> {
   }
 }
 
-/** Open the store's manage-subscription page (Play subscriptions screen). */
-export async function showManageSubscriptions(): Promise<void> {
+/** Open the store's manage-subscription page. Returns false when there is no management URL
+ *  (e.g. the Test Store, or no active store subscription) so the UI can show a fallback. */
+export async function showManageSubscriptions(): Promise<boolean> {
   const info = await getCustomerInfoSafe();
   if (info?.managementURL) {
     Linking.openURL(info.managementURL).catch((e) => console.warn("openURL failed:", e));
+    return true;
   }
+  return false;
 }
