@@ -261,6 +261,9 @@ function AppInner() {
             caption={bigThree}
             dateText={moment}
             placeLabel={birth.placeLabel}
+            compare={clock.mode === "compare"
+              ? { aPos: compareAPos, bPos: compareBPos, aSub: cmpA, bSub: cmpB }
+              : undefined}
           />
         </View>
       ) : null}
