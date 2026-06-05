@@ -15,7 +15,7 @@ async function capture(ref: RefObject<View | null>): Promise<string> {
 /** Capture the referenced view and write it to the device photo library. */
 export async function saveChartImage(ref: RefObject<View | null>): Promise<SaveResult> {
   try {
-    const perm = await MediaLibrary.requestPermissionsAsync(); // write+read; save needs write
+    const perm = await MediaLibrary.requestPermissionsAsync(true); // writeOnly: save-only permission
     if (!perm.granted) return { ok: false, reason: "permission" };
     const uri = await capture(ref);
     await MediaLibrary.saveToLibraryAsync(uri);

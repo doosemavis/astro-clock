@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { Palette, Positions } from "@astro/engine";
-import type { Vis, VisMap } from "../../lib/chartModel";
+import type { Vis } from "../../lib/chartModel";
 import type { Framing } from "../../lib/exportPolicy";
 import type { ExportSettings } from "../../lib/exportSettings";
 import { ThemeProvider } from "../../lib/theme";
