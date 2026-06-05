@@ -33,7 +33,7 @@
       "expo-apple-authentication"
     ],
     "extra": {
-      "revenueCatAndroidKey": "test_bWUBDRvMQHIlTkZvZzFAofTJoLo",
+      "revenueCatAndroidKey": "goog_xTVbjUxpXijtscIHlJemCmWwleK",
       "revenueCatIosKey": "test_bWUBDRvMQHIlTkZvZzFAofTJoLo",
       "eas": {
         "projectId": "5c515b11-9669-44a1-a396-7316b866e2a0"

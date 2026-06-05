@@ -19,27 +19,28 @@
 - [ ] Enter bank account details and tax information. Google must approve the merchant profile before you can sell subscriptions — approval typically takes 1–3 business days.
 - [ ] Verify the profile status shows **Active** before proceeding to subscription creation.
 
-### 1.3 Create subscription products
+### 1.3 Create subscription products — ✅ DONE 2026-06-05
 
-- [ ] In Play Console → your app → **Monetise → Subscriptions → Create subscription**.
-- [ ] Create the **monthly** product:
+> **ID naming gotcha (learned 2026-06-05):** *Product* IDs allow underscores (`pro_monthly`), but *base plan* and *offer* IDs allow **only lowercase letters, numbers, and hyphens** — no underscores. Use hyphens for those (`pro-monthly-base`, `pro-monthly-trial`).
+
+- [x] In Play Console → your app → **Monetise → Subscriptions → Create subscription**.
+- [x] Created the **monthly** product:
   - Product ID: `pro_monthly`
-  - Name: "Pro Monthly"
-  - Description: brief description for the Play Store
-  - Save, then open the product and click **Add base plan**.
-  - Base plan ID: `pro_monthly_base`
-  - Billing period: **1 month**
-  - Set your price (e.g. $3.99/month) and activate the base plan.
-  - Under the base plan, click **Add offer** → choose **Free trial**.
-  - Set trial duration: **3 days**; eligibility: new subscribers only.
-  - Activate the offer.
-- [ ] Create the **yearly** product:
+  - Name: "MoveStar Pro (Monthly)"  *(internal label — not shown to users)*
+  - Base plan ID: `pro-monthly-base`  *(hyphens!)*
+  - Billing period: **1 month** · grace 7 days · account hold auto (53 d) · resubscribe Allow
+  - Price: **$6.99 USD**, auto-converted to all 174 regions.
+  - Offer `pro-monthly-trial`: **Free trial · 3 days**; eligibility **New customer acquisition → "Never had any subscription"** (one free trial per user across BOTH products — prevents farming a trial on each).
+  - Activated base plan + offer.
+- [x] Created the **yearly** product:
   - Product ID: `pro_yearly`
-  - Name: "Pro Yearly"
-  - Add base plan: `pro_yearly_base`, billing period **1 year**, set your price.
-  - Add a **3-day free trial** offer, same way as above.
-  - Activate both base plan and offer.
-- [ ] Confirm both `pro_monthly` and `pro_yearly` show status **Active** in the Subscriptions list.
+  - Name: "MoveStar Pro (Yearly)"
+  - Base plan ID: `pro-yearly-base`, billing period **1 year**, grace 14 days, price **$44.99 USD** auto-converted.
+  - Offer `pro-yearly-trial`: **Free trial · 3 days**, same "Never had any subscription" eligibility.
+  - Activated base plan + offer.
+- [x] Both `pro_monthly` and `pro_yearly` show **Active** (base plans + trials) across 174 regions.
+
+> RevenueCat mapping (§2.3) must use these exact IDs: package `$rc_monthly` → product `pro_monthly` / base plan `pro-monthly-base`; package `$rc_annual` → product `pro_yearly` / base plan `pro-yearly-base`. Summer-sale promo offers (annual −30% / monthly −20%, [[pro-subscription-pricing]]) are added later as separate *offers* on each base plan, not by changing base price.
 
 ### 1.4 Internal testing track & license testers
 
