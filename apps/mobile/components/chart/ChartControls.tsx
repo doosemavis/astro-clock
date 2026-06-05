@@ -7,7 +7,6 @@ import type { Palette, PlanetKey } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { PACES } from "../../lib/chartModel";
 import type { Mode, TimeFormat, CompareView, ThemeMode, Vis, Layer } from "../../lib/chartModel";
-import type { ExportSettings, ExportToggleKey } from "../../lib/exportSettings";
 import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
@@ -29,8 +28,6 @@ interface Props {
   onTheme: (m: ThemeMode) => void;
   vis: Vis;
   onToggleVis: (key: PlanetKey | "all", layer: Layer) => void;
-  exportSettings: ExportSettings;
-  onToggleExport: (key: ExportToggleKey) => void;
 }
 
 const MODES: { key: Mode; label: string }[] = [
@@ -71,7 +68,7 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 
 export function ChartControls({
   clock, isPro, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
-  themeMode, onTheme, vis, onToggleVis, exportSettings, onToggleExport,
+  themeMode, onTheme, vis, onToggleVis,
 }: Props) {
   const { palette: pal } = useTheme();
   const styles = useMemo(() => makeStyles(pal), [pal]);
@@ -168,25 +165,6 @@ export function ChartControls({
           </Pressable>
           <Pressable style={[styles.btn, showMinor && styles.btnOn]} onPress={onToggleMinor}>
             <Text style={[styles.btnText, showMinor && styles.btnTextOn]}>Minor</Text>
-          </Pressable>
-        </View>
-      </Section>
-
-      <Section label="Saved image">
-        <View style={styles.rowTight}>
-          <Pressable style={[styles.btn, exportSettings.caption && styles.btnOn]} onPress={() => onToggleExport("caption")}>
-            <Text style={[styles.btnText, exportSettings.caption && styles.btnTextOn]}>Caption</Text>
-          </Pressable>
-          <Pressable style={[styles.btn, exportSettings.dateTime && styles.btnOn]} onPress={() => onToggleExport("dateTime")}>
-            <Text style={[styles.btnText, exportSettings.dateTime && styles.btnTextOn]}>Date</Text>
-          </Pressable>
-        </View>
-        <View style={[styles.rowTight, { marginTop: 8 }]}>
-          <Pressable style={[styles.btn, exportSettings.placeLabel && styles.btnOn]} onPress={() => onToggleExport("placeLabel")}>
-            <Text style={[styles.btnText, exportSettings.placeLabel && styles.btnTextOn]}>Place</Text>
-          </Pressable>
-          <Pressable style={[styles.btn, exportSettings.cosmicBackground && styles.btnOn]} onPress={() => onToggleExport("cosmicBackground")}>
-            <Text style={[styles.btnText, exportSettings.cosmicBackground && styles.btnTextOn]}>Stars</Text>
           </Pressable>
         </View>
       </Section>

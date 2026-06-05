@@ -1,16 +1,15 @@
-/** Which optional overlays appear in the saved chart image. */
+/** Which optional elements appear in the saved chart image. The Sun/Moon/Rising caption is
+ *  always shown and birth location is never shown, so neither is a setting here. */
 export interface ExportSettings {
-  caption: boolean;          // Sun/Moon/Rising line
-  dateTime: boolean;         // moment / birth date-time line
-  placeLabel: boolean;       // birth place / chart label
-  cosmicBackground: boolean; // starfield vs solid theme color
+  dateTime: boolean;         // Date & time line
+  cosmicBackground: boolean; // starfield vs. solid theme color
+  logo: boolean;             // MoveStar wordmark + movestar.app footer (Pro-only toggle; free is always branded)
 }
 
 export const DEFAULT_EXPORT_SETTINGS: ExportSettings = {
-  caption: true,
   dateTime: true,
-  placeLabel: true,
   cosmicBackground: true,
+  logo: true,
 };
 
 export type ExportToggleKey = keyof ExportSettings;
@@ -27,9 +26,8 @@ export function parseExportSettings(raw: unknown): ExportSettings {
   const bool = (k: ExportToggleKey): boolean =>
     typeof r[k] === "boolean" ? (r[k] as boolean) : DEFAULT_EXPORT_SETTINGS[k];
   return {
-    caption: bool("caption"),
     dateTime: bool("dateTime"),
-    placeLabel: bool("placeLabel"),
     cosmicBackground: bool("cosmicBackground"),
+    logo: bool("logo"),
   };
 }

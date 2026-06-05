@@ -27,8 +27,8 @@ import { useEntitlement } from "./hooks/useEntitlement";
 import { SignInPrompt } from "./components/SignInPrompt";
 import { tierOf } from "./lib/entitlement";
 import { clampMode } from "./lib/proMode";
-import { ExportCard, EXPORT_SIZE } from "./components/export/ExportCard";
-import { framingFor, canShare as canShareFor } from "./lib/exportPolicy";
+import { ExportCard, EXPORT_WIDTH, exportHeight } from "./components/export/ExportCard";
+import { canShare as canShareFor, canToggleLogo as canToggleLogoFor, showLogo as showLogoFor } from "./lib/exportPolicy";
 import { DEFAULT_EXPORT_SETTINGS, toggleSetting } from "./lib/exportSettings";
 import type { ExportSettings, ExportToggleKey } from "./lib/exportSettings";
 import { loadExportSettings, saveExportSettings } from "./lib/exportSettingsStore";
@@ -226,8 +226,6 @@ function AppInner() {
             onToggleMinor={() => setShowMinor((v) => !v)}
             vis={vis}
             onToggleVis={onToggleVis}
-            exportSettings={exportSettings}
-            onToggleExport={onToggleExport}
           />
         </BottomSheet>
       ) : null}
@@ -242,13 +240,16 @@ function AppInner() {
         onEditBirth={() => { setMenuOpen(false); setEditing(true); }}
         onSave={() => { setMenuOpen(false); setExportReq("save"); }}
         onShare={() => { setMenuOpen(false); setExportReq("share"); }}
+        exportSettings={exportSettings}
+        onToggleExport={onToggleExport}
+        canToggleLogo={canToggleLogoFor(tier)}
       />
       <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
       <AccountView visible={authView === "account"} onClose={() => setAuthView(null)} />
       {exportReq ? (
-        <View ref={exportRef} collapsable={false} style={styles.exportHost}>
+        <View ref={exportRef} collapsable={false} style={[styles.exportHost, { width: EXPORT_WIDTH, height: exportHeight(width, height) }]}>
           <ExportCard
-            framing={framingFor(tier)}
+            showLogo={showLogoFor(tier, exportSettings.logo)}
             toggles={exportSettings}
             palette={palette}
             themeT={themeT}
@@ -260,7 +261,6 @@ function AppInner() {
             vis={vis}
             caption={bigThree}
             dateText={moment}
-            placeLabel={birth.placeLabel}
             compare={clock.mode === "compare"
               ? { aPos: compareAPos, bPos: compareBPos, aSub: cmpA, bSub: cmpB }
               : undefined}
@@ -301,5 +301,5 @@ const makeStyles = (p: Palette) => StyleSheet.create({
     marginBottom: 8,
   },
   note: { color: p.textDim, fontSize: 13, letterSpacing: 2 },
-  exportHost: { position: "absolute", left: -100000, top: 0, width: EXPORT_SIZE, height: EXPORT_SIZE },
+  exportHost: { position: "absolute", left: -100000, top: 0 },
 });

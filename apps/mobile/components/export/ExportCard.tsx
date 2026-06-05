@@ -1,18 +1,24 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import type { Palette, Positions } from "@astro/engine";
 import type { Vis } from "../../lib/chartModel";
-import type { Framing } from "../../lib/exportPolicy";
 import type { ExportSettings } from "../../lib/exportSettings";
 import { ThemeProvider } from "../../lib/theme";
 import { ChartWheel } from "../chart/ChartWheel";
 import { CompareWheel } from "../chart/CompareWheel";
 import { Sky } from "../chart/Sky";
 
-/** Square export resolution (px). 1080 = clean for social. */
-export const EXPORT_SIZE = 1080;
+/** Export image width in px. Height matches the device screen aspect (see `exportHeight`) so
+ *  the saved image works as a phone wallpaper — full-bleed, no letterboxing. */
+export const EXPORT_WIDTH = 1080;
+
+/** Portrait export height for a given screen, matching its aspect ratio. */
+export function exportHeight(screenW: number, screenH: number): number {
+  if (!screenW || !screenH) return Math.round(EXPORT_WIDTH * (16 / 9));
+  return Math.round(EXPORT_WIDTH * (screenH / screenW));
+}
 
 export interface ExportCardProps {
-  framing: Framing;
+  showLogo: boolean;
   toggles: ExportSettings;
   palette: Palette;
   themeT: number;
@@ -26,8 +32,6 @@ export interface ExportCardProps {
   caption: string;
   /** e.g. "Birth · Jul 29, 1992 · 2:28pm". */
   dateText: string;
-  /** e.g. "Jonesboro, AR". */
-  placeLabel?: string;
   /** When set, render the Compare pair instead of the single natal/live wheel. */
   compare?: {
     aPos: Positions;
@@ -37,88 +41,77 @@ export interface ExportCardProps {
   };
 }
 
-// Each CompareWheel in export mode: card minus wordmark/footer/gaps split across 2 wheels.
-const COMPARE_WHEEL_SIZE = Math.floor((EXPORT_SIZE - 320) / 2);
+const COMPARE_WHEEL_SIZE = Math.floor((EXPORT_WIDTH - 360) / 2);
 
-/** A fixed-size composed chart image. `branded` adds the MoveStar wordmark + footer;
- *  `clean` (Pro) omits all branding. Overlay text obeys `toggles`.
- *  When `compare` is provided, renders both Compare wheels stacked vertically. */
+/** A full-height (screen-aspect) composed chart image for saving/sharing — designed to double
+ *  as a wallpaper. The chart + labels sit as a centered cluster over the cosmic background, which
+ *  fills the whole frame. `branded` adds the MoveStar wordmark + footer; `clean` (Pro) omits them.
+ *  Overlay text obeys `toggles`. */
 export function ExportCard({
-  framing, toggles, palette: p, themeT,
+  showLogo, toggles, palette: p, themeT,
   natalPositions, livePositions, showNatal, showMajor, showMinor, vis,
-  caption, dateText, placeLabel, compare,
+  caption, dateText, compare,
 }: ExportCardProps) {
-  const branded = framing === "branded";
-  const wheel = EXPORT_SIZE - 260; // leave room for wordmark/caption/labels/footer
+  const { width: sw, height: sh } = useWindowDimensions();
+  const height = exportHeight(sw, sh);
+  const wheel = EXPORT_WIDTH - 120; // width-constrained; the tall frame has vertical room to spare
 
   return (
     <ThemeProvider value={{ t: themeT, palette: p }}>
-      <View style={[styles.card, { width: EXPORT_SIZE, height: EXPORT_SIZE, backgroundColor: p.bg }]}>
-        {toggles.cosmicBackground ? <Sky themeT={themeT} /> : null}
-        {branded ? <Text style={[styles.wordmark, { color: p.text }]}>MOVESTAR</Text> : null}
+      <View style={[styles.card, { width: EXPORT_WIDTH, height, backgroundColor: p.bg }]}>
+        {toggles.cosmicBackground ? <Sky themeT={themeT} width={EXPORT_WIDTH} height={height} /> : null}
 
-        {compare ? (
-          // Compare mode: two wheels stacked vertically, each with its sub-caption pill.
-          <View style={styles.compareStage}>
-            <CompareWheel
-              idPrefix="export-a-"
-              caption="Chart A"
-              subCaption={compare.aSub}
-              size={COMPARE_WHEEL_SIZE}
-              pos={compare.aPos}
-              showMajor={showMajor}
-              showMinor={showMinor}
-              vis={vis.live}
-            />
-            <View style={styles.compareDivider} />
-            <CompareWheel
-              idPrefix="export-b-"
-              caption="Chart B"
-              subCaption={compare.bSub}
-              size={COMPARE_WHEEL_SIZE}
-              pos={compare.bPos}
-              showMajor={showMajor}
-              showMinor={showMinor}
-              vis={vis.live}
-            />
-          </View>
-        ) : (
-          // Single-wheel mode (natal / live).
-          <View style={styles.stage}>
-            {toggles.caption ? <Text style={[styles.caption, { color: p.textDim }]}>{caption}</Text> : null}
-            <View style={{ width: wheel, height: wheel }}>
-              <ChartWheel
-                size={wheel}
-                natalPositions={natalPositions}
-                livePositions={livePositions}
-                showNatal={showNatal}
-                showMajor={showMajor}
-                showMinor={showMinor}
-                vis={vis}
+        <View style={styles.content}>
+          {showLogo ? <Text style={[styles.wordmark, { color: p.text }]}>MOVESTAR</Text> : null}
+
+          {compare ? (
+            // Compare mode: two wheels stacked vertically, each with its sub-caption pill.
+            <View style={styles.compareStage}>
+              <CompareWheel
+                idPrefix="export-a-" caption="Chart A" subCaption={compare.aSub}
+                size={COMPARE_WHEEL_SIZE} pos={compare.aPos}
+                showMajor={showMajor} showMinor={showMinor} vis={vis.live}
+              />
+              <View style={styles.compareDivider} />
+              <CompareWheel
+                idPrefix="export-b-" caption="Chart B" subCaption={compare.bSub}
+                size={COMPARE_WHEEL_SIZE} pos={compare.bPos}
+                showMajor={showMajor} showMinor={showMinor} vis={vis.live}
               />
             </View>
-            {toggles.dateTime ? <Text style={[styles.date, { color: p.text }]}>{dateText}</Text> : null}
-            {toggles.placeLabel && placeLabel ? (
-              <Text style={[styles.place, { color: p.textDim }]}>{placeLabel}</Text>
-            ) : null}
-          </View>
-        )}
+          ) : (
+            <>
+              <Text style={[styles.caption, { color: p.textDim }]}>{caption}</Text>
+              <View style={{ width: wheel, height: wheel }}>
+                <ChartWheel
+                  size={wheel}
+                  natalPositions={natalPositions}
+                  livePositions={livePositions}
+                  showNatal={showNatal}
+                  showMajor={showMajor}
+                  showMinor={showMinor}
+                  vis={vis}
+                />
+              </View>
+              {toggles.dateTime ? <Text style={[styles.date, { color: p.text }]}>{dateText}</Text> : null}
+            </>
+          )}
 
-        {branded ? <Text style={[styles.footer, { color: p.textDim }]}>movestar.app</Text> : null}
+          {showLogo ? <Text style={[styles.footer, { color: p.textDim }]}>movestar.app</Text> : null}
+        </View>
       </View>
     </ThemeProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { overflow: "hidden", alignItems: "center", justifyContent: "space-between", paddingVertical: 48 },
-  wordmark: { fontSize: 40, letterSpacing: 10, fontWeight: "700" },
-  stage: { flex: 1, alignItems: "center", justifyContent: "center" },
-  caption: { fontSize: 30, letterSpacing: 1.5, marginBottom: 18, textAlign: "center" },
-  date: { fontSize: 28, letterSpacing: 0.5, marginTop: 18, textAlign: "center" },
-  place: { fontSize: 24, marginTop: 6, textAlign: "center" },
-  footer: { fontSize: 22, letterSpacing: 2, opacity: 0.8 },
-  // Compare mode: center both wheels vertically with a small gap between them.
-  compareStage: { flex: 1, alignItems: "center", justifyContent: "center" },
-  compareDivider: { height: 20 },
+  // Full-bleed frame; the content cluster is centered, so the starfield fills above and below it.
+  card: { overflow: "hidden", alignItems: "center", justifyContent: "center" },
+  content: { alignItems: "center", justifyContent: "center", paddingHorizontal: 40 },
+  wordmark: { fontSize: 44, letterSpacing: 12, fontWeight: "700", marginBottom: 30 },
+  caption: { fontSize: 32, letterSpacing: 1.5, marginBottom: 24, textAlign: "center" },
+  date: { fontSize: 28, letterSpacing: 0.5, marginTop: 26, textAlign: "center" },
+  footer: { fontSize: 22, letterSpacing: 2, opacity: 0.8, marginTop: 34 },
+  compareStage: { alignItems: "center", justifyContent: "center" },
+  compareDivider: { height: 24 },
 });

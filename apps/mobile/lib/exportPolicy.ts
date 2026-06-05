@@ -1,13 +1,17 @@
 import type { Tier } from "./entitlement.ts";
 
-export type Framing = "branded" | "clean";
-
-/** Pro exports are clean (no watermark/chrome); free and anonymous get the branded share card. */
-export function framingFor(tier: Tier): Framing {
-  return tier === "pro" ? "clean" : "branded";
-}
-
 /** The native Share sheet is Pro-only; free/anon get Save-to-Photos only. */
 export function canShare(tier: Tier): boolean {
   return tier === "pro";
+}
+
+/** Only Pro users can toggle the MoveStar logo; free/anon are always branded. */
+export function canToggleLogo(tier: Tier): boolean {
+  return tier === "pro";
+}
+
+/** Whether the MoveStar logo (wordmark + footer) appears on the export:
+ *  free/anon are always branded; Pro follows their logo toggle. */
+export function showLogo(tier: Tier, logoSetting: boolean): boolean {
+  return tier === "pro" ? logoSetting : true;
 }

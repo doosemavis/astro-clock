@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Modal, View, Text, Pressable, StyleSheet } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../lib/theme";
+import type { ExportSettings, ExportToggleKey } from "../lib/exportSettings";
 
 interface Props {
   visible: boolean;
@@ -12,11 +13,14 @@ interface Props {
   onEditBirth: () => void;
   onSave: () => void;           // Save chart to Photos
   onShare: () => void;          // Share chart (Pro)
+  exportSettings: ExportSettings;
+  onToggleExport: (key: ExportToggleKey) => void;
+  canToggleLogo: boolean;
 }
 
 /** Small dropdown anchored under the header avatar: auth (Sign in / Account) + Edit birth.
  *  Tapping the backdrop closes it; taps on the card body are absorbed. */
-export function HeaderMenu({ visible, signedIn, canShare, onClose, onAuth, onEditBirth, onSave, onShare }: Props) {
+export function HeaderMenu({ visible, signedIn, canShare, onClose, onAuth, onEditBirth, onSave, onShare, exportSettings, onToggleExport, canToggleLogo }: Props) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
   return (
@@ -43,8 +47,27 @@ export function HeaderMenu({ visible, signedIn, canShare, onClose, onAuth, onEdi
             <Text style={styles.itemText}>Share…</Text>
           </Pressable>
         ) : null}
+        <View style={styles.divider} />
+        <ExportOption label="Date" on={exportSettings.dateTime} onPress={() => onToggleExport("dateTime")} />
+        <ExportOption label="Stars" on={exportSettings.cosmicBackground} onPress={() => onToggleExport("cosmicBackground")} />
+        {canToggleLogo ? (
+          <ExportOption label="Logo" on={exportSettings.logo} onPress={() => onToggleExport("logo")} />
+        ) : null}
       </View>
     </Modal>
+  );
+}
+
+function ExportOption({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  const { palette: p } = useTheme();
+  return (
+    <Pressable
+      style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 13, paddingHorizontal: 16 }}
+      onPress={onPress}
+    >
+      <Text style={{ color: p.text, fontSize: 16, fontWeight: "600" }}>{label}</Text>
+      <Text style={{ fontSize: 14, fontWeight: "600", color: on ? p.live : p.textDim }}>{on ? "On" : "Off"}</Text>
+    </Pressable>
   );
 }
 
