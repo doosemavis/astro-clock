@@ -6,14 +6,17 @@ import { useTheme } from "../lib/theme";
 interface Props {
   visible: boolean;
   signedIn: boolean;
+  canShare: boolean;            // Pro-only: show the Share item
   onClose: () => void;
-  onAuth: () => void; // open Sign in (logged out) or Account (logged in)
-  onEditBirth: () => void; // open the birth-details form
+  onAuth: () => void;
+  onEditBirth: () => void;
+  onSave: () => void;           // Save chart to Photos
+  onShare: () => void;          // Share chart (Pro)
 }
 
 /** Small dropdown anchored under the header avatar: auth (Sign in / Account) + Edit birth.
  *  Tapping the backdrop closes it; taps on the card body are absorbed. */
-export function HeaderMenu({ visible, signedIn, onClose, onAuth, onEditBirth }: Props) {
+export function HeaderMenu({ visible, signedIn, canShare, onClose, onAuth, onEditBirth, onSave, onShare }: Props) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
   return (
@@ -30,6 +33,15 @@ export function HeaderMenu({ visible, signedIn, onClose, onAuth, onEditBirth }: 
               <Text style={styles.itemText}>Edit birth details</Text>
             </Pressable>
           </>
+        ) : null}
+        <View style={styles.divider} />
+        <Pressable style={styles.item} onPress={onSave}>
+          <Text style={styles.itemText}>Save to Photos</Text>
+        </Pressable>
+        {canShare ? (
+          <Pressable style={styles.item} onPress={onShare}>
+            <Text style={styles.itemText}>Share…</Text>
+          </Pressable>
         ) : null}
       </View>
     </Modal>

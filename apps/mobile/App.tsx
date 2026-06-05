@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Platform, Pressable, StyleSheet, Text, ToastAndroid, useWindowDimensions, View } from "react-native";
 import { useFonts, NotoSansSymbols_400Regular } from "@expo-google-fonts/noto-sans-symbols";
 import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, mixPalette, solarT, PLANET_KEYS, SIGN_GLYPH } from "@astro/engine";
 import type { BirthData, Palette, Sign, PlanetKey } from "@astro/engine";
@@ -27,6 +27,12 @@ import { useEntitlement } from "./hooks/useEntitlement";
 import { SignInPrompt } from "./components/SignInPrompt";
 import { tierOf } from "./lib/entitlement";
 import { clampMode } from "./lib/proMode";
+import { ExportCard, EXPORT_SIZE } from "./components/export/ExportCard";
+import { framingFor, canShare as canShareFor } from "./lib/exportPolicy";
+import { DEFAULT_EXPORT_SETTINGS, toggleSetting } from "./lib/exportSettings";
+import type { ExportSettings, ExportToggleKey } from "./lib/exportSettings";
+import { loadExportSettings, saveExportSettings } from "./lib/exportSettingsStore";
+import { saveChartImage, shareChartImage } from "./lib/saveChart";
 
 const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "Date", range: "Range", compare: "Compare" };
 
@@ -55,6 +61,50 @@ function AppInner() {
   const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
   const [vis, setVis] = useState<Vis>(() => ({ natal: allVisible(PLANET_KEYS), live: allVisible(PLANET_KEYS) }));
   const onToggleVis = (key: PlanetKey | "all", layer: Layer) => setVis((v) => toggleVis(v, key, layer));
+
+  const [exportSettings, setExportSettings] = useState<ExportSettings>(DEFAULT_EXPORT_SETTINGS);
+  const [exportReq, setExportReq] = useState<null | "save" | "share">(null);
+  const exportRef = useRef<View | null>(null);
+
+  // Load persisted export toggles on launch.
+  useEffect(() => {
+    let active = true;
+    loadExportSettings().then((s) => { if (active) setExportSettings(s); });
+    return () => { active = false; };
+  }, []);
+
+  const onToggleExport = (key: ExportToggleKey) => {
+    setExportSettings((s) => {
+      const next = toggleSetting(s, key);
+      saveExportSettings(next).catch(() => { /* cache only */ });
+      return next;
+    });
+  };
+
+  // When an export is requested, the off-screen ExportCard renders; wait two frames for
+  // layout, capture it, then save or share. Clear the request when done.
+  useEffect(() => {
+    if (!exportReq) return;
+    let cancelled = false;
+    const id = requestAnimationFrame(() =>
+      requestAnimationFrame(async () => {
+        if (cancelled) return;
+        const result = exportReq === "save"
+          ? await saveChartImage(exportRef)
+          : await shareChartImage(exportRef);
+        if (cancelled) return;
+        if (result.ok && exportReq === "save") {
+          if (Platform.OS === "android") ToastAndroid.show("Saved to Photos", ToastAndroid.SHORT);
+        } else if (!result.ok && result.reason === "permission") {
+          Alert.alert("Photo access needed", "Allow photo access in Settings to save charts.");
+        } else if (!result.ok) {
+          Alert.alert("Couldn't save", "Something went wrong. Please try again.");
+        }
+        setExportReq(null);
+      }),
+    );
+    return () => { cancelled = true; cancelAnimationFrame(id); };
+  }, [exportReq]);
 
   // Load the saved birth on launch (falls back to DEFAULT_BIRTH).
   useEffect(() => {
@@ -176,6 +226,8 @@ function AppInner() {
             onToggleMinor={() => setShowMinor((v) => !v)}
             vis={vis}
             onToggleVis={onToggleVis}
+            exportSettings={exportSettings}
+            onToggleExport={onToggleExport}
           />
         </BottomSheet>
       ) : null}
@@ -184,12 +236,34 @@ function AppInner() {
       <HeaderMenu
         visible={menuOpen}
         signedIn={!!session}
+        canShare={canShareFor(tier)}
         onClose={() => setMenuOpen(false)}
         onAuth={() => { setMenuOpen(false); setAuthView(session ? "account" : "login"); }}
         onEditBirth={() => { setMenuOpen(false); setEditing(true); }}
+        onSave={() => { setMenuOpen(false); setExportReq("save"); }}
+        onShare={() => { setMenuOpen(false); setExportReq("share"); }}
       />
       <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
       <AccountView visible={authView === "account"} onClose={() => setAuthView(null)} />
+      {exportReq ? (
+        <View ref={exportRef} collapsable={false} style={styles.exportHost}>
+          <ExportCard
+            framing={framingFor(tier)}
+            toggles={exportSettings}
+            palette={palette}
+            themeT={themeT}
+            natalPositions={natalPos}
+            livePositions={livePos}
+            showNatal={!anonymous}
+            showMajor={showMajor}
+            showMinor={showMinor}
+            vis={vis}
+            caption={bigThree}
+            dateText={moment}
+            placeLabel={birth.placeLabel}
+          />
+        </View>
+      ) : null}
       <StatusBar style="light" />
       </View>
     </ThemeProvider>
@@ -224,4 +298,5 @@ const makeStyles = (p: Palette) => StyleSheet.create({
     marginBottom: 8,
   },
   note: { color: p.textDim, fontSize: 13, letterSpacing: 2 },
+  exportHost: { position: "absolute", left: -100000, top: 0, width: EXPORT_SIZE, height: EXPORT_SIZE },
 });
