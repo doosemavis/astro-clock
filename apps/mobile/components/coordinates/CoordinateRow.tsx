@@ -39,12 +39,12 @@ export const CoordinateRow = memo(CoordinateRowBase);
 const SIDE = 32;
 
 const makeStyles = (p: Palette) => StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: p.border },
-  planet: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 20, width: SIDE, textAlign: "center" },
+  row: { flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: p.border },
+  planet: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 26, width: SIDE, textAlign: "center" },
   side: { width: SIDE },
   cell: { flex: 1, paddingHorizontal: 8, alignItems: "center", justifyContent: "center" },
   vline: { width: StyleSheet.hairlineWidth, alignSelf: "stretch", backgroundColor: p.border },
-  pos: { color: p.text, fontSize: 16, textAlign: "center" },
+  pos: { color: p.text, fontSize: 20, textAlign: "center" },
   sign: { fontFamily: GLYPH_FONT },
-  empty: { color: p.textDim, fontSize: 16, textAlign: "center" },
+  empty: { color: p.textDim, fontSize: 20, textAlign: "center" },
 });
