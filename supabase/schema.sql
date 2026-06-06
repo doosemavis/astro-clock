@@ -25,13 +25,15 @@ create table if not exists public.birth_charts (
 );
 create index if not exists birth_charts_user_idx on public.birth_charts (user_id);
 
--- ---------- subscriptions (mirror of Stripe, written by webhook) ----------
+-- ---------- subscriptions (provider-agnostic: Stripe, Play, Apple) ----------
 create table if not exists public.subscriptions (
   user_id uuid primary key references auth.users on delete cascade,
   stripe_customer_id text,
   stripe_subscription_id text,
   status text,                       -- active | trialing | past_due | canceled | incomplete
   price_id text,
+  provider text,                     -- 'play' | 'stripe' | 'apple'
+  product_id text,                   -- generic product purchased (RC product id)
   current_period_end timestamptz,
   updated_at timestamptz not null default now()
 );

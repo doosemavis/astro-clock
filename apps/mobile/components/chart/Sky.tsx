@@ -5,8 +5,10 @@ import { makeStars } from "../../lib/stars";
 
 /** Full-screen sky backdrop behind the wheel: a day gradient that fades in with themeT and a
  *  starfield that fades out. themeT 0 = night (stars), 1 = day (gradient). Non-interactive. */
-function SkyBase({ themeT }: { themeT: number }) {
-  const { width, height } = useWindowDimensions();
+function SkyBase({ themeT, width: wProp, height: hProp }: { themeT: number; width?: number; height?: number }) {
+  const win = useWindowDimensions();
+  const width = wProp ?? win.width;
+  const height = hProp ?? win.height;
   const stars = useMemo(() => makeStars(160, 0x5eed), []);
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">

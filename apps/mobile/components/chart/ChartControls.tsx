@@ -12,9 +12,12 @@ import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
 import { VisGrid } from "./VisGrid";
 import { ZonedMomentField } from "./ZonedMomentField";
+import { presentProPaywall } from "../../lib/purchases";
+import { isProMode } from "../../lib/proMode";
 
 interface Props {
   clock: ChartClock;
+  isPro: boolean;
   timeFormat: TimeFormat;
   onTimeFormat: (f: TimeFormat) => void;
   showMajor: boolean;
@@ -64,7 +67,7 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export function ChartControls({
-  clock, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
+  clock, isPro, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
   themeMode, onTheme, vis, onToggleVis,
 }: Props) {
   const { palette: pal } = useTheme();
@@ -76,10 +79,18 @@ export function ChartControls({
     compareA, setCompareA, compareB, setCompareB, compareView, setCompareView,
   } = clock;
 
+  const modeOptions = MODES.map((m) =>
+    !isPro && isProMode(m.key) ? { key: m.key, label: `${m.label} 🔒` } : m,
+  );
+  const onModeChange = (m: Mode) => {
+    if (!isPro && isProMode(m)) { void presentProPaywall(); return; }
+    setMode(m);
+  };
+
   return (
     <View>
       <Section label="View">
-        <Segmented options={MODES} value={mode} onChange={setMode} wrap />
+        <Segmented options={modeOptions} value={mode} onChange={onModeChange} wrap />
       </Section>
 
       {mode === "moment" ? (
@@ -138,7 +149,13 @@ export function ChartControls({
       </Section>
 
       <Section label="Glyphs">
-        <VisGrid vis={vis} onToggle={onToggleVis} />
+        {isPro ? (
+          <VisGrid vis={vis} onToggle={onToggleVis} />
+        ) : (
+          <Pressable style={styles.locked} onPress={() => void presentProPaywall()}>
+            <Text style={styles.lockedText}>🔒 Glyph customization is a Pro feature</Text>
+          </Pressable>
+        )}
       </Section>
 
       <Section label="Aspects">
@@ -151,6 +168,7 @@ export function ChartControls({
           </Pressable>
         </View>
       </Section>
+
     </View>
   );
 }
@@ -171,7 +189,7 @@ function DateField({
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const d = new Date(valueMs);
-  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" });
   const timeOpts: Intl.DateTimeFormatOptions = timeFormat === "24h"
     ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
     : { hour: "2-digit", minute: "2-digit", hour12: true };
@@ -268,4 +286,6 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   pickerDone: { alignSelf: "flex-end", paddingHorizontal: 16, paddingVertical: 10 },
   pickerDoneText: { color: p.live, fontSize: 15, fontWeight: "600" },
   note: { color: p.textDim, fontSize: 12, marginTop: 10, lineHeight: 17 },
+  locked: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 8, paddingVertical: 14, alignItems: "center" },
+  lockedText: { color: p.textDim, fontSize: 13 },
 });

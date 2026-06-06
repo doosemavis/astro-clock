@@ -5,6 +5,7 @@ import { R, polar, declutter, PLANET_KEYS, PLANET_GLYPH } from "@astro/engine";
 import type { Positions } from "@astro/engine";
 import { CHART, GLYPH_FONT } from "./palette";
 import { useTheme } from "../../lib/theme";
+import { textGlyph } from "../../lib/glyph";
 import type { VisMap } from "../../lib/chartModel";
 
 interface Props {
@@ -35,7 +36,7 @@ function NatalLayerBase({ positions, vis }: Props) {
           textAnchor="middle"
           dy={CHART.natalGlyphSize * 0.35}
         >
-          {PLANET_GLYPH[key]}
+          {textGlyph(PLANET_GLYPH[key])}
         </SvgText>
       </G>
     );

@@ -2,15 +2,19 @@
   "expo": {
     "name": "MoveStar",
     "slug": "movestar",
-    "version": "1.0.0",
+    "scheme": "movestar",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.movestar.app",
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.movestar.app",
+      "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -24,7 +28,25 @@
     },
     "plugins": [
       "expo-font",
-      "@react-native-community/datetimepicker"
-    ]
+      "@react-native-community/datetimepicker",
+      "expo-web-browser",
+      "expo-apple-authentication",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "MoveStar saves your chart images to your photo library.",
+          "savePhotosPermission": "MoveStar saves your chart images to your photo library.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      "./plugins/withBlockedMediaPermissions"
+    ],
+    "extra": {
+      "revenueCatAndroidKey": "goog_xTVbjUxpXijtscIHlJemCmWwleK",
+      "revenueCatIosKey": "test_bWUBDRvMQHIlTkZvZzFAofTJoLo",
+      "eas": {
+        "projectId": "5c515b11-9669-44a1-a396-7316b866e2a0"
+      }
+    }
   }
 }

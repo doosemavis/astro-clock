@@ -16,9 +16,9 @@ function birthShift(instantMs: number, birth: BirthData): Date {
 export function fmtDate(date: Date, mode: Mode, birth: BirthData): string {
   if (mode === "birth")
     return birthShift(date.getTime(), birth).toLocaleDateString(undefined, {
-      month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
+      month: "short", day: "2-digit", year: "numeric", timeZone: "UTC",
     });
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" });
 }
 
 /** Force a leading zero on a single-digit leading hour ("2:28 PM" -> "02:28 PM"). Some
@@ -67,7 +67,7 @@ export function cmpCaption(moment: CompareMoment, timeFormat: TimeFormat): strin
   const [Y, M, D] = moment.date.split("-").map(Number);
   const [h, m] = moment.time.split(":").map(Number);
   const d = new Date(Y || 2000, (M || 1) - 1, D || 1, h || 0, m || 0);
-  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" });
   const opts: Intl.DateTimeFormatOptions = timeFormat === "24h"
     ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
     : { hour: "2-digit", minute: "2-digit", hour12: true };
