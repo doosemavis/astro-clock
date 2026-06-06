@@ -124,23 +124,22 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
 
               {!isPro ? (
                 <Pressable style={styles.action} onPress={() => void presentProPaywall()}>
-                  <Text style={styles.actionText}>Upgrade to Pro</Text>
+                  <Text style={styles.actionText}>Upgrade To Pro</Text>
                 </Pressable>
               ) : (
                 <Pressable style={styles.action} onPress={() => void onManage()}>
-                  <Text style={styles.actionText}>Manage subscription</Text>
+                  <Text style={styles.actionText}>Manage Subscription</Text>
                 </Pressable>
               )}
               <Pressable style={styles.action} onPress={() => void onRestore()} disabled={acting}>
-                <Text style={styles.actionText}>{acting ? "…" : "Restore purchases"}</Text>
+                <Text style={styles.actionText}>{acting ? "…" : "Restore Purchases"}</Text>
               </Pressable>
-              <Pressable style={[styles.action, styles.rowAction]} onPress={openPassword}>
-                <Text style={styles.actionText}>{hasPassword ? "Change password" : "Set a password"}</Text>
-                <Text style={styles.chevron}>›</Text>
+              <Pressable style={styles.action} onPress={openPassword}>
+                <Text style={styles.actionText}>Change Password</Text>
               </Pressable>
               {msg ? <Text style={styles.msg}>{msg}</Text> : null}
               <Pressable style={[styles.signout, busy && styles.signoutOff]} onPress={onSignOut} disabled={busy}>
-                <Text style={styles.signoutText}>{busy ? "…" : "Sign out"}</Text>
+                <Text style={styles.signoutText}>{busy ? "…" : "Sign Out"}</Text>
               </Pressable>
               <Pressable
                 style={styles.manageData}
@@ -189,7 +188,7 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
                 onChangeText={setConfirmPw}
               />
               <Pressable style={styles.action} onPress={() => void onSavePassword()} disabled={acting}>
-                <Text style={styles.actionText}>{acting ? "…" : "Save password"}</Text>
+                <Text style={styles.actionText}>{acting ? "…" : "Save Password"}</Text>
               </Pressable>
               {msg ? <Text style={styles.msg}>{msg}</Text> : null}
               <Pressable style={styles.cancel} onPress={backToMain}>
@@ -215,8 +214,6 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   value: { color: p.text, fontSize: 16 },
   action: { backgroundColor: p.bg, borderColor: p.border, borderWidth: 1, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 12 },
   actionText: { color: p.live, fontSize: 16, fontWeight: "700" },
-  rowAction: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 18 },
-  chevron: { color: p.live, fontSize: 22, fontWeight: "700", marginTop: -2 },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
   headerTitle: { color: p.text, fontSize: 22, fontWeight: "700" },
   backRow: { flexDirection: "row", alignItems: "center" },
