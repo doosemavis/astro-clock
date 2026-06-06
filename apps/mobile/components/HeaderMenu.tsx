@@ -68,9 +68,12 @@ export function HeaderMenu({
         </View>
 
         {canShare ? (
-          <Pressable style={styles.item} onPress={onShare}>
-            <Text style={styles.itemText}>Share…</Text>
-          </Pressable>
+          <>
+            <View style={styles.divider} />
+            <Pressable style={styles.item} onPress={onShare}>
+              <Text style={styles.itemText}>Share…</Text>
+            </Pressable>
+          </>
         ) : null}
       </View>
     </Modal>
