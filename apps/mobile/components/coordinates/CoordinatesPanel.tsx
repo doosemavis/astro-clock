@@ -37,7 +37,7 @@ function CoordinatesPanelBase({ visible, onClose, natalPos, livePos }: Props) {
           <Text style={s.tabDisabled}>Staircase</Text>
         </View>
         <View style={s.head}>
-          <View style={s.headCell} />
+          <Text style={s.headLabel}>Planets</Text>
           <View style={s.vline} />
           <Text style={s.headLabel}>Fixed</Text>
           <View style={s.vline} />
@@ -60,9 +60,8 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   tabs: { flexDirection: "row", gap: 16, paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: p.border },
   tabActive: { color: p.text, fontSize: 16, fontWeight: "800" },
   tabDisabled: { color: p.textDim, fontSize: 16, fontWeight: "600", opacity: 0.5 },
-  head: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: p.border },
-  headCell: { flex: 1 },
-  headLabel: { flex: 1, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingHorizontal: 6 },
+  head: { flexDirection: "row", alignItems: "stretch", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: p.border },
+  headLabel: { flex: 1, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingHorizontal: 6, paddingVertical: 10 },
   vline: { width: StyleSheet.hairlineWidth, alignSelf: "stretch", backgroundColor: p.border },
   scroll: { paddingHorizontal: 16, paddingBottom: 24 },
 });

@@ -8,7 +8,9 @@ import type { CoordinateRow as Row } from "../../lib/coordinateRows";
 
 interface Props { fixed: Row | null; moveable: Row; }
 
-/** One planet's comparison row: three even, centered columns — glyph | Fixed | Moveable. */
+/** One planet's comparison row: three even, centered columns — glyph | Fixed | Moveable.
+ *  Vertical padding lives on the cells (not the row) so the divider Views span the full
+ *  row height and join into continuous vertical gridlines down the whole table. */
 function CoordinateRowBase({ fixed, moveable }: Props) {
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
@@ -38,9 +40,9 @@ function CoordinateRowBase({ fixed, moveable }: Props) {
 export const CoordinateRow = memo(CoordinateRowBase);
 
 const makeStyles = (p: Palette) => StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: p.border },
-  cell: { flex: 1, paddingHorizontal: 6, alignItems: "center", justifyContent: "center" },
-  vline: { width: StyleSheet.hairlineWidth, alignSelf: "stretch", backgroundColor: p.border },
+  row: { flexDirection: "row", alignItems: "stretch", borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: p.border },
+  cell: { flex: 1, paddingHorizontal: 6, paddingVertical: 14, alignItems: "center", justifyContent: "center" },
+  vline: { width: StyleSheet.hairlineWidth, backgroundColor: p.border },
   planet: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 26, textAlign: "center" },
   pos: { color: p.text, fontSize: 20, textAlign: "center" },
   sign: { fontFamily: GLYPH_FONT },
