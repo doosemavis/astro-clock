@@ -49,8 +49,8 @@ export const CoordinateRow = memo(CoordinateRowBase);
 
 const makeStyles = (p: Palette) => StyleSheet.create({
   row: { flexDirection: "row", alignItems: "stretch", borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: p.border },
-  glyphCell: { width: 76, paddingVertical: 8, justifyContent: "center" },
-  cell: { flex: 1, paddingHorizontal: 6, paddingVertical: 8, justifyContent: "center" },
+  glyphCell: { width: 76, paddingVertical: 8, alignItems: "center", justifyContent: "center" },
+  cell: { flex: 1, paddingHorizontal: 6, paddingVertical: 8, alignItems: "center", justifyContent: "center" },
   vline: { width: StyleSheet.hairlineWidth, backgroundColor: p.border },
   planet: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 26, textAlign: "center" },
   planetName: { color: p.text, fontSize: 14, fontWeight: "600", textAlign: "center" },
