@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, Pressable, ScrollView, View, Text, StyleSheet, Dimensions } from "react-native";
+import { Animated, Easing, Pressable, ScrollView, Switch, View, Text, StyleSheet, Dimensions } from "react-native";
 import type { Palette, Positions } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { buildCoordinateRows } from "../../lib/coordinateRows";
@@ -26,6 +26,7 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
   const [mounted, setMounted] = useState(visible);
+  const [showNames, setShowNames] = useState(false);
   const x = useRef(new Animated.Value(visible ? 0 : -PANEL_W)).current;
   const fade = useRef(new Animated.Value(visible ? 1 : 0)).current;
 
@@ -57,6 +58,12 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
       <Animated.View style={[s.panel, { transform: [{ translateX: x }] }]}>
         <View style={s.tabs}>
           <Text style={s.tabActive}>Coordinates</Text>
+          <Switch
+            value={showNames}
+            onValueChange={setShowNames}
+            trackColor={{ false: p.border, true: p.live }}
+            thumbColor={p.panel}
+          />
         </View>
         <View style={s.head}>
           <Text style={s.headGlyph}>Planets</Text>
@@ -67,7 +74,7 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
         </View>
         <ScrollView contentContainerStyle={s.scroll}>
           {moveable.map((m, i) => (
-            <CoordinateRow key={m.key} fixed={fixed ? fixed[i] : null} moveable={m} />
+            <CoordinateRow key={m.key} fixed={fixed ? fixed[i] : null} moveable={m} showName={showNames} />
           ))}
         </ScrollView>
       </Animated.View>
@@ -80,7 +87,7 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, zIndex: 10 },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.35)" },
   panel: { position: "absolute", top: 0, bottom: 0, left: 0, width: PANEL_W, backgroundColor: p.panel, borderRightWidth: 1, borderRightColor: p.border, paddingTop: 96 },
-  tabs: { flexDirection: "row", gap: 16, paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: p.border },
+  tabs: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: p.border },
   tabActive: { color: p.text, fontSize: 16, fontWeight: "800" },
   head: { flexDirection: "row", alignItems: "stretch", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: p.border },
   headGlyph: { width: 76, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingVertical: 10 },
