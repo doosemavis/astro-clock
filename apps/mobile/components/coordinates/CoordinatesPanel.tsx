@@ -8,8 +8,10 @@ import { CoordinateRow } from "./CoordinateRow";
 interface Props {
   visible: boolean;
   onClose: () => void;
-  natalPos: Positions | null;   // null when no birth chart is set
-  livePos: Positions;
+  fixedPos: Positions | null;   // left value column source (null => "—" placeholder)
+  movablePos: Positions;        // right value column source
+  fixedLabel: string;           // "Fixed" (birth/now/date) or "From" (range/compare)
+  movableLabel: string;         // "Moveable" (birth/now/date) or "To" (range/compare)
 }
 
 const PANEL_W = Math.min(Dimensions.get("window").width * 0.86, 380);
@@ -18,7 +20,7 @@ const PANEL_W = Math.min(Dimensions.get("window").width * 0.86, 380);
  *  overlay — NOT a Modal — so the header (and its toggle button) stay above it and fully
  *  visible. It slides smoothly both ways: stays mounted through the close animation, then
  *  unmounts. Content starts below the header so the brand never overlaps the tabs. */
-function CoordinatesPanelBase({ visible, onClose, natalPos, livePos }: Props) {
+function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLabel, movableLabel }: Props) {
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
   const [mounted, setMounted] = useState(visible);
@@ -42,8 +44,8 @@ function CoordinatesPanelBase({ visible, onClose, natalPos, livePos }: Props) {
 
   if (!mounted) return null;
 
-  const fixed = natalPos ? buildCoordinateRows(natalPos) : null;
-  const moveable = buildCoordinateRows(livePos);
+  const fixed = fixedPos ? buildCoordinateRows(fixedPos) : null;
+  const moveable = buildCoordinateRows(movablePos);
 
   return (
     <View style={s.overlay} pointerEvents="box-none">
@@ -58,9 +60,9 @@ function CoordinatesPanelBase({ visible, onClose, natalPos, livePos }: Props) {
         <View style={s.head}>
           <Text style={s.headLabel}>Planets</Text>
           <View style={s.vline} />
-          <Text style={s.headLabel}>Fixed</Text>
+          <Text style={s.headLabel}>{fixedLabel}</Text>
           <View style={s.vline} />
-          <Text style={s.headLabel}>Moveable</Text>
+          <Text style={s.headLabel}>{movableLabel}</Text>
         </View>
         <ScrollView contentContainerStyle={s.scroll}>
           {moveable.map((m, i) => (

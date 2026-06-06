@@ -139,6 +139,20 @@ function AppInner() {
   const cmpA = cmpCaption(clock.compareA, timeFormat);
   const cmpB = cmpCaption(clock.compareB, timeFormat);
 
+  // The coordinates panel's two value columns are mode-dependent:
+  //   birth/now/date → Fixed = natal, Moveable = live (transit)
+  //   range          → From  = range start,  To = range end
+  //   compare        → Chart A = compareA,   Chart B = compareB
+  const rangeFromPos = useMemo(() => positions(new Date(clock.rangeStartMs)), [clock.rangeStartMs]);
+  const rangeToPos = useMemo(() => positions(new Date(clock.rangeEndMs)), [clock.rangeEndMs]);
+  const coords = useMemo(() => {
+    if (clock.mode === "range")
+      return { fixedPos: rangeFromPos, movablePos: rangeToPos, fixedLabel: "From", movableLabel: "To" };
+    if (clock.mode === "compare")
+      return { fixedPos: compareAPos, movablePos: compareBPos, fixedLabel: "Chart A", movableLabel: "Chart B" };
+    return { fixedPos: anonymous ? null : natalPos, movablePos: livePos, fixedLabel: "Fixed", movableLabel: "Moveable" };
+  }, [clock.mode, rangeFromPos, rangeToPos, compareAPos, compareBPos, anonymous, natalPos, livePos]);
+
   // Theme: light=1 / dark=0 / auto=Sun altitude at the displayed moment (birth location).
   const themeT = useMemo(() => {
     if (themeMode === "light") return 1;
@@ -256,8 +270,10 @@ function AppInner() {
       <CoordinatesPanel
         visible={coordsOpen}
         onClose={() => setCoordsOpen(false)}
-        natalPos={anonymous ? null : natalPos}
-        livePos={livePos}
+        fixedPos={coords.fixedPos}
+        movablePos={coords.movablePos}
+        fixedLabel={coords.fixedLabel}
+        movableLabel={coords.movableLabel}
       />
       <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
       <AccountView visible={authView === "account"} onClose={() => setAuthView(null)} />

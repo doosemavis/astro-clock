@@ -15,8 +15,9 @@ function CoordinateRowBase({ fixed, moveable }: Props) {
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
   const label =
-    `${moveable.key}, now ${moveable.sign} ${moveable.dms}` +
-    (fixed ? `, natal ${fixed.sign} ${fixed.dms}` : "");
+    `${moveable.key}: ` +
+    (fixed ? `${fixed.sign} ${fixed.dms}, ` : "") +
+    `${moveable.sign} ${moveable.dms}`;
   return (
     <View style={s.row} accessible accessibilityLabel={label}>
       <View style={s.cell}>
