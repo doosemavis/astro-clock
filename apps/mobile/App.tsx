@@ -180,13 +180,13 @@ function AppInner() {
       <Sky themeT={themeT} />
       <View style={styles.header}>
         <View style={styles.headerRow}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.brand}>MoveStar</Text>
+          <Text style={styles.brand}>MoveStar</Text>
+          <View style={styles.headerRight}>
+            <Pressable onPress={() => setMenuOpen(true)} style={styles.editBtn} hitSlop={8}>
+              <Avatar glyph={sunGlyph} />
+            </Pressable>
             <CoordinatesButton onPress={() => { if (isPro) setCoordsOpen(true); else void presentProPaywall(); }} />
           </View>
-          <Pressable onPress={() => setMenuOpen(true)} style={styles.editBtn} hitSlop={8}>
-            <Avatar glyph={sunGlyph} />
-          </Pressable>
         </View>
       </View>
 
@@ -300,7 +300,7 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: p.bg },
   header: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 2 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  headerRight: { alignItems: "flex-end", gap: 8 },
   brand: { color: p.text, fontSize: 24, letterSpacing: 4, fontWeight: "600" },
   editBtn: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4, paddingLeft: 12 },
   bigThree: { color: p.textDim, fontSize: 14, letterSpacing: 1, textAlign: "center", marginBottom: 12 },
