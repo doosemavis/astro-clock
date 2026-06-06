@@ -249,7 +249,7 @@ function AppInner() {
         </View>
       )}
 
-      {clock.mode === "range" && !sheetExpanded && !coordsOpen ? <RangeHud clock={clock} /> : null}
+      {clock.mode === "range" && !sheetExpanded ? <RangeHud clock={clock} /> : null}
 
       {session ? (
         <BottomSheet onExpandedChange={setSheetExpanded}>

@@ -42,7 +42,9 @@ const makeStyles = (p: Palette) => StyleSheet.create({
     flexDirection: "row", alignItems: "center",
     backgroundColor: p.panel, borderColor: p.border, borderWidth: 1, borderRadius: 26,
     paddingHorizontal: 4,
-    shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6,
+    // No Android `elevation` here: it would out-stack the coordinates panel overlay (which
+    // layers via zIndex), making the pill float over the panel. Border + iOS shadow only.
+    shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
   },
   btn: { paddingHorizontal: 16, paddingVertical: 11, alignItems: "center", justifyContent: "center" },
   speed: { paddingHorizontal: 16, paddingVertical: 11, borderLeftColor: p.border, borderLeftWidth: 1 },
