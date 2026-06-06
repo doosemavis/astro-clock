@@ -1,9 +1,10 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, Pressable, ScrollView, Switch, View, Text, StyleSheet, Dimensions } from "react-native";
+import { Animated, Easing, Pressable, ScrollView, View, Text, StyleSheet, Dimensions } from "react-native";
 import type { Palette, Positions } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { buildCoordinateRows } from "../../lib/coordinateRows";
 import { CoordinateRow } from "./CoordinateRow";
+import { Segmented } from "../Segmented";
 
 interface Props {
   visible: boolean;
@@ -58,11 +59,10 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
       <Animated.View style={[s.panel, { transform: [{ translateX: x }] }]}>
         <View style={s.tabs}>
           <Text style={s.tabActive}>Coordinates</Text>
-          <Switch
-            value={showNames}
-            onValueChange={setShowNames}
-            trackColor={{ false: p.border, true: p.live }}
-            thumbColor={p.panel}
+          <Segmented
+            options={[{ key: "glyph", label: "Glyph" }, { key: "name", label: "Name" }]}
+            value={showNames ? "name" : "glyph"}
+            onChange={(v) => setShowNames(v === "name")}
           />
         </View>
         <View style={s.head}>
