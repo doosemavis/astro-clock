@@ -52,8 +52,10 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   glyphCell: { width: 76, paddingVertical: 8, alignItems: "center", justifyContent: "center" },
   cell: { flex: 1, paddingHorizontal: 6, paddingVertical: 8, alignItems: "center", justifyContent: "center" },
   vline: { width: StyleSheet.hairlineWidth, backgroundColor: p.border },
-  planet: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 26, textAlign: "center" },
-  planetName: { color: p.text, fontSize: 14, fontWeight: "600", textAlign: "center" },
+  // Glyph (26) and name (14) share a lineHeight so the Planets column — and thus the row
+  // height — stays identical whichever the Glyph/Name toggle shows.
+  planet: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 26, lineHeight: 34, textAlign: "center" },
+  planetName: { color: p.text, fontSize: 14, lineHeight: 34, fontWeight: "600", textAlign: "center" },
   pos: { color: p.text, fontSize: 20, textAlign: "center" },
   sign: { fontFamily: GLYPH_FONT },
   empty: { color: p.textDim, fontSize: 20, textAlign: "center" },
