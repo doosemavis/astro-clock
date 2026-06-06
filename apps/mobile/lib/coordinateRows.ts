@@ -1,19 +1,12 @@
-import {
-  PLANET_KEYS, PLANET_GLYPH, SIGN_GLYPH, signOf, degInSign, decanOf, cuspOf, isAnaretic,
-} from "@astro/engine";
+import { PLANET_KEYS, PLANET_GLYPH, SIGN_GLYPH, signOf, degInSign } from "@astro/engine";
 import type { Positions, PlanetKey, Sign } from "@astro/engine";
 
 export interface CoordinateRow {
   key: PlanetKey;
-  glyph: string;          // planet glyph
-  sign: Sign;
-  signGlyph: string;
-  dms: string;            // degree within sign, e.g. "0°29'"
-  decan: 1 | 2 | 3;
-  decanRuler: PlanetKey;
-  decanRulerGlyph: string;
-  anaretic: boolean;
-  cusp: { from: Sign; to: Sign } | null;
+  glyph: string;       // planet glyph
+  sign: Sign;          // sign name (for accessibility)
+  signGlyph: string;   // sign glyph
+  dms: string;         // degree within sign, e.g. "0°29'"
 }
 
 /** Format the degree-within-sign as D°MM' (e.g. 0.4833 -> "0°29'"). */
@@ -29,19 +22,12 @@ export function buildCoordinateRows(positions: Positions): CoordinateRow[] {
   return PLANET_KEYS.map((key) => {
     const lon = positions[key];
     const sign = signOf(lon) as Sign;
-    const { decan, ruler } = decanOf(lon);
-    const cuspHit = cuspOf(lon);
     return {
       key,
       glyph: PLANET_GLYPH[key],
       sign,
       signGlyph: SIGN_GLYPH[sign],
       dms: fmtDeg(lon),
-      decan,
-      decanRuler: ruler,
-      decanRulerGlyph: PLANET_GLYPH[ruler],
-      anaretic: isAnaretic(lon),
-      cusp: cuspHit ? { from: cuspHit.from, to: cuspHit.to } : null,
     };
   });
 }

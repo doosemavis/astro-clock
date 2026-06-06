@@ -6,42 +6,37 @@ import { GLYPH_FONT } from "../chart/palette";
 import { textGlyph } from "../../lib/glyph";
 import type { CoordinateRow as Row } from "../../lib/coordinateRows";
 
-/** One body's readout: glyph + sign/degree + decan, with anaretic/cusp badges. */
-function CoordinateRowBase({ row }: { row: Row }) {
+interface Props { fixed: Row | null; moveable: Row; }
+
+/** One planet's comparison row: glyph (once) + Fixed | Moveable positions. */
+function CoordinateRowBase({ fixed, moveable }: Props) {
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
   return (
     <View style={s.row}>
-      <Text style={s.glyph}>{textGlyph(row.glyph)}</Text>
-      <View style={s.body}>
-        <Text style={s.pos}>
-          <Text style={s.sign}>{textGlyph(row.signGlyph)}</Text> {row.dms}
-        </Text>
-        <Text style={s.decan}>
-          {row.decan === 1 ? "1st" : row.decan === 2 ? "2nd" : "3rd"} ·{" "}
-          <Text style={s.sign}>{textGlyph(row.decanRulerGlyph)}</Text>
-        </Text>
+      <Text style={s.planet}>{textGlyph(moveable.glyph)}</Text>
+      <View style={s.cell}>
+        {fixed ? (
+          <Text style={s.pos}><Text style={s.sign}>{textGlyph(fixed.signGlyph)}</Text> {fixed.dms}</Text>
+        ) : (
+          <Text style={s.empty}>—</Text>
+        )}
       </View>
-      <View style={s.badges}>
-        {row.anaretic ? <Text style={[s.badge, s.anaretic]}>29°</Text> : null}
-        {row.cusp ? <Text style={[s.badge, s.cusp]}>cusp</Text> : null}
+      <View style={s.vline} />
+      <View style={s.cell}>
+        <Text style={s.pos}><Text style={s.sign}>{textGlyph(moveable.signGlyph)}</Text> {moveable.dms}</Text>
       </View>
     </View>
   );
 }
-
 export const CoordinateRow = memo(CoordinateRowBase);
 
-const makeStyles = (p: Palette) =>
-  StyleSheet.create({
-    row: { flexDirection: "row", alignItems: "center", paddingVertical: 8, gap: 8 },
-    glyph: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 18, width: 22, textAlign: "center" },
-    body: { flex: 1 },
-    pos: { color: p.text, fontSize: 14, fontWeight: "600" },
-    sign: { fontFamily: GLYPH_FONT },
-    decan: { color: p.textDim, fontSize: 12, marginTop: 1 },
-    badges: { flexDirection: "row", gap: 4 },
-    badge: { fontSize: 10, fontWeight: "800", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 5, overflow: "hidden" },
-    anaretic: { color: p.bg, backgroundColor: p.live },
-    cusp: { color: p.live, borderWidth: 1, borderColor: p.border },
-  });
+const makeStyles = (p: Palette) => StyleSheet.create({
+  row: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: p.border },
+  planet: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 18, width: 28, textAlign: "center" },
+  cell: { flex: 1, paddingHorizontal: 8 },
+  vline: { width: StyleSheet.hairlineWidth, alignSelf: "stretch", backgroundColor: p.border },
+  pos: { color: p.text, fontSize: 15 },
+  sign: { fontFamily: GLYPH_FONT },
+  empty: { color: p.textDim, fontSize: 15 },
+});
