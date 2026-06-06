@@ -5,7 +5,7 @@ import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf } from "@astr
 import "../login/auth.css";
 
 export default async function AccountPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/account");
 

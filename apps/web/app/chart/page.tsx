@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPrimaryBirthChart } from "@/lib/birthCharts";
 
 export default async function ChartPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const initialBirth = user ? await getPrimaryBirthChart(supabase) : null;
   const userName =
