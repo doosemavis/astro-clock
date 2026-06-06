@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
@@ -7,9 +7,9 @@ import { textGlyph } from "../../lib/glyph";
 import type { CoordinateRow as Row } from "../../lib/coordinateRows";
 
 /** One body's readout: glyph + sign/degree + decan, with anaretic/cusp badges. */
-export const CoordinateRow = memo(function CoordinateRow({ row }: { row: Row }) {
+function CoordinateRowBase({ row }: { row: Row }) {
   const { palette: p } = useTheme();
-  const s = makeStyles(p);
+  const s = useMemo(() => makeStyles(p), [p]);
   return (
     <View style={s.row}>
       <Text style={s.glyph}>{textGlyph(row.glyph)}</Text>
@@ -28,7 +28,9 @@ export const CoordinateRow = memo(function CoordinateRow({ row }: { row: Row }) 
       </View>
     </View>
   );
-});
+}
+
+export const CoordinateRow = memo(CoordinateRowBase);
 
 const makeStyles = (p: Palette) =>
   StyleSheet.create({

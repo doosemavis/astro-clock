@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
@@ -11,9 +12,9 @@ interface Props {
 }
 
 /** One titled column (Fixed or Moveable). `rows === null` => empty placeholder. */
-export function CoordinateColumn({ title, rows, emptyHint }: Props) {
+function CoordinateColumnBase({ title, rows, emptyHint }: Props) {
   const { palette: p } = useTheme();
-  const s = makeStyles(p);
+  const s = useMemo(() => makeStyles(p), [p]);
   return (
     <View style={s.col}>
       <Text style={s.title}>{title}</Text>
@@ -25,6 +26,8 @@ export function CoordinateColumn({ title, rows, emptyHint }: Props) {
     </View>
   );
 }
+
+export const CoordinateColumn = memo(CoordinateColumnBase);
 
 const makeStyles = (p: Palette) =>
   StyleSheet.create({
