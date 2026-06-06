@@ -24,9 +24,10 @@ interface Props {
   vis?: VisMap;
 }
 
-// Vertical chrome above/below the two wheels in "Both" (header + collapsed sheet + each
-// wheel's caption pill + gaps). A tuned constant — refine on-device like the 3a sheet height.
-const COMPARE_CHROME = 360;
+// Vertical chrome above/below the two wheels in "Both" (header + collapsed sheet 132 + each
+// wheel's caption pill ×2 + gaps). The header stacks the avatar + coordinates button (~156),
+// so both wheels need ~378 reserved to stay fully visible. Tuned constant — refine on-device.
+const COMPARE_CHROME = 392;
 // Room reserved above each wheel for its caption pill, so the flip card holds both faces.
 const CAPTION_BLOCK = 52;
 const FLIP_MS = 600;
