@@ -38,7 +38,8 @@
           "savePhotosPermission": "MoveStar saves your chart images to your photo library.",
           "isAccessMediaLocationEnabled": false
         }
-      ]
+      ],
+      "./plugins/withBlockedMediaPermissions"
     ],
     "extra": {
       "revenueCatAndroidKey": "goog_xTVbjUxpXijtscIHlJemCmWwleK",
