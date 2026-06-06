@@ -14,7 +14,9 @@ interface Props {
   movableLabel: string;         // "Moveable" (birth/now/date) or "To" (range/compare)
 }
 
-const PANEL_W = Math.min(Dimensions.get("window").width * 0.86, 380);
+// Leave a right gutter so the panel never reaches the top-right header buttons
+// (avatar + hamburger ≈ 42px circle + 20px edge padding ≈ 62px; ~22px clearance).
+const PANEL_W = Math.min(Dimensions.get("window").width - 84, 380);
 
 /** Left slide-out comparison table (Planets | Fixed | Moveable), rendered as an in-app
  *  overlay — NOT a Modal — so the header (and its toggle button) stay above it and fully
