@@ -234,7 +234,9 @@ function AppInner() {
       <HeaderMenu
         visible={menuOpen}
         signedIn={!!session}
-        canShare={canShareFor(tier)}
+        // Share temporarily disabled for release: it opens the camera instead of the native
+        // share sheet (expo-sharing). Re-enable with `canShareFor(tier)` once that's fixed.
+        canShare={false && canShareFor(tier)}
         onClose={() => setMenuOpen(false)}
         onAuth={() => { setMenuOpen(false); setAuthView(session ? "account" : "login"); }}
         onEditBirth={() => { setMenuOpen(false); setEditing(true); }}
