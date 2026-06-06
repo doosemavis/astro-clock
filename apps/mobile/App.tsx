@@ -15,6 +15,8 @@ import { BirthForm } from "./components/BirthForm";
 import { useChartClock } from "./hooks/useChartClock";
 import { ThemeProvider } from "./lib/theme";
 import { Avatar } from "./components/Avatar";
+import { CoordinatesButton } from "./components/CoordinatesButton";
+import { CoordinatesPanel } from "./components/coordinates/CoordinatesPanel";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { LoginScreen } from "./components/auth/LoginScreen";
 import { AccountView } from "./components/auth/AccountView";
@@ -33,6 +35,7 @@ import { DEFAULT_EXPORT_SETTINGS, toggleSetting } from "./lib/exportSettings";
 import type { ExportSettings, ExportToggleKey } from "./lib/exportSettings";
 import { loadExportSettings, saveExportSettings } from "./lib/exportSettingsStore";
 import { saveChartImage, shareChartImage } from "./lib/saveChart";
+import { presentProPaywall } from "./lib/purchases";
 
 const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "Date", range: "Range", compare: "Compare" };
 
@@ -54,6 +57,7 @@ function AppInner() {
   const anonymous = tier === "anonymous";
   const [authView, setAuthView] = useState<null | "login" | "account">(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [coordsOpen, setCoordsOpen] = useState(false);
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
   const [showMajor, setShowMajor] = useState(true);
   const [showMinor, setShowMinor] = useState(false);
@@ -176,7 +180,10 @@ function AppInner() {
       <Sky themeT={themeT} />
       <View style={styles.header}>
         <View style={styles.headerRow}>
-          <Text style={styles.brand}>MoveStar</Text>
+          <View style={styles.headerLeft}>
+            <Text style={styles.brand}>MoveStar</Text>
+            <CoordinatesButton onPress={() => { if (isPro) setCoordsOpen(true); else void presentProPaywall(); }} />
+          </View>
           <Pressable onPress={() => setMenuOpen(true)} style={styles.editBtn} hitSlop={8}>
             <Avatar glyph={sunGlyph} />
           </Pressable>
@@ -246,6 +253,12 @@ function AppInner() {
         onToggleExport={onToggleExport}
         canToggleLogo={canToggleLogoFor(tier)}
       />
+      <CoordinatesPanel
+        visible={coordsOpen}
+        onClose={() => setCoordsOpen(false)}
+        natalPos={anonymous ? null : natalPos}
+        livePos={livePos}
+      />
       <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
       <AccountView visible={authView === "account"} onClose={() => setAuthView(null)} />
       {exportReq ? (
@@ -287,6 +300,7 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: p.bg },
   header: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 2 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
   brand: { color: p.text, fontSize: 24, letterSpacing: 4, fontWeight: "600" },
   editBtn: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4, paddingLeft: 12 },
   bigThree: { color: p.textDim, fontSize: 14, letterSpacing: 1, textAlign: "center", marginBottom: 12 },
