@@ -39,6 +39,10 @@ import { presentProPaywall } from "./lib/purchases";
 
 const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "Date", range: "Range", compare: "Compare" };
 
+/** The chart Name counts as "unset" when empty or still the DEFAULT_BIRTH placeholder — only
+ *  then does the account name fill it as a default (a user-edited name is never overwritten). */
+const isDefaultName = (n?: string): boolean => !n || n === DEFAULT_BIRTH.name;
+
 // Quantize the Auto theme value so the palette only re-blends ~50x across a day (not every
 // frame in Auto+Range), which bounds re-renders/style recreation.
 const quantize = (x: number) => Math.round(x * 50) / 50;
@@ -51,10 +55,15 @@ function AppInner() {
 
   const [birth, setBirth] = useState<BirthData>(DEFAULT_BIRTH);
   const [editing, setEditing] = useState(false);
-  const { session } = useAuth();
+  const { session, user, setAccountName } = useAuth();
   const { isPro } = useEntitlement(session);
   const tier = tierOf(!!session, isPro);
   const anonymous = tier === "anonymous";
+  // Account display name (user_metadata.name); used to default the chart's Name. A ref holds
+  // the latest value so the launch loader can apply it without a stale closure.
+  const accountName = (user?.user_metadata?.name as string | undefined)?.trim() ?? "";
+  const accountNameRef = useRef(accountName);
+  accountNameRef.current = accountName;
   const [authView, setAuthView] = useState<null | "login" | "account">(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [coordsOpen, setCoordsOpen] = useState(false);
@@ -113,9 +122,16 @@ function AppInner() {
   // Load the saved birth on launch (falls back to DEFAULT_BIRTH).
   useEffect(() => {
     let active = true;
-    loadBirth().then((b) => { if (active && b) setBirth(b); });
+    loadBirth().then((b) => { if (active && b) setBirth({ ...b, name: isDefaultName(b.name) ? (accountNameRef.current || b.name) : b.name }); });
     return () => { active = false; };
   }, []);
+
+  // account → chart: the account name fills the chart's Name only as a default (when unset),
+  // so a user-edited chart Name is never overwritten.
+  useEffect(() => {
+    if (!accountName) return;
+    setBirth((prev) => (isDefaultName(prev.name) ? { ...prev, name: accountName } : prev));
+  }, [accountName]);
 
   const birthMs = useMemo(() => birthInstant(birth).getTime(), [birth]);
   const natalPos = useMemo(() => positions(new Date(birthMs)), [birthMs]);
@@ -205,6 +221,10 @@ function AppInner() {
     setBirth(b);
     saveBirth(b).catch(() => { /* local cache only; ignore write errors */ });
     setEditing(false);
+    // chart → account: a user-edited chart Name (not the placeholder) is saved as the account
+    // name (best-effort, signed-in only).
+    const n = b.name?.trim();
+    if (session && n && n !== DEFAULT_BIRTH.name && n !== accountNameRef.current) void setAccountName(n);
   }
 
   return (

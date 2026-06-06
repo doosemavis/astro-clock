@@ -149,7 +149,7 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
                   )
                 }
               >
-                <Text style={styles.manageDataText}>Delete account or data ↗</Text>
+                <Text style={styles.manageDataText}>Delete Account or Data ↗</Text>
               </Pressable>
               <Pressable style={styles.cancel} onPress={close}>
                 <Text style={styles.cancelText}>Close</Text>

@@ -30,6 +30,7 @@ interface AuthValue {
   requestPasswordReset: (email: string) => Promise<AuthResult>;
   confirmPasswordReset: (email: string, token: string, newPassword: string) => Promise<AuthResult>;
   setAccountPassword: (password: string) => Promise<AuthResult>;
+  setAccountName: (name: string) => Promise<AuthResult>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -143,9 +144,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return error ? { error: error.message } : {};
   }
 
+  // Update the account display name (user_metadata.name) — kept in sync with the chart's Name.
+  async function setAccountName(name: string): Promise<AuthResult> {
+    const { error } = await supabase.auth.updateUser({ data: { name } });
+    return error ? { error: error.message } : {};
+  }
+
   return (
     <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, loading, signUp, signIn, signInWithGoogle, signInWithApple, signOut, requestPasswordReset, confirmPasswordReset, setAccountPassword }}
+      value={{ session, user: session?.user ?? null, loading, signUp, signIn, signInWithGoogle, signInWithApple, signOut, requestPasswordReset, confirmPasswordReset, setAccountPassword, setAccountName }}
     >
       {children}
     </AuthContext.Provider>
