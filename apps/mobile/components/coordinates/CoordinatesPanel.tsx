@@ -60,7 +60,7 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
           <Text style={s.tabDisabled}>Staircase</Text>
         </View>
         <View style={s.head}>
-          <Text style={s.headLabel}>Planets</Text>
+          <Text style={s.headGlyph}>Planets</Text>
           <View style={s.vline} />
           <Text style={s.headLabel}>{fixedLabel}</Text>
           <View style={s.vline} />
@@ -85,7 +85,8 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   tabActive: { color: p.text, fontSize: 16, fontWeight: "800" },
   tabDisabled: { color: p.textDim, fontSize: 16, fontWeight: "600", opacity: 0.5 },
   head: { flexDirection: "row", alignItems: "stretch", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: p.border },
+  headGlyph: { flex: 0.75, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingHorizontal: 6, paddingVertical: 10 },
   headLabel: { flex: 1, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingHorizontal: 6, paddingVertical: 10 },
   vline: { width: StyleSheet.hairlineWidth, alignSelf: "stretch", backgroundColor: p.border },
-  scroll: { paddingHorizontal: 16, paddingBottom: 24 },
+  scroll: { paddingHorizontal: 16, paddingBottom: 12 },
 });

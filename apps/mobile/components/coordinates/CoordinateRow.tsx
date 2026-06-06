@@ -20,7 +20,7 @@ function CoordinateRowBase({ fixed, moveable }: Props) {
     `${moveable.sign} ${moveable.dms}`;
   return (
     <View style={s.row} accessible accessibilityLabel={label}>
-      <View style={s.cell}>
+      <View style={s.glyphCell}>
         <Text style={s.planet}>{textGlyph(moveable.glyph)}</Text>
       </View>
       <View style={s.vline} />
@@ -42,7 +42,8 @@ export const CoordinateRow = memo(CoordinateRowBase);
 
 const makeStyles = (p: Palette) => StyleSheet.create({
   row: { flexDirection: "row", alignItems: "stretch", borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: p.border },
-  cell: { flex: 1, paddingHorizontal: 6, paddingVertical: 14, alignItems: "center", justifyContent: "center" },
+  glyphCell: { flex: 0.75, paddingVertical: 8, alignItems: "center", justifyContent: "center" },
+  cell: { flex: 1, paddingHorizontal: 6, paddingVertical: 8, alignItems: "center", justifyContent: "center" },
   vline: { width: StyleSheet.hairlineWidth, backgroundColor: p.border },
   planet: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 26, textAlign: "center" },
   pos: { color: p.text, fontSize: 20, textAlign: "center" },

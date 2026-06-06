@@ -145,13 +145,32 @@ function AppInner() {
   //   compare        → Chart A = compareA,   Chart B = compareB
   const rangeFromPos = useMemo(() => positions(new Date(clock.rangeStartMs)), [clock.rangeStartMs]);
   const rangeToPos = useMemo(() => positions(new Date(clock.rangeEndMs)), [clock.rangeEndMs]);
+  // The panel's "Now" column needs the live sky even in Birth mode, where the chart's own
+  // displayInstant is frozen at the birth instant — so tick a dedicated nowMs while the
+  // panel is open in Birth mode.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!coordsOpen || clock.mode !== "birth") return;
+    setNowMs(Date.now());
+    const id = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [coordsOpen, clock.mode]);
+  const nowPos = useMemo(() => positions(new Date(nowMs)), [nowMs]);
+
   const coords = useMemo(() => {
-    if (clock.mode === "range")
-      return { fixedPos: rangeFromPos, movablePos: rangeToPos, fixedLabel: "From", movableLabel: "To" };
-    if (clock.mode === "compare")
-      return { fixedPos: compareAPos, movablePos: compareBPos, fixedLabel: "Chart A", movableLabel: "Chart B" };
-    return { fixedPos: anonymous ? null : natalPos, movablePos: livePos, fixedLabel: "Fixed", movableLabel: "Moveable" };
-  }, [clock.mode, rangeFromPos, rangeToPos, compareAPos, compareBPos, anonymous, natalPos, livePos]);
+    switch (clock.mode) {
+      case "range":
+        return { fixedPos: rangeFromPos, movablePos: rangeToPos, fixedLabel: "From", movableLabel: "To" };
+      case "compare":
+        return { fixedPos: compareAPos, movablePos: compareBPos, fixedLabel: "Chart A", movableLabel: "Chart B" };
+      case "moment":
+        return { fixedPos: anonymous ? null : natalPos, movablePos: livePos, fixedLabel: "Birth", movableLabel: fmtDate(clock.displayInstant, "moment", birth) };
+      case "birth":
+        return { fixedPos: anonymous ? null : natalPos, movablePos: nowPos, fixedLabel: "Birth", movableLabel: "Now" };
+      default: // now
+        return { fixedPos: anonymous ? null : natalPos, movablePos: livePos, fixedLabel: "Birth", movableLabel: "Now" };
+    }
+  }, [clock.mode, clock.displayInstant, rangeFromPos, rangeToPos, compareAPos, compareBPos, anonymous, natalPos, livePos, nowPos, birth]);
 
   // Theme: light=1 / dark=0 / auto=Sun altitude at the displayed moment (birth location).
   const themeT = useMemo(() => {
