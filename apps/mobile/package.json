@@ -38,7 +38,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types \"lib/*.test.ts\""
+    "test": "node --test --experimental-strip-types \"lib/*.test.ts\"",
+    "eas-build-pre-install": "node scripts/assert-build-env.mjs"
   },
   "private": true
 }
