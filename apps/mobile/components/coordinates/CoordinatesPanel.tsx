@@ -38,6 +38,7 @@ function CoordinatesPanelBase({ visible, onClose, natalPos, livePos }: Props) {
         </View>
         <View style={s.head}>
           <View style={s.gutter} />
+          <View style={s.vline} />
           <Text style={s.headLabel}>Fixed</Text>
           <View style={s.vline} />
           <Text style={s.headLabel}>Moveable</Text>

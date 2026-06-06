@@ -19,6 +19,7 @@ function CoordinateRowBase({ fixed, moveable }: Props) {
   return (
     <View style={s.row} accessible accessibilityLabel={label}>
       <Text style={s.planet}>{textGlyph(moveable.glyph)}</Text>
+      <View style={s.vline} />
       <View style={s.cell}>
         {fixed ? (
           <Text style={s.pos}><Text style={s.sign}>{textGlyph(fixed.signGlyph)}</Text> {fixed.dms}</Text>
