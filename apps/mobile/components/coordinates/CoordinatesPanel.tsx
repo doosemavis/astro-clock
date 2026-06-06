@@ -1,5 +1,5 @@
-import { memo, useEffect, useMemo, useRef } from "react";
-import { Animated, Modal, Pressable, ScrollView, View, Text, StyleSheet, Dimensions } from "react-native";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Easing, Pressable, ScrollView, View, Text, StyleSheet, Dimensions } from "react-native";
 import type { Palette, Positions } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { buildCoordinateRows } from "../../lib/coordinateRows";
@@ -14,23 +14,42 @@ interface Props {
 
 const PANEL_W = Math.min(Dimensions.get("window").width * 0.86, 380);
 
-/** Left slide-out: a Fixed | Moveable comparison table, one row per planet.
- *  The "Staircase" tab is a disabled stub for a future v2. */
+/** Left slide-out comparison table (Planets | Fixed | Moveable), rendered as an in-app
+ *  overlay — NOT a Modal — so the header (and its toggle button) stay above it and fully
+ *  visible. It slides smoothly both ways: stays mounted through the close animation, then
+ *  unmounts. Content starts below the header so the brand never overlaps the tabs. */
 function CoordinatesPanelBase({ visible, onClose, natalPos, livePos }: Props) {
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
-  const x = useRef(new Animated.Value(-PANEL_W)).current;
+  const [mounted, setMounted] = useState(visible);
+  const x = useRef(new Animated.Value(visible ? 0 : -PANEL_W)).current;
+  const fade = useRef(new Animated.Value(visible ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.timing(x, { toValue: visible ? 0 : -PANEL_W, duration: 200, useNativeDriver: true }).start();
-  }, [visible, x]);
+    if (visible) {
+      setMounted(true);
+      Animated.parallel([
+        Animated.timing(x, { toValue: 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(fade, { toValue: 1, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(x, { toValue: -PANEL_W, duration: 220, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(fade, { toValue: 0, duration: 220, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+      ]).start(({ finished }) => { if (finished) setMounted(false); });
+    }
+  }, [visible, x, fade]);
+
+  if (!mounted) return null;
 
   const fixed = natalPos ? buildCoordinateRows(natalPos) : null;
   const moveable = buildCoordinateRows(livePos);
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <Pressable style={s.backdrop} onPress={onClose} />
+    <View style={s.overlay} pointerEvents="box-none">
+      <Animated.View style={[s.backdrop, { opacity: fade }]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close coordinates" />
+      </Animated.View>
       <Animated.View style={[s.panel, { transform: [{ translateX: x }] }]}>
         <View style={s.tabs}>
           <Text style={s.tabActive}>Coordinates</Text>
@@ -49,14 +68,15 @@ function CoordinatesPanelBase({ visible, onClose, natalPos, livePos }: Props) {
           ))}
         </ScrollView>
       </Animated.View>
-    </Modal>
+    </View>
   );
 }
 export const CoordinatesPanel = memo(CoordinatesPanelBase);
 
 const makeStyles = (p: Palette) => StyleSheet.create({
+  overlay: { ...StyleSheet.absoluteFillObject, zIndex: 10 },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.35)" },
-  panel: { position: "absolute", top: 0, bottom: 0, left: 0, width: PANEL_W, backgroundColor: p.panel, borderRightWidth: 1, borderRightColor: p.border, paddingTop: 56 },
+  panel: { position: "absolute", top: 0, bottom: 0, left: 0, width: PANEL_W, backgroundColor: p.panel, borderRightWidth: 1, borderRightColor: p.border, paddingTop: 96 },
   tabs: { flexDirection: "row", gap: 16, paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: p.border },
   tabActive: { color: p.text, fontSize: 16, fontWeight: "800" },
   tabDisabled: { color: p.textDim, fontSize: 16, fontWeight: "600", opacity: 0.5 },

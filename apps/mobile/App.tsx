@@ -185,7 +185,7 @@ function AppInner() {
             <Pressable onPress={() => setMenuOpen(true)} style={styles.editBtn} hitSlop={8}>
               <Avatar glyph={sunGlyph} />
             </Pressable>
-            <CoordinatesButton onPress={() => { if (isPro) setCoordsOpen(true); else void presentProPaywall(); }} />
+            <CoordinatesButton onPress={() => { if (isPro) setCoordsOpen((v) => !v); else void presentProPaywall(); }} />
           </View>
         </View>
       </View>
@@ -298,7 +298,7 @@ export default function App() {
 
 const makeStyles = (p: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: p.bg },
-  header: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 2 },
+  header: { paddingTop: 54, paddingHorizontal: 20, paddingBottom: 2, zIndex: 20 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   headerRight: { alignItems: "flex-end", gap: 8 },
   brand: { color: p.text, fontSize: 24, letterSpacing: 4, fontWeight: "600" },
