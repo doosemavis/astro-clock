@@ -48,7 +48,7 @@ function CoordinateRowBase({ fixed, moveable, showName }: Props) {
 export const CoordinateRow = memo(CoordinateRowBase);
 
 const makeStyles = (p: Palette) => StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "stretch", borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: p.border },
+  row: { flex: 1, minHeight: 50, flexDirection: "row", alignItems: "stretch", borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: p.border },
   glyphCell: { width: 76, paddingVertical: 8, alignItems: "center", justifyContent: "center" },
   cell: { flex: 1, paddingHorizontal: 6, paddingVertical: 8, alignItems: "center", justifyContent: "center" },
   vline: { width: StyleSheet.hairlineWidth, backgroundColor: p.border },

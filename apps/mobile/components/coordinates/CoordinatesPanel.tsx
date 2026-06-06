@@ -74,7 +74,7 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
           <View style={s.vline} />
           <Text style={s.headLabel}>{movableLabel}</Text>
         </View>
-        <ScrollView contentContainerStyle={s.scroll}>
+        <ScrollView style={s.body} contentContainerStyle={s.scroll}>
           {moveable.map((m, i) => (
             <CoordinateRow key={m.key} fixed={fixed ? fixed[i] : null} moveable={m} showName={showNames} />
           ))}
@@ -96,5 +96,6 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   headGlyph: { width: 76, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingVertical: 10 },
   headLabel: { flex: 1, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingHorizontal: 6, paddingVertical: 10 },
   vline: { width: StyleSheet.hairlineWidth, alignSelf: "stretch", backgroundColor: p.border },
-  scroll: { paddingBottom: 12 },
+  body: { flex: 1 },
+  scroll: { flexGrow: 1, paddingBottom: 12 },
 });
