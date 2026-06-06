@@ -59,11 +59,13 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
       <Animated.View style={[s.panel, { transform: [{ translateX: x }] }]}>
         <View style={s.tabs}>
           <Text style={s.tabActive}>Coordinates</Text>
-          <Segmented
-            options={[{ key: "glyph", label: "Glyph" }, { key: "name", label: "Name" }]}
-            value={showNames ? "name" : "glyph"}
-            onChange={(v) => setShowNames(v === "name")}
-          />
+          <View style={s.toggle}>
+            <Segmented
+              options={[{ key: "glyph", label: "Glyph" }, { key: "name", label: "Name" }]}
+              value={showNames ? "name" : "glyph"}
+              onChange={(v) => setShowNames(v === "name")}
+            />
+          </View>
         </View>
         <View style={s.head}>
           <Text style={s.headGlyph}>Planets</Text>
@@ -89,6 +91,7 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   panel: { position: "absolute", top: 0, bottom: 0, left: 0, width: PANEL_W, backgroundColor: p.panel, borderRightWidth: 1, borderRightColor: p.border, paddingTop: 96 },
   tabs: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: p.border },
   tabActive: { color: p.text, fontSize: 16, fontWeight: "800" },
+  toggle: { width: 150 },
   head: { flexDirection: "row", alignItems: "stretch", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: p.border },
   headGlyph: { width: 76, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingVertical: 10 },
   headLabel: { flex: 1, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingHorizontal: 6, paddingVertical: 10 },
