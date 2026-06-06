@@ -8,8 +8,7 @@ import type { CoordinateRow as Row } from "../../lib/coordinateRows";
 
 interface Props { fixed: Row | null; moveable: Row; }
 
-/** One planet's comparison row: glyph (once) + centered Fixed | Moveable cells.
- *  A trailing spacer mirrors the planet gutter so the divider sits dead-center. */
+/** One planet's comparison row: three even, centered columns — glyph | Fixed | Moveable. */
 function CoordinateRowBase({ fixed, moveable }: Props) {
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
@@ -18,7 +17,9 @@ function CoordinateRowBase({ fixed, moveable }: Props) {
     (fixed ? `, natal ${fixed.sign} ${fixed.dms}` : "");
   return (
     <View style={s.row} accessible accessibilityLabel={label}>
-      <Text style={s.planet}>{textGlyph(moveable.glyph)}</Text>
+      <View style={s.cell}>
+        <Text style={s.planet}>{textGlyph(moveable.glyph)}</Text>
+      </View>
       <View style={s.vline} />
       <View style={s.cell}>
         {fixed ? (
@@ -31,20 +32,16 @@ function CoordinateRowBase({ fixed, moveable }: Props) {
       <View style={s.cell}>
         <Text style={s.pos}><Text style={s.sign}>{textGlyph(moveable.signGlyph)}</Text> {moveable.dms}</Text>
       </View>
-      <View style={s.side} />
     </View>
   );
 }
 export const CoordinateRow = memo(CoordinateRowBase);
 
-const SIDE = 32;
-
 const makeStyles = (p: Palette) => StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: p.border },
-  planet: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 26, width: SIDE, textAlign: "center" },
-  side: { width: SIDE },
-  cell: { flex: 1, paddingHorizontal: 8, alignItems: "center", justifyContent: "center" },
+  cell: { flex: 1, paddingHorizontal: 6, alignItems: "center", justifyContent: "center" },
   vline: { width: StyleSheet.hairlineWidth, alignSelf: "stretch", backgroundColor: p.border },
+  planet: { color: p.text, fontFamily: GLYPH_FONT, fontSize: 26, textAlign: "center" },
   pos: { color: p.text, fontSize: 20, textAlign: "center" },
   sign: { fontFamily: GLYPH_FONT },
   empty: { color: p.textDim, fontSize: 20, textAlign: "center" },

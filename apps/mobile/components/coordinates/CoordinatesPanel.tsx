@@ -37,12 +37,11 @@ function CoordinatesPanelBase({ visible, onClose, natalPos, livePos }: Props) {
           <Text style={s.tabDisabled}>Staircase</Text>
         </View>
         <View style={s.head}>
-          <View style={s.gutter} />
+          <View style={s.headCell} />
           <View style={s.vline} />
           <Text style={s.headLabel}>Fixed</Text>
           <View style={s.vline} />
           <Text style={s.headLabel}>Moveable</Text>
-          <View style={s.gutter} />
         </View>
         <ScrollView contentContainerStyle={s.scroll}>
           {moveable.map((m, i) => (
@@ -62,8 +61,8 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   tabActive: { color: p.text, fontSize: 16, fontWeight: "800" },
   tabDisabled: { color: p.textDim, fontSize: 16, fontWeight: "600", opacity: 0.5 },
   head: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: p.border },
-  gutter: { width: 32 },
-  headLabel: { flex: 1, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingHorizontal: 8 },
+  headCell: { flex: 1 },
+  headLabel: { flex: 1, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingHorizontal: 6 },
   vline: { width: StyleSheet.hairlineWidth, alignSelf: "stretch", backgroundColor: p.border },
   scroll: { paddingHorizontal: 16, paddingBottom: 24 },
 });
