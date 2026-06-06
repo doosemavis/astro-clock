@@ -211,10 +211,10 @@ function AppInner() {
     <ThemeProvider value={{ t: themeT, palette }}>
       <View style={styles.root}>
       <Sky themeT={themeT} />
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
+      <View style={styles.header} pointerEvents="box-none">
+        <View style={styles.headerRow} pointerEvents="box-none">
           <Text style={styles.brand}>MoveStar</Text>
-          <View style={styles.headerRight}>
+          <View style={styles.headerRight} pointerEvents="box-none">
             <Pressable onPress={() => setMenuOpen(true)} style={styles.editBtn} hitSlop={8}>
               <Avatar glyph={sunGlyph} />
             </Pressable>
