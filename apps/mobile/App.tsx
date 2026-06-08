@@ -55,7 +55,7 @@ function AppInner() {
 
   const [birth, setBirth] = useState<BirthData>(DEFAULT_BIRTH);
   const [editing, setEditing] = useState(false);
-  const { session, user, setAccountName } = useAuth();
+  const { session, user } = useAuth();
   const { isPro } = useEntitlement(session);
   const tier = tierOf(!!session, isPro);
   const anonymous = tier === "anonymous";
@@ -221,10 +221,9 @@ function AppInner() {
     setBirth(b);
     saveBirth(b).catch(() => { /* local cache only; ignore write errors */ });
     setEditing(false);
-    // chart → account: a user-edited chart Name (not the placeholder) is saved as the account
-    // name (best-effort, signed-in only).
-    const n = b.name?.trim();
-    if (session && n && n !== DEFAULT_BIRTH.name && n !== accountNameRef.current) void setAccountName(n);
+    // The chart Name is independent: editing it NEVER changes the account name (which comes only
+    // from the create-account form or 3rd-party auth). It's pre-filled from the account name as a
+    // default while still the placeholder, then it's its own thing.
   }
 
   return (
