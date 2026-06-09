@@ -22,7 +22,7 @@ export function cuspOf(
   orbDeg = 1,
 ): { onCusp: boolean; from: Sign; to: Sign } | null {
   const d = degInSign(lon);
-  const sign = signOf(lon) as Sign;
+  const sign = signOf(lon);
   const idx = SIGNS.indexOf(sign);
   if (d < orbDeg) return { onCusp: true, from: SIGNS[(idx + 11) % 12], to: sign };
   if (d > 30 - orbDeg) return { onCusp: true, from: sign, to: SIGNS[(idx + 1) % 12] };
