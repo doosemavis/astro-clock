@@ -44,7 +44,7 @@ export function houseOf(planetLon: number, ascLon: number): number {
 
 /** Whole-sign house for every body, keyed by planet. */
 export function wholeSignHouses(pos: Positions, ascLon: number): Record<PlanetKey, number> {
-  const out = {} as Record<PlanetKey, number>;
-  for (const k of PLANET_KEYS) out[k] = houseOf(pos[k], ascLon);
-  return out;
+  return Object.fromEntries(
+    PLANET_KEYS.map((k) => [k, houseOf(pos[k], ascLon)]),
+  ) as Record<PlanetKey, number>;
 }
