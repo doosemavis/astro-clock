@@ -2,7 +2,7 @@
 export * from "./types.ts";
 export { positions, sunAltitude, ascendant, birthInstant, dayNumber } from "./ephemeris.ts";
 export { ASPECT_DEFS, separation, aspectBetween, findAspects } from "./aspects.ts";
-export { decanOf, cuspOf, isAnaretic } from "./coordinates.ts";
+export { decanOf, cuspOf, isAnaretic, houseOf, wholeSignHouses } from "./coordinates.ts";
 export { R, CX, CY, signOf, degInSign, formatDMS, polar, declutter, arcPath } from "./chart.ts";
 export {
   NIGHT, DAY, THEME_VARS, mixColor, themeVars, mixPalette, aspectColor, solarT,
