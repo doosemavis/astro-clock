@@ -30,6 +30,7 @@ export function natalRequests(pos: Positions, ascLon: number): NatalRequest[] {
 
 /** Natal positions + current positions → the list of forecast (transit) keys. */
 export function forecastRequests(natal: Positions, now: Positions): ForecastRequest[] {
+  // transitHits is (transiting, natal): "now" is the transiting sky, "natal" is the birth chart.
   return transitHits(now, natal).map((h) => ({
     subject: h.transiting,
     kind: "transit",

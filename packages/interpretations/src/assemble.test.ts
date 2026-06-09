@@ -15,6 +15,16 @@ test("natalRequests: one rising sign + per-planet sign + per-planet house", () =
   assert.ok(reqs.some((r) => r.subject === "sun" && r.kind === "house" && r.key === "house:sun:1"));
 });
 
+test("natalRequests: non-zero position routes signOf/houseOf args correctly", () => {
+  const pos = zero();
+  pos.sun = 95;       // Cancer (90–120°), sign index 3
+  const reqs = natalRequests(pos, 30); // Taurus ascendant (sign index 1)
+  // Sun in Cancer
+  assert.ok(reqs.some((r) => r.subject === "sun" && r.kind === "sign" && r.key === "sign:sun:Cancer"));
+  // Sun sign 3, asc sign 1 → whole-sign house = ((3 - 1 + 12) % 12) + 1 = 3
+  assert.ok(reqs.some((r) => r.subject === "sun" && r.kind === "house" && r.key === "house:sun:3"));
+});
+
 test("forecastRequests: maps transit hits to transit keys", () => {
   const natal = zero();
   const now = { ...zero(), sun: 120 }; // transiting sun trine natal moon (both ref 0)
