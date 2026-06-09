@@ -15,3 +15,4 @@ export {
   natalRequests, forecastRequests,
   type NatalRequest, type ForecastRequest,
 } from "./assemble.ts";
+export { TEASER_BANK, TeaserBankSchema, type TeaserBank, type TeaserEntry } from "./teaser.ts";
