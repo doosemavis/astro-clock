@@ -135,6 +135,7 @@ function AppInner() {
 
   const birthMs = useMemo(() => birthInstant(birth).getTime(), [birth]);
   const natalPos = useMemo(() => positions(new Date(birthMs)), [birthMs]);
+  const natalAsc = useMemo(() => ascendant(new Date(birthMs), birth.lat, birth.lon), [birthMs, birth.lat, birth.lon]);
   const clock = useChartClock(birthMs, birth);
   const livePos = useMemo(() => positions(clock.displayInstant), [clock.displayInstant]);
 
@@ -312,6 +313,9 @@ function AppInner() {
         movablePos={coords.movablePos}
         fixedLabel={coords.fixedLabel}
         movableLabel={coords.movableLabel}
+        natalPos={natalPos}
+        ascLon={natalAsc}
+        isPro={isPro}
       />
       <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
       <AccountView visible={authView === "account"} onClose={() => setAuthView(null)} />

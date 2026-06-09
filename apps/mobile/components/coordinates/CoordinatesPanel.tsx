@@ -5,6 +5,7 @@ import { useTheme } from "../../lib/theme";
 import { buildCoordinateRows } from "../../lib/coordinateRows";
 import { CoordinateRow } from "./CoordinateRow";
 import { Segmented } from "../Segmented";
+import { ReadingsList } from "./ReadingsList";
 
 interface Props {
   visible: boolean;
@@ -13,6 +14,9 @@ interface Props {
   movablePos: Positions;        // right value column source
   fixedLabel: string;           // "Fixed" (birth/now/date) or "From" (range/compare)
   movableLabel: string;         // "Moveable" (birth/now/date) or "To" (range/compare)
+  natalPos: Positions;          // birth chart positions (for Readings tab)
+  ascLon: number;               // natal ascendant longitude (for Readings tab)
+  isPro: boolean;               // entitlement (for Readings tab gating)
 }
 
 // Leave a right gutter so the panel never reaches the top-right header buttons
@@ -23,11 +27,12 @@ const PANEL_W = Math.min(Dimensions.get("window").width - 84, 380);
  *  overlay — NOT a Modal — so the header (and its toggle button) stay above it and fully
  *  visible. It slides smoothly both ways: stays mounted through the close animation, then
  *  unmounts. Content starts below the header so the brand never overlaps the tabs. */
-function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLabel, movableLabel }: Props) {
+function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLabel, movableLabel, natalPos, ascLon, isPro }: Props) {
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
   const [mounted, setMounted] = useState(visible);
   const [showNames, setShowNames] = useState(false);
+  const [tab, setTab] = useState<"coordinates" | "readings">("coordinates");
   const x = useRef(new Animated.Value(visible ? 0 : -PANEL_W)).current;
   const fade = useRef(new Animated.Value(visible ? 1 : 0)).current;
 
@@ -58,27 +63,42 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
       </Animated.View>
       <Animated.View style={[s.panel, { transform: [{ translateX: x }] }]}>
         <View style={s.tabs}>
-          <Text style={s.tabActive}>Coordinates</Text>
-          <View style={s.toggle}>
-            <Segmented
-              options={[{ key: "glyph", label: "Glyph" }, { key: "name", label: "Name" }]}
-              value={showNames ? "name" : "glyph"}
-              onChange={(v) => setShowNames(v === "name")}
-            />
+          <View style={s.tabRow}>
+            <Pressable onPress={() => setTab("coordinates")}>
+              <Text style={tab === "coordinates" ? s.tabActive : s.tabInactive}>Coordinates</Text>
+            </Pressable>
+            <Pressable onPress={() => setTab("readings")}>
+              <Text style={tab === "readings" ? s.tabActive : s.tabInactive}>Readings</Text>
+            </Pressable>
           </View>
+          {tab === "coordinates" ? (
+            <View style={s.toggle}>
+              <Segmented
+                options={[{ key: "glyph", label: "Glyph" }, { key: "name", label: "Name" }]}
+                value={showNames ? "name" : "glyph"}
+                onChange={(v) => setShowNames(v === "name")}
+              />
+            </View>
+          ) : null}
         </View>
-        <View style={s.head}>
-          <Text style={s.headGlyph}>Planets</Text>
-          <View style={s.vline} />
-          <Text style={s.headLabel}>{fixedLabel}</Text>
-          <View style={s.vline} />
-          <Text style={s.headLabel}>{movableLabel}</Text>
-        </View>
-        <ScrollView style={s.body} contentContainerStyle={s.scroll}>
-          {moveable.map((m, i) => (
-            <CoordinateRow key={m.key} fixed={fixed ? fixed[i] : null} moveable={m} showName={showNames} />
-          ))}
-        </ScrollView>
+        {tab === "coordinates" ? (
+          <>
+            <View style={s.head}>
+              <Text style={s.headGlyph}>Planets</Text>
+              <View style={s.vline} />
+              <Text style={s.headLabel}>{fixedLabel}</Text>
+              <View style={s.vline} />
+              <Text style={s.headLabel}>{movableLabel}</Text>
+            </View>
+            <ScrollView style={s.body} contentContainerStyle={s.scroll}>
+              {moveable.map((m, i) => (
+                <CoordinateRow key={m.key} fixed={fixed ? fixed[i] : null} moveable={m} showName={showNames} />
+              ))}
+            </ScrollView>
+          </>
+        ) : (
+          <ReadingsList natalPos={natalPos} ascLon={ascLon} isPro={isPro} />
+        )}
       </Animated.View>
     </View>
   );
@@ -90,7 +110,9 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.35)" },
   panel: { position: "absolute", top: 0, bottom: 0, left: 0, width: PANEL_W, backgroundColor: p.panel, borderRightWidth: 1, borderRightColor: p.border, paddingTop: 96 },
   tabs: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: p.border },
+  tabRow: { flexDirection: "row", gap: 16 },
   tabActive: { color: p.text, fontSize: 16, fontWeight: "800" },
+  tabInactive: { color: p.textDim, fontSize: 16, fontWeight: "600" },
   toggle: { width: 150 },
   head: { flexDirection: "row", alignItems: "stretch", borderBottomWidth: 1, borderBottomColor: p.border },
   headGlyph: { width: 76, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingVertical: 10 },
