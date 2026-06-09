@@ -238,7 +238,7 @@ function AppInner() {
             <Pressable onPress={() => setMenuOpen(true)} style={styles.editBtn} hitSlop={8}>
               <Avatar glyph={sunGlyph} />
             </Pressable>
-            <CoordinatesButton onPress={() => { if (isPro) setCoordsOpen((v) => !v); else void presentProPaywall(); }} />
+            <CoordinatesButton onPress={() => { if (anonymous) setAuthView("login"); else setCoordsOpen((v) => !v); }} />
           </View>
         </View>
       </View>
@@ -316,6 +316,7 @@ function AppInner() {
         natalPos={natalPos}
         ascLon={natalAsc}
         isPro={isPro}
+        onUpgrade={() => void presentProPaywall()}
       />
       <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
       <AccountView visible={authView === "account"} onClose={() => setAuthView(null)} />
