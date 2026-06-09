@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { transitHits, TRANSIT_DEFS } from "./transits.ts";
 import { PLANET_KEYS, type Positions } from "@astro/engine";
+import { TRANSIT_ASPECTS } from "./keys.ts";
 
 // Build a Positions object with everything at 0, then override specific bodies.
 const at = (overrides: Partial<Positions>): Positions => ({
@@ -11,13 +12,15 @@ const at = (overrides: Partial<Positions>): Positions => ({
 
 test("TRANSIT_DEFS include conjunction through opposition", () => {
   assert.deepEqual(TRANSIT_DEFS.map((d) => d.name), ["conjunction", "sextile", "square", "trine", "opposition"]);
+  // Guard: detection defs must stay in sync with the enumerated aspect list (keys.ts).
+  assert.deepEqual(TRANSIT_DEFS.map((d) => d.name), [...TRANSIT_ASPECTS]);
 });
 
 test("transitHits finds a transiting Sun trine natal Moon (120°)", () => {
   const now = at({ sun: 120 });   // transiting sun at 120
   const natal = at({ moon: 0 });  // natal moon at 0 → 120° separation = trine
   const hits = transitHits(now, natal);
-  assert.ok(hits.some((h) => h.transiting === "sun" && h.aspect === "trine" && h.natal === "moon"));
+  assert.ok(hits.some((h) => h.transiting === "sun" && h.aspect === "trine" && h.natal === "moon" && h.delta === 0));
 });
 
 test("transitHits only considers the 5 transiting bodies", () => {

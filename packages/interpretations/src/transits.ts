@@ -22,6 +22,8 @@ export interface TransitHit {
 /** Cross-set: aspects from each transiting body to each natal body (first match wins). */
 export function transitHits(transiting: Positions, natal: Positions): TransitHit[] {
   const hits: TransitHit[] = [];
+  // Same-body pairs (e.g. transiting Sun vs natal Sun) yield a ~0° conjunction — this is
+  // the solar/lunar "return" and is intentional, not a self-comparison bug.
   for (const t of TRANSITING_BODIES) {
     for (const n of PLANET_KEYS) {
       const d = separation(transiting[t], natal[n]);
