@@ -1,0 +1,25 @@
+{
+  "name": "@astro/interpretations",
+  "version": "0.1.0",
+  "description": "Keyed astrological interpretation text layer on top of @astro/engine. Pure data + lookup; no DOM, no I/O at runtime.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "test": "node --test --experimental-strip-types \"src/*.test.ts\"",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@astro/engine": "workspace:*",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
