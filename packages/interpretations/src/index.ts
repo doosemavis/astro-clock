@@ -8,6 +8,7 @@ export {
   type TransitAspect,
 } from "./keys.ts";
 export { lookup } from "./lookup.ts";
+export { titleFor } from "./titles.ts";
 export { isTeaser, visibleField, FREE_TEASER_SUBJECTS, type Tier } from "./gating.ts";
 export { transitHits, TRANSIT_DEFS, type TransitHit } from "./transits.ts";
 export {

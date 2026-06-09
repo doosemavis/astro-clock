@@ -1,16 +1,6 @@
 import { allSignKeys, allHouseKeys, allTransitKeys } from "../src/keys.ts";
 import type { Bank } from "../src/types.ts";
-
-const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
-
-/** Human-readable title for a key (used in UI and to seed the LLM prompt). */
-export function titleFor(key: string): string {
-  const [kind, a, b, c] = key.split(":");
-  if (kind === "sign") return `${a === "ascendant" ? "Rising" : cap(a)} in ${b}`;
-  if (kind === "house") return `${cap(a)} in House ${b}`;
-  if (kind === "transit") return `Transiting ${cap(a)} ${b} natal ${cap(c)}`;
-  throw new Error(`Unknown interpretation key format: ${key}`);
-}
+import { titleFor } from "../src/titles.ts";
 
 export function promptFor(key: string): string {
   return [
