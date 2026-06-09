@@ -26,3 +26,7 @@ test("InterpretationSchema rejects a non-boolean reviewed flag", () => {
 test("BankSchema accepts a keyed map of entries", () => {
   assert.doesNotThrow(() => BankSchema.parse({ [valid.key]: valid }));
 });
+
+test("BankSchema rejects an entry with an invalid field", () => {
+  assert.throws(() => BankSchema.parse({ [valid.key]: { ...valid, body: "" } }));
+});
