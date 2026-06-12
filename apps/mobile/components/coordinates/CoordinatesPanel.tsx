@@ -16,7 +16,8 @@ interface Props {
   movableLabel: string;         // "Moveable" (birth/now/date) or "To" (range/compare)
   natalPos: Positions;          // birth chart positions (for Readings tab)
   ascLon: number;               // natal ascendant longitude (for Readings tab)
-  isPro: boolean;               // entitlement (for Readings tab gating + Coordinates tab lock)
+  isPro: boolean;               // entitlement (for Readings tab gating + Glyph/Name toggle)
+  coordsLocked: boolean;        // Coordinates tab Pro lock (free in Birth/Now, Pro in Date/Range/Compare)
   onUpgrade: () => void;        // launch the Pro paywall (Coordinates tab lock CTA)
 }
 
@@ -28,7 +29,7 @@ const PANEL_W = Math.min(Dimensions.get("window").width - 84, 380);
  *  overlay — NOT a Modal — so the header (and its toggle button) stay above it and fully
  *  visible. It slides smoothly both ways: stays mounted through the close animation, then
  *  unmounts. Content starts below the header so the brand never overlaps the tabs. */
-function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLabel, movableLabel, natalPos, ascLon, isPro, onUpgrade }: Props) {
+function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLabel, movableLabel, natalPos, ascLon, isPro, coordsLocked, onUpgrade }: Props) {
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
   const [mounted, setMounted] = useState(visible);
@@ -83,7 +84,7 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
           ) : null}
         </View>
         {tab === "coordinates" ? (
-          isPro ? (
+          !coordsLocked ? (
             <>
               <View style={s.head}>
                 <Text style={s.headGlyph}>Planets</Text>
@@ -102,7 +103,7 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
             <View style={s.proLock}>
               <Text style={s.proLockIcon}>🔒</Text>
               <Text style={s.proLockTitle}>Pro Feature</Text>
-              <Text style={s.proLockBody}>Coordinates is a Pro feature.</Text>
+              <Text style={s.proLockBody}>Coordinates for Date, Range & Compare is a Pro feature.</Text>
               <Pressable style={s.proLockBtn} onPress={onUpgrade}>
                 <Text style={s.proLockBtnText}>Unlock Pro</Text>
               </Pressable>

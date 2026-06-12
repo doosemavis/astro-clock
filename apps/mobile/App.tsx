@@ -28,7 +28,7 @@ import { loadBirth, saveBirth } from "./lib/birthStore";
 import { useEntitlement } from "./hooks/useEntitlement";
 import { SignInPrompt } from "./components/SignInPrompt";
 import { tierOf } from "./lib/entitlement";
-import { clampMode } from "./lib/proMode";
+import { clampMode, coordinatesLocked } from "./lib/proMode";
 import { ExportCard, EXPORT_WIDTH, exportHeight } from "./components/export/ExportCard";
 import { canShare as canShareFor, canToggleLogo as canToggleLogoFor, showLogo as showLogoFor } from "./lib/exportPolicy";
 import { DEFAULT_EXPORT_SETTINGS, toggleSetting } from "./lib/exportSettings";
@@ -316,6 +316,7 @@ function AppInner() {
         natalPos={natalPos}
         ascLon={natalAsc}
         isPro={isPro}
+        coordsLocked={coordinatesLocked(clock.mode, isPro)}
         onUpgrade={() => void presentProPaywall()}
       />
       <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
