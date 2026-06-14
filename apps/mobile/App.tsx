@@ -24,6 +24,7 @@ import { HeaderMenu } from "./components/HeaderMenu";
 import { allVisible, toggleVis } from "./lib/chartModel";
 import type { Mode, TimeFormat, ThemeMode, Vis, Layer } from "./lib/chartModel";
 import { themeTForMode } from "./lib/themeMode";
+import { loadThemeMode, saveThemeMode } from "./lib/themeStorage";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
 import { loadBirth, saveBirth } from "./lib/birthStore";
 import { useEntitlement } from "./hooks/useEntitlement";
@@ -85,6 +86,16 @@ function AppInner() {
     loadExportSettings().then((s) => { if (active) setExportSettings(s); });
     return () => { active = false; };
   }, []);
+
+  // Load persisted theme on launch.
+  useEffect(() => {
+    let active = true;
+    loadThemeMode().then((m) => { if (active) setThemeMode(m); });
+    return () => { active = false; };
+  }, []);
+  // Change + persist the theme. Saving in the handler (not a value-effect) avoids clobbering
+  // the just-loaded value on mount.
+  const onThemeChange = (m: ThemeMode) => { setThemeMode(m); void saveThemeMode(m); };
 
   const onToggleExport = (key: ExportToggleKey) => {
     setExportSettings((s) => {
