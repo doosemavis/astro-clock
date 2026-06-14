@@ -1,8 +1,8 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Platform, Pressable, StyleSheet, Text, ToastAndroid, useWindowDimensions, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, Text, ToastAndroid, useColorScheme, useWindowDimensions, View } from "react-native";
 import { useFonts, NotoSansSymbols_400Regular } from "@expo-google-fonts/noto-sans-symbols";
-import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, mixPalette, solarT, PLANET_KEYS, SIGN_GLYPH } from "@astro/engine";
+import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, mixPalette, PLANET_KEYS, SIGN_GLYPH } from "@astro/engine";
 import type { BirthData, Palette, Sign, PlanetKey } from "@astro/engine";
 import { GLYPH_FONT, CHART } from "./components/chart/palette";
 import { ChartWheel } from "./components/chart/ChartWheel";
@@ -23,6 +23,7 @@ import { AccountView } from "./components/auth/AccountView";
 import { HeaderMenu } from "./components/HeaderMenu";
 import { allVisible, toggleVis } from "./lib/chartModel";
 import type { Mode, TimeFormat, ThemeMode, Vis, Layer } from "./lib/chartModel";
+import { themeTForMode } from "./lib/themeMode";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
 import { loadBirth, saveBirth } from "./lib/birthStore";
 import { useEntitlement } from "./hooks/useEntitlement";
@@ -45,7 +46,6 @@ const isDefaultName = (n?: string): boolean => !n || n === DEFAULT_BIRTH.name;
 
 // Quantize the Auto theme value so the palette only re-blends ~50x across a day (not every
 // frame in Auto+Range), which bounds re-renders/style recreation.
-const quantize = (x: number) => Math.round(x * 50) / 50;
 
 function AppInner() {
   // Gate on the glyph font: rendering planet glyphs before it loads would flash tofu.
@@ -189,13 +189,12 @@ function AppInner() {
     }
   }, [clock.mode, clock.displayInstant, rangeFromPos, rangeToPos, compareAPos, compareBPos, anonymous, natalPos, livePos, nowPos, birth]);
 
-  // Theme: light=1 / dark=0 / auto=Sun altitude at the displayed moment (birth location).
-  const themeT = useMemo(() => {
-    if (themeMode === "light") return 1;
-    if (themeMode === "dark") return 0;
-    const inst = clock.mode === "compare" ? new Date(clock.compareAMs) : clock.displayInstant;
-    return quantize(solarT(inst, birth.lat, birth.lon));
-  }, [themeMode, clock.mode, clock.displayInstant, clock.compareAMs, birth.lat, birth.lon]);
+  // Theme: light=1 / dark=0 / system=follow the OS scheme (live via useColorScheme).
+  const osScheme = useColorScheme();
+  const themeT = useMemo(
+    () => themeTForMode(themeMode, osScheme === "dark"),
+    [themeMode, osScheme],
+  );
   const palette = useMemo(() => mixPalette(themeT), [themeT]);
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
