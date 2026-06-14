@@ -1,6 +1,6 @@
 // Pure degree-based astrology readouts derived from an ecliptic longitude (0..360).
 // Same source of truth as the wheel, so panel readouts match the chart by construction.
-import { SIGNS, type PlanetKey, type Sign } from "./types.ts";
+import { SIGNS, PLANET_KEYS, type PlanetKey, type Sign, type Positions } from "./types.ts";
 import { signOf, degInSign } from "./chart.ts";
 
 const norm = (lon: number): number => ((lon % 360) + 360) % 360;
@@ -22,7 +22,7 @@ export function cuspOf(
   orbDeg = 1,
 ): { onCusp: boolean; from: Sign; to: Sign } | null {
   const d = degInSign(lon);
-  const sign = signOf(lon) as Sign;
+  const sign = signOf(lon);
   const idx = SIGNS.indexOf(sign);
   if (d < orbDeg) return { onCusp: true, from: SIGNS[(idx + 11) % 12], to: sign };
   if (d > 30 - orbDeg) return { onCusp: true, from: sign, to: SIGNS[(idx + 1) % 12] };
@@ -33,4 +33,18 @@ export function cuspOf(
 export function isAnaretic(lon: number): boolean {
   const d = degInSign(lon);
   return d >= 29 && d < 30;
+}
+
+/** Whole-sign house (1..12) of an ecliptic longitude given the ascendant longitude. */
+export function houseOf(planetLon: number, ascLon: number): number {
+  const ascSign = Math.floor(norm(ascLon) / 30);
+  const bodySign = Math.floor(norm(planetLon) / 30);
+  return ((bodySign - ascSign + 12) % 12) + 1;
+}
+
+/** Whole-sign house for every body, keyed by planet. */
+export function wholeSignHouses(pos: Positions, ascLon: number): Record<PlanetKey, number> {
+  return Object.fromEntries(
+    PLANET_KEYS.map((k) => [k, houseOf(pos[k], ascLon)]),
+  ) as Record<PlanetKey, number>;
 }

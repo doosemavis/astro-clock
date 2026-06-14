@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "pnpm --filter @astro/web dev",
     "build": "pnpm --filter @astro/engine build && pnpm --filter @astro/web build",
-    "test": "pnpm --filter @astro/engine test",
+    "test": "pnpm --filter @astro/engine test && pnpm --filter @astro/interpretations test",
     "lint": "pnpm -r lint"
   }
 }

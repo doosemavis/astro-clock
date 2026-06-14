@@ -28,7 +28,7 @@ import { loadBirth, saveBirth } from "./lib/birthStore";
 import { useEntitlement } from "./hooks/useEntitlement";
 import { SignInPrompt } from "./components/SignInPrompt";
 import { tierOf } from "./lib/entitlement";
-import { clampMode } from "./lib/proMode";
+import { clampMode, coordinatesLocked } from "./lib/proMode";
 import { ExportCard, EXPORT_WIDTH, exportHeight } from "./components/export/ExportCard";
 import { canShare as canShareFor, canToggleLogo as canToggleLogoFor, showLogo as showLogoFor } from "./lib/exportPolicy";
 import { DEFAULT_EXPORT_SETTINGS, toggleSetting } from "./lib/exportSettings";
@@ -135,6 +135,7 @@ function AppInner() {
 
   const birthMs = useMemo(() => birthInstant(birth).getTime(), [birth]);
   const natalPos = useMemo(() => positions(new Date(birthMs)), [birthMs]);
+  const natalAsc = useMemo(() => ascendant(new Date(birthMs), birth.lat, birth.lon), [birthMs, birth.lat, birth.lon]);
   const clock = useChartClock(birthMs, birth);
   const livePos = useMemo(() => positions(clock.displayInstant), [clock.displayInstant]);
 
@@ -237,7 +238,7 @@ function AppInner() {
             <Pressable onPress={() => setMenuOpen(true)} style={styles.editBtn} hitSlop={8}>
               <Avatar glyph={sunGlyph} />
             </Pressable>
-            <CoordinatesButton onPress={() => { if (isPro) setCoordsOpen((v) => !v); else void presentProPaywall(); }} />
+            <CoordinatesButton onPress={() => { if (anonymous) setAuthView("login"); else setCoordsOpen((v) => !v); }} />
           </View>
         </View>
       </View>
@@ -312,6 +313,11 @@ function AppInner() {
         movablePos={coords.movablePos}
         fixedLabel={coords.fixedLabel}
         movableLabel={coords.movableLabel}
+        natalPos={natalPos}
+        ascLon={natalAsc}
+        isPro={isPro}
+        coordsLocked={coordinatesLocked(clock.mode, isPro)}
+        onUpgrade={() => void presentProPaywall()}
       />
       <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
       <AccountView visible={authView === "account"} onClose={() => setAuthView(null)} />

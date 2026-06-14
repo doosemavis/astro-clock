@@ -1,0 +1,146 @@
+{
+  "sign:sun:Aries": {
+    "title": "Sun in Aries",
+    "summary": "Your spark is bold and direct—you're happiest leading the way, starting fresh, and trusting your instinct to act."
+  },
+  "sign:sun:Taurus": {
+    "title": "Sun in Taurus",
+    "summary": "You shine through steadiness and warmth, finding deep joy in comfort, beauty, and building something lasting at your own patient pace."
+  },
+  "sign:sun:Gemini": {
+    "title": "Sun in Gemini",
+    "summary": "Curiosity lights you up—you thrive on conversation, learning, and connecting ideas, bringing playful energy wherever your quick mind wanders."
+  },
+  "sign:sun:Cancer": {
+    "title": "Sun in Cancer",
+    "summary": "Your heart leads with care—you shine by nurturing others, trusting your feelings, and creating a home where people feel safe."
+  },
+  "sign:sun:Leo": {
+    "title": "Sun in Leo",
+    "summary": "You're meant to be seen—warm, generous, and creative, you light up rooms simply by sharing your big, genuine heart."
+  },
+  "sign:sun:Virgo": {
+    "title": "Sun in Virgo",
+    "summary": "You shine through thoughtful care, noticing the details others miss and quietly making things better for the people you love."
+  },
+  "sign:sun:Libra": {
+    "title": "Sun in Libra",
+    "summary": "Harmony is your gift—you bring fairness, charm, and grace to your connections, helping people find balance and feel truly seen."
+  },
+  "sign:sun:Scorpio": {
+    "title": "Sun in Scorpio",
+    "summary": "You feel everything deeply and aren't afraid of real intensity, finding your power in honesty, transformation, and loyal, meaningful bonds."
+  },
+  "sign:sun:Sagittarius": {
+    "title": "Sun in Sagittarius",
+    "summary": "Adventure calls you—you shine through optimism, big questions, and the freedom to explore new places, ideas, and possibilities with open eyes."
+  },
+  "sign:sun:Capricorn": {
+    "title": "Sun in Capricorn",
+    "summary": "You're built to climb—patient, responsible, and quietly determined, you turn long-term goals into real, lasting achievements you can be proud of."
+  },
+  "sign:sun:Aquarius": {
+    "title": "Sun in Aquarius",
+    "summary": "Your originality is your strength—you see the world differently and shine by staying true to your ideals and the bigger picture."
+  },
+  "sign:sun:Pisces": {
+    "title": "Sun in Pisces",
+    "summary": "Imaginative and tender-hearted, you shine through compassion and creativity, sensing what others feel and bringing a little magic wherever you go."
+  },
+  "sign:moon:Aries": {
+    "title": "Moon in Aries",
+    "summary": "Your feelings move fast and honestly—you feel safest taking action, speaking up quickly, and meeting emotions head-on with brave directness."
+  },
+  "sign:moon:Taurus": {
+    "title": "Moon in Taurus",
+    "summary": "You find emotional safety in calm and comfort, soothed by routine, good food, gentle touch, and the people who feel like home."
+  },
+  "sign:moon:Gemini": {
+    "title": "Moon in Gemini",
+    "summary": "You process feelings by talking them through—curiosity and good conversation keep your heart light and help you make sense of everything."
+  },
+  "sign:moon:Cancer": {
+    "title": "Moon in Cancer",
+    "summary": "Deeply caring and intuitive, you feel most at peace when nurturing loved ones and being held in a warm, safe space yourself."
+  },
+  "sign:moon:Leo": {
+    "title": "Moon in Leo",
+    "summary": "Your heart needs warmth and appreciation—you feel best when you can express affection openly and know your love is truly noticed."
+  },
+  "sign:moon:Virgo": {
+    "title": "Moon in Virgo",
+    "summary": "You feel calmer when things are in order, showing love through helpful acts and finding comfort in being genuinely useful to others."
+  },
+  "sign:moon:Libra": {
+    "title": "Moon in Libra",
+    "summary": "Your emotions thrive on harmony and connection—you feel most at ease when your relationships are fair, kind, and gently balanced."
+  },
+  "sign:moon:Scorpio": {
+    "title": "Moon in Scorpio",
+    "summary": "You feel deeply and privately, craving real closeness and honesty; safety comes from trust and bonds that can hold your whole intensity."
+  },
+  "sign:moon:Sagittarius": {
+    "title": "Moon in Sagittarius",
+    "summary": "Your heart needs room to roam—you feel happiest with freedom, hope, and a sense that something wonderful is always on the horizon."
+  },
+  "sign:moon:Capricorn": {
+    "title": "Moon in Capricorn",
+    "summary": "You find comfort in steadiness and self-reliance, feeling safest when you've built something dependable and know you can handle whatever comes."
+  },
+  "sign:moon:Aquarius": {
+    "title": "Moon in Aquarius",
+    "summary": "You need emotional freedom and space to be yourself, feeling most at home among open-minded people who accept your wonderful individuality."
+  },
+  "sign:moon:Pisces": {
+    "title": "Moon in Pisces",
+    "summary": "Tender and deeply intuitive, you feel everything around you—peace comes through gentleness, creativity, and quiet time to let your heart rest."
+  },
+  "sign:ascendant:Aries": {
+    "title": "Rising in Aries",
+    "summary": "You come across as bold and energetic, meeting the world head-on with confidence that makes others feel ready to follow your lead."
+  },
+  "sign:ascendant:Taurus": {
+    "title": "Rising in Taurus",
+    "summary": "You give a calm, grounded first impression—steady and warm, you put people at ease with your patient, reassuring presence."
+  },
+  "sign:ascendant:Gemini": {
+    "title": "Rising in Gemini",
+    "summary": "You meet the world with curiosity and quick wit, coming across as friendly, chatty, and genuinely interested in everyone you encounter."
+  },
+  "sign:ascendant:Cancer": {
+    "title": "Rising in Cancer",
+    "summary": "You come across as gentle and caring, naturally putting people at ease and making others feel welcomed, safe, and quietly understood."
+  },
+  "sign:ascendant:Leo": {
+    "title": "Rising in Leo",
+    "summary": "You make a warm, memorable first impression, radiating confidence and friendliness that draws people in and brightens the room you enter."
+  },
+  "sign:ascendant:Virgo": {
+    "title": "Rising in Virgo",
+    "summary": "You come across as thoughtful and capable, approaching the world with quiet attention to detail and a sincere wish to be helpful."
+  },
+  "sign:ascendant:Libra": {
+    "title": "Rising in Libra",
+    "summary": "You greet the world with charm and grace, coming across as friendly and fair, naturally putting people at ease in your company."
+  },
+  "sign:ascendant:Scorpio": {
+    "title": "Rising in Scorpio",
+    "summary": "You make a magnetic, intriguing first impression—calm on the surface yet clearly deep, drawing people in with quiet, focused presence."
+  },
+  "sign:ascendant:Sagittarius": {
+    "title": "Rising in Sagittarius",
+    "summary": "You come across as open and adventurous, meeting the world with optimism and humor that makes others feel free to explore alongside you."
+  },
+  "sign:ascendant:Capricorn": {
+    "title": "Rising in Capricorn",
+    "summary": "You give a composed, capable first impression—people sense your reliability and quiet ambition, and naturally trust you to handle things well."
+  },
+  "sign:ascendant:Aquarius": {
+    "title": "Rising in Aquarius",
+    "summary": "You come across as original and friendly, approaching the world your own way and making others feel free to be authentically themselves."
+  },
+  "sign:ascendant:Pisces": {
+    "title": "Rising in Pisces",
+    "summary": "You meet the world with gentle, dreamy warmth, coming across as kind and approachable, easily sensing the moods of those around you."
+  }
+}

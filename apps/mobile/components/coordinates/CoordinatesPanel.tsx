@@ -5,6 +5,7 @@ import { useTheme } from "../../lib/theme";
 import { buildCoordinateRows } from "../../lib/coordinateRows";
 import { CoordinateRow } from "./CoordinateRow";
 import { Segmented } from "../Segmented";
+import { ReadingsList } from "./ReadingsList";
 
 interface Props {
   visible: boolean;
@@ -13,6 +14,11 @@ interface Props {
   movablePos: Positions;        // right value column source
   fixedLabel: string;           // "Fixed" (birth/now/date) or "From" (range/compare)
   movableLabel: string;         // "Moveable" (birth/now/date) or "To" (range/compare)
+  natalPos: Positions;          // birth chart positions (for Readings tab)
+  ascLon: number;               // natal ascendant longitude (for Readings tab)
+  isPro: boolean;               // entitlement (for Readings tab gating + Glyph/Name toggle)
+  coordsLocked: boolean;        // Coordinates tab Pro lock (free in Birth/Now, Pro in Date/Range/Compare)
+  onUpgrade: () => void;        // launch the Pro paywall (Coordinates tab lock CTA)
 }
 
 // Leave a right gutter so the panel never reaches the top-right header buttons
@@ -23,11 +29,12 @@ const PANEL_W = Math.min(Dimensions.get("window").width - 84, 380);
  *  overlay — NOT a Modal — so the header (and its toggle button) stay above it and fully
  *  visible. It slides smoothly both ways: stays mounted through the close animation, then
  *  unmounts. Content starts below the header so the brand never overlaps the tabs. */
-function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLabel, movableLabel }: Props) {
+function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLabel, movableLabel, natalPos, ascLon, isPro, coordsLocked, onUpgrade }: Props) {
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
   const [mounted, setMounted] = useState(visible);
   const [showNames, setShowNames] = useState(false);
+  const [tab, setTab] = useState<"coordinates" | "readings">("coordinates");
   const x = useRef(new Animated.Value(visible ? 0 : -PANEL_W)).current;
   const fade = useRef(new Animated.Value(visible ? 1 : 0)).current;
 
@@ -58,27 +65,53 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
       </Animated.View>
       <Animated.View style={[s.panel, { transform: [{ translateX: x }] }]}>
         <View style={s.tabs}>
-          <Text style={s.tabActive}>Coordinates</Text>
-          <View style={s.toggle}>
-            <Segmented
-              options={[{ key: "glyph", label: "Glyph" }, { key: "name", label: "Name" }]}
-              value={showNames ? "name" : "glyph"}
-              onChange={(v) => setShowNames(v === "name")}
-            />
+          <View style={s.tabRow}>
+            <Pressable onPress={() => setTab("coordinates")}>
+              <Text style={tab === "coordinates" ? s.tabActive : s.tabInactive}>Coordinates</Text>
+            </Pressable>
+            <Pressable onPress={() => setTab("readings")}>
+              <Text style={tab === "readings" ? s.tabActive : s.tabInactive}>Readings</Text>
+            </Pressable>
           </View>
+          {tab === "coordinates" && isPro ? (
+            <View style={s.toggle}>
+              <Segmented
+                options={[{ key: "glyph", label: "Glyph" }, { key: "name", label: "Name" }]}
+                value={showNames ? "name" : "glyph"}
+                onChange={(v) => setShowNames(v === "name")}
+              />
+            </View>
+          ) : null}
         </View>
-        <View style={s.head}>
-          <Text style={s.headGlyph}>Planets</Text>
-          <View style={s.vline} />
-          <Text style={s.headLabel}>{fixedLabel}</Text>
-          <View style={s.vline} />
-          <Text style={s.headLabel}>{movableLabel}</Text>
-        </View>
-        <ScrollView style={s.body} contentContainerStyle={s.scroll}>
-          {moveable.map((m, i) => (
-            <CoordinateRow key={m.key} fixed={fixed ? fixed[i] : null} moveable={m} showName={showNames} />
-          ))}
-        </ScrollView>
+        {tab === "coordinates" ? (
+          !coordsLocked ? (
+            <>
+              <View style={s.head}>
+                <Text style={s.headGlyph}>Planets</Text>
+                <View style={s.vline} />
+                <Text style={s.headLabel}>{fixedLabel}</Text>
+                <View style={s.vline} />
+                <Text style={s.headLabel}>{movableLabel}</Text>
+              </View>
+              <ScrollView style={s.body} contentContainerStyle={s.scroll}>
+                {moveable.map((m, i) => (
+                  <CoordinateRow key={m.key} fixed={fixed ? fixed[i] : null} moveable={m} showName={showNames} />
+                ))}
+              </ScrollView>
+            </>
+          ) : (
+            <View style={s.proLock}>
+              <Text style={s.proLockIcon}>🔒</Text>
+              <Text style={s.proLockTitle}>Pro Feature</Text>
+              <Text style={s.proLockBody}>Coordinates for Date, Range & Compare is a Pro feature.</Text>
+              <Pressable style={s.proLockBtn} onPress={onUpgrade}>
+                <Text style={s.proLockBtnText}>Unlock Pro</Text>
+              </Pressable>
+            </View>
+          )
+        ) : (
+          <ReadingsList natalPos={natalPos} ascLon={ascLon} isPro={isPro} />
+        )}
       </Animated.View>
     </View>
   );
@@ -90,7 +123,9 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.35)" },
   panel: { position: "absolute", top: 0, bottom: 0, left: 0, width: PANEL_W, backgroundColor: p.panel, borderRightWidth: 1, borderRightColor: p.border, paddingTop: 96 },
   tabs: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: p.border },
+  tabRow: { flexDirection: "row", gap: 16 },
   tabActive: { color: p.text, fontSize: 16, fontWeight: "800" },
+  tabInactive: { color: p.textDim, fontSize: 16, fontWeight: "600" },
   toggle: { width: 150 },
   head: { flexDirection: "row", alignItems: "stretch", borderBottomWidth: 1, borderBottomColor: p.border },
   headGlyph: { width: 76, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingVertical: 10 },
@@ -98,4 +133,10 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   vline: { width: StyleSheet.hairlineWidth, alignSelf: "stretch", backgroundColor: p.border },
   body: { flex: 1 },
   scroll: { flexGrow: 1, paddingBottom: 12 },
+  proLock: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24, gap: 12 },
+  proLockIcon: { fontSize: 36 },
+  proLockTitle: { color: p.text, fontSize: 18, fontWeight: "700", textAlign: "center" },
+  proLockBody: { color: p.textDim, fontSize: 14, textAlign: "center", lineHeight: 20 },
+  proLockBtn: { backgroundColor: p.live, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 28, alignItems: "center", marginTop: 4 },
+  proLockBtnText: { color: p.bg, fontSize: 15, fontWeight: "700" },
 });

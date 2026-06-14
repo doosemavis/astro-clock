@@ -16,3 +16,9 @@ export function clampMode(mode: Mode, isPro: boolean): Mode {
   if (!isPro && isProMode(mode)) return "birth";
   return mode;
 }
+
+/** True iff the Coordinates tab should show the Pro lock: the table is free in the free
+ *  views (Birth/Now) and Pro-only in the Pro modes (Date/Range/Compare). */
+export function coordinatesLocked(mode: Mode, isPro: boolean): boolean {
+  return !isPro && isProMode(mode);
+}

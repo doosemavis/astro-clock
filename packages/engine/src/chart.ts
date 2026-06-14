@@ -1,6 +1,6 @@
 // Chart geometry + formatting. Ported from the prototype's P/signName/degInSign/
 // fmtDMS/declutter. Pure; the React SVG layer consumes these.
-import type { Positions, PlanetKey } from "./types.ts";
+import type { Positions, PlanetKey, Sign } from "./types.ts";
 import { PLANET_KEYS, SIGNS } from "./types.ts";
 
 const rev = (x: number) => ((x % 360) + 360) % 360;
@@ -14,7 +14,7 @@ export const R = {
 export const CX = 500;
 export const CY = 500;
 
-export function signOf(lon: number): string {
+export function signOf(lon: number): Sign {
   return SIGNS[Math.floor(rev(lon) / 30)];
 }
 
