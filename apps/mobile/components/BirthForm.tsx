@@ -203,6 +203,9 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
               </View>
             )}
 
+            <Text style={styles.label}>Birth timezone</Text>
+            <OffsetSelect valueZone={ianaTz} date={date} time={time} onChange={setIanaTz} />
+
             <Text style={styles.label}>Clock</Text>
             <Segmented options={TIME_FORMATS} value={timeFormat} onChange={onTimeFormat} />
 
@@ -235,8 +238,6 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
                   value={lon === null ? "" : String(lon)}
                   onChangeText={(t) => setLon(t === "" || t === "-" ? null : Number(t))}
                   placeholder="-180 to 180" placeholderTextColor={p.textDim} />
-                <Text style={styles.label}>Birth timezone</Text>
-                <OffsetSelect valueZone={ianaTz} date={date} time={time} onChange={setIanaTz} />
               </View>
             ) : null}
 
