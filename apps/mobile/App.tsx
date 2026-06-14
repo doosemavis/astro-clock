@@ -25,6 +25,7 @@ import { allVisible, toggleVis } from "./lib/chartModel";
 import type { Mode, TimeFormat, ThemeMode, Vis, Layer } from "./lib/chartModel";
 import { themeTForMode } from "./lib/themeMode";
 import { loadThemeMode, saveThemeMode } from "./lib/themeStorage";
+import { bigThreeLabel } from "./lib/bigThree";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
 import { loadBirth, saveBirth } from "./lib/birthStore";
 import { useEntitlement } from "./hooks/useEntitlement";
@@ -73,6 +74,7 @@ function AppInner() {
   const [showMinor, setShowMinor] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
+  const [birthLoaded, setBirthLoaded] = useState(false);
   const [vis, setVis] = useState<Vis>(() => ({ natal: allVisible(PLANET_KEYS), live: allVisible(PLANET_KEYS) }));
   const onToggleVis = (key: PlanetKey | "all", layer: Layer) => setVis((v) => toggleVis(v, key, layer));
 
@@ -133,7 +135,11 @@ function AppInner() {
   // Load the saved birth on launch (falls back to DEFAULT_BIRTH).
   useEffect(() => {
     let active = true;
-    loadBirth().then((b) => { if (active && b) setBirth({ ...b, name: isDefaultName(b.name) ? (accountNameRef.current || b.name) : b.name }); });
+    loadBirth().then((b) => {
+      if (!active) return;
+      if (b) setBirth({ ...b, name: isDefaultName(b.name) ? (accountNameRef.current || b.name) : b.name });
+      setBirthLoaded(true);
+    });
     return () => { active = false; };
   }, []);
 
@@ -209,20 +215,21 @@ function AppInner() {
   const palette = useMemo(() => mixPalette(themeT), [themeT]);
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
-  // The chart's signature: Sun / Moon / Ascendant signs (mirrors the web bigThree).
+  // The chart's signature for the CURRENTLY DISPLAYED moment: Now -> live sky, Birth -> natal.
+  // Ascendant (needs birth time+place) only once the real birth has loaded, so the default
+  // chart never shows for a signed-in user mid-load.
   const bigThree = useMemo(() => {
-    if (anonymous) {
-      // Pre-birth placeholder: the current sky's Sun + Moon, tracking the Now moment.
-      // No Ascendant — it needs a birth time + place, which unlocks on sign-in.
-      return `☉ ${signOf(livePos.sun)}   ☽ ${signOf(livePos.moon)}`;
-    }
-    const asc = ascendant(new Date(birthMs), birth.lat, birth.lon);
-    return `☉ ${signOf(natalPos.sun)}   ☽ ${signOf(natalPos.moon)}   ↑ ${signOf(asc)}`;
-  }, [anonymous, livePos, birthMs, birth.lat, birth.lon, natalPos]);
+    const sun = signOf(livePos.sun);
+    const moon = signOf(livePos.moon);
+    const asc = !anonymous && birthLoaded
+      ? signOf(ascendant(clock.displayInstant, birth.lat, birth.lon))
+      : null;
+    return bigThreeLabel(sun, moon, asc);
+  }, [anonymous, birthLoaded, livePos, clock.displayInstant, birth.lat, birth.lon]);
 
   // The header avatar's glyph: the current sky's Sun sign when signed out (tracks Now),
   // the user's birth Sun sign once signed in.
-  const sunGlyph = SIGN_GLYPH[signOf(anonymous ? livePos.sun : natalPos.sun) as Sign];
+  const sunGlyph = SIGN_GLYPH[signOf((anonymous || !birthLoaded) ? livePos.sun : natalPos.sun) as Sign];
 
   // Persistent readout of the moment on screen — which view + when (fixed vs. moveable).
   const moment =
