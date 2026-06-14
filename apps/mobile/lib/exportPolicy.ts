@@ -15,3 +15,8 @@ export function canToggleLogo(tier: Tier): boolean {
 export function showLogo(tier: Tier, logoSetting: boolean): boolean {
   return tier === "pro" ? logoSetting : true;
 }
+
+/** Save-to-Photos requires an account; anonymous users must sign in/up first. */
+export function canSave(tier: Tier): boolean {
+  return tier !== "anonymous";
+}

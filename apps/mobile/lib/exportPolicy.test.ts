@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { canShare, canToggleLogo, showLogo } from "./exportPolicy.ts";
+import { canShare, canToggleLogo, showLogo, canSave } from "./exportPolicy.ts";
 
 test("canShare: only pro", () => {
   assert.equal(canShare("pro"), true);
@@ -19,4 +19,10 @@ test("showLogo: free/anon always branded; pro follows the toggle", () => {
   assert.equal(showLogo("anonymous", false), true);
   assert.equal(showLogo("pro", true), true);
   assert.equal(showLogo("pro", false), false);
+});
+
+test("canSave: requires an account (free/pro), not anonymous", () => {
+  assert.equal(canSave("anonymous"), false);
+  assert.equal(canSave("free"), true);
+  assert.equal(canSave("pro"), true);
 });
