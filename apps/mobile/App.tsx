@@ -15,7 +15,7 @@ import { BirthForm } from "./components/BirthForm";
 import { useChartClock } from "./hooks/useChartClock";
 import { ThemeProvider } from "./lib/theme";
 import { Avatar } from "./components/Avatar";
-import { CoordinatesButton } from "./components/CoordinatesButton";
+import { MenuButton } from "./components/MenuButton";
 import { CoordinatesPanel } from "./components/coordinates/CoordinatesPanel";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { LoginScreen } from "./components/auth/LoginScreen";
@@ -252,10 +252,10 @@ function AppInner() {
         <View style={styles.headerRow} pointerEvents="box-none">
           <Text style={styles.brand}>MoveStar</Text>
           <View style={styles.headerRight} pointerEvents="box-none">
-            <Pressable onPress={() => setMenuOpen(true)} style={styles.editBtn} hitSlop={8}>
+            <MenuButton onPress={() => setMenuOpen(true)} />
+            <Pressable onPress={() => { if (anonymous) setAuthView("login"); else setCoordsOpen((v) => !v); }} style={styles.editBtn} hitSlop={8}>
               <Avatar glyph={sunGlyph} />
             </Pressable>
-            <CoordinatesButton onPress={() => { if (anonymous) setAuthView("login"); else setCoordsOpen((v) => !v); }} />
           </View>
         </View>
       </View>
