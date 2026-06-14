@@ -8,6 +8,7 @@ interface Props {
   visible: boolean;
   signedIn: boolean;
   canShare: boolean;            // Pro-only: show the Share item
+  canSave: boolean;             // signed-in only: show the Save-to-Photos item
   onClose: () => void;
   onAuth: () => void;
   onEditBirth: () => void;
@@ -22,7 +23,7 @@ interface Props {
  *  "Save to Photos" button whose caret opens a floating options dropdown (overlays, with a
  *  shadow, and stays open while you flip toggles). */
 export function HeaderMenu({
-  visible, signedIn, canShare, onClose, onAuth, onEditBirth, onSave, onShare,
+  visible, signedIn, canShare, canSave, onClose, onAuth, onEditBirth, onSave, onShare,
   exportSettings, onToggleExport, canToggleLogo,
 }: Props) {
   const { palette: p } = useTheme();
@@ -45,27 +46,31 @@ export function HeaderMenu({
           </>
         ) : null}
 
-        <View style={styles.divider} />
-        {/* Split "Save to Photos" button; the caret opens a floating options dropdown. */}
-        <View style={styles.splitWrap}>
-          <View style={styles.splitRow} onLayout={(e) => setRowH(e.nativeEvent.layout.height)}>
-            <Pressable style={styles.splitMain} onPress={onSave}>
-              <Text style={styles.itemText}>Save to Photos</Text>
-            </Pressable>
-            <Pressable style={styles.splitCaret} onPress={() => setOptionsOpen((o) => !o)} hitSlop={6}>
-              <Text style={styles.caretText}>{optionsOpen ? "⌃" : "⌄"}</Text>
-            </Pressable>
-          </View>
-          {optionsOpen ? (
-            <View style={[styles.popover, { top: rowH + 4 }]}>
-              <ExportOption label="Date" on={exportSettings.dateTime} onPress={() => onToggleExport("dateTime")} />
-              <ExportOption label="Stars" on={exportSettings.cosmicBackground} onPress={() => onToggleExport("cosmicBackground")} />
-              {canToggleLogo ? (
-                <ExportOption label="Logo" on={exportSettings.logo} onPress={() => onToggleExport("logo")} />
+        {canSave ? (
+          <>
+            <View style={styles.divider} />
+            {/* Split "Save to Photos" button; the caret opens a floating options dropdown. */}
+            <View style={styles.splitWrap}>
+              <View style={styles.splitRow} onLayout={(e) => setRowH(e.nativeEvent.layout.height)}>
+                <Pressable style={styles.splitMain} onPress={onSave}>
+                  <Text style={styles.itemText}>Save to Photos</Text>
+                </Pressable>
+                <Pressable style={styles.splitCaret} onPress={() => setOptionsOpen((o) => !o)} hitSlop={6}>
+                  <Text style={styles.caretText}>{optionsOpen ? "⌃" : "⌄"}</Text>
+                </Pressable>
+              </View>
+              {optionsOpen ? (
+                <View style={[styles.popover, { top: rowH + 4 }]}>
+                  <ExportOption label="Date" on={exportSettings.dateTime} onPress={() => onToggleExport("dateTime")} />
+                  <ExportOption label="Stars" on={exportSettings.cosmicBackground} onPress={() => onToggleExport("cosmicBackground")} />
+                  {canToggleLogo ? (
+                    <ExportOption label="Logo" on={exportSettings.logo} onPress={() => onToggleExport("logo")} />
+                  ) : null}
+                </View>
               ) : null}
             </View>
-          ) : null}
-        </View>
+          </>
+        ) : null}
 
         {canShare ? (
           <>

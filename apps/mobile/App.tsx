@@ -30,7 +30,7 @@ import { SignInPrompt } from "./components/SignInPrompt";
 import { tierOf } from "./lib/entitlement";
 import { clampMode, coordinatesLocked } from "./lib/proMode";
 import { ExportCard, EXPORT_WIDTH, exportHeight } from "./components/export/ExportCard";
-import { canShare as canShareFor, canToggleLogo as canToggleLogoFor, showLogo as showLogoFor } from "./lib/exportPolicy";
+import { canShare as canShareFor, canToggleLogo as canToggleLogoFor, showLogo as showLogoFor, canSave as canSaveFor } from "./lib/exportPolicy";
 import { DEFAULT_EXPORT_SETTINGS, toggleSetting } from "./lib/exportSettings";
 import type { ExportSettings, ExportToggleKey } from "./lib/exportSettings";
 import { loadExportSettings, saveExportSettings } from "./lib/exportSettingsStore";
@@ -297,6 +297,7 @@ function AppInner() {
         // Share temporarily disabled for release: it opens the camera instead of the native
         // share sheet (expo-sharing). Re-enable with `canShareFor(tier)` once that's fixed.
         canShare={false && canShareFor(tier)}
+        canSave={canSaveFor(tier)}
         onClose={() => setMenuOpen(false)}
         onAuth={() => { setMenuOpen(false); setAuthView(session ? "account" : "login"); }}
         onEditBirth={() => { setMenuOpen(false); setEditing(true); }}
