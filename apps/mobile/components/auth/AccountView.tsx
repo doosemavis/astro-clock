@@ -1,11 +1,12 @@
 import { useMemo, useState, useEffect } from "react";
-import { Modal, View, Text, Pressable, StyleSheet, TextInput, Keyboard, Linking } from "react-native";
+import { Modal, View, Text, Pressable, StyleSheet, TextInput, Keyboard, Linking, Platform } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { useAuth } from "../../lib/auth";
 import { useEntitlement } from "../../hooks/useEntitlement";
 import { presentProPaywall, restorePurchases, showManageSubscriptions } from "../../lib/purchases";
 import { validatePassword, passwordsMatch } from "../../lib/password";
+import { storeUrl } from "../../lib/rateApp";
 
 type Screen = "main" | "password";
 
@@ -136,6 +137,16 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
               </Pressable>
               <Pressable style={styles.action} onPress={openPassword}>
                 <Text style={styles.actionText}>Change Password</Text>
+              </Pressable>
+              <Pressable
+                style={styles.action}
+                onPress={() =>
+                  void Linking.openURL(storeUrl(Platform.OS)).catch(() =>
+                    setMsg("Couldn't open the Play Store. Search 'MoveStar' to leave a review."),
+                  )
+                }
+              >
+                <Text style={styles.actionText}>Rate MoveStar ⭐</Text>
               </Pressable>
               {msg ? <Text style={styles.msg}>{msg}</Text> : null}
               <Pressable style={[styles.signout, busy && styles.signoutOff]} onPress={onSignOut} disabled={busy}>
