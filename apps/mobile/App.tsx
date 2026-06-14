@@ -33,10 +33,7 @@ import { SignInPrompt } from "./components/SignInPrompt";
 import { tierOf } from "./lib/entitlement";
 import { clampMode, coordinatesLocked } from "./lib/proMode";
 import { ExportCard, EXPORT_WIDTH, exportHeight } from "./components/export/ExportCard";
-import { canShare as canShareFor, canToggleLogo as canToggleLogoFor, showLogo as showLogoFor, canSave as canSaveFor } from "./lib/exportPolicy";
-import { DEFAULT_EXPORT_SETTINGS, toggleSetting } from "./lib/exportSettings";
-import type { ExportSettings, ExportToggleKey } from "./lib/exportSettings";
-import { loadExportSettings, saveExportSettings } from "./lib/exportSettingsStore";
+import { canShare as canShareFor, canSave as canSaveFor } from "./lib/exportPolicy";
 import { saveChartImage, shareChartImage } from "./lib/saveChart";
 import { presentProPaywall } from "./lib/purchases";
 
@@ -78,16 +75,8 @@ function AppInner() {
   const [vis, setVis] = useState<Vis>(() => ({ natal: allVisible(PLANET_KEYS), live: allVisible(PLANET_KEYS) }));
   const onToggleVis = (key: PlanetKey | "all", layer: Layer) => setVis((v) => toggleVis(v, key, layer));
 
-  const [exportSettings, setExportSettings] = useState<ExportSettings>(DEFAULT_EXPORT_SETTINGS);
   const [exportReq, setExportReq] = useState<null | "save" | "share">(null);
   const exportRef = useRef<View | null>(null);
-
-  // Load persisted export toggles on launch.
-  useEffect(() => {
-    let active = true;
-    loadExportSettings().then((s) => { if (active) setExportSettings(s); });
-    return () => { active = false; };
-  }, []);
 
   // Load persisted theme on launch.
   useEffect(() => {
@@ -99,13 +88,6 @@ function AppInner() {
   // the just-loaded value on mount.
   const onThemeChange = (m: ThemeMode) => { setThemeMode(m); void saveThemeMode(m); };
 
-  const onToggleExport = (key: ExportToggleKey) => {
-    setExportSettings((s) => {
-      const next = toggleSetting(s, key);
-      saveExportSettings(next).catch(() => { /* cache only */ });
-      return next;
-    });
-  };
 
   // When an export is requested, the off-screen ExportCard renders; wait two frames for
   // layout, capture it, then save or share. Clear the request when done.
@@ -319,9 +301,6 @@ function AppInner() {
         onEditBirth={() => { setMenuOpen(false); setEditing(true); }}
         onSave={() => { setMenuOpen(false); setExportReq("save"); }}
         onShare={() => { setMenuOpen(false); setExportReq("share"); }}
-        exportSettings={exportSettings}
-        onToggleExport={onToggleExport}
-        canToggleLogo={canToggleLogoFor(tier)}
       />
       <CoordinatesPanel
         visible={coordsOpen}
@@ -341,8 +320,6 @@ function AppInner() {
       {exportReq ? (
         <View ref={exportRef} collapsable={false} style={[styles.exportHost, { width: EXPORT_WIDTH, height: exportHeight(width, height) }]}>
           <ExportCard
-            showLogo={showLogoFor(tier, exportSettings.logo)}
-            toggles={exportSettings}
             palette={palette}
             themeT={themeT}
             natalPositions={natalPos}
