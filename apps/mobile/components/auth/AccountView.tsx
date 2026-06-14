@@ -26,6 +26,7 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
   const [screen, setScreen] = useState<Screen>("main");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
+  const [pwVisible, setPwVisible] = useState(false);
   const [kbHeight, setKbHeight] = useState(0);
 
   // This is a bottom-anchored sheet, so the soft keyboard would cover its inputs. Lift the sheet
@@ -188,6 +189,8 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
                 autoCapitalize="none"
                 value={newPw}
                 onChangeText={setNewPw}
+                visible={pwVisible}
+                onToggleVisible={() => setPwVisible((v) => !v)}
               />
               <PasswordInput
                 style={styles.input}
@@ -196,6 +199,8 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
                 autoCapitalize="none"
                 value={confirmPw}
                 onChangeText={setConfirmPw}
+                visible={pwVisible}
+                showToggle={false}
               />
               <Pressable style={styles.action} onPress={() => void onSavePassword()} disabled={acting}>
                 <Text style={styles.actionText}>{acting ? "…" : "Save Password"}</Text>

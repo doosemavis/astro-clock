@@ -47,8 +47,15 @@ password fields (DRY). Wraps React Native `TextInput`:
 - Accessibility: toggle gets `accessibilityRole="button"` and
   `accessibilityLabel={visible ? "Hide password" : "Show password"}`.
 
-Each field owns its own toggle state (component-local) — expected behavior. Confirm fields
-get a toggle too, for consistency.
+**Linked-eye for new + confirm pairs (per user request):** on the three forms that have a
+*new password + confirm password* pair — Create account, Forgot-password reset, and
+Account → Change Password — a single eye lives on the **first** field and reveals/hides
+**both** fields together (less confusion for non-technical users comparing the two). This is
+done by lifting a `pwVisible` state into the parent and passing `visible`/`onToggleVisible`
+to the first field and `visible` + `showToggle={false}` to the confirm field. The Sign-in
+form (single password field) keeps its own eye. `PasswordInput` therefore supports optional
+controlled visibility (`visible`, `onToggleVisible`, `showToggle`); without them it stays
+uncontrolled.
 
 ### Call sites (replace raw `TextInput` with `<PasswordInput .../>`)
 

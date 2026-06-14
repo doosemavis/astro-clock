@@ -12,6 +12,12 @@ type Props = {
   placeholderTextColor?: string;
   autoCapitalize?: TextInputProps["autoCapitalize"];
   style?: StyleProp<ViewStyle>;
+  /** Controlled visibility (optional). When set, the field shows/hides per this value and the
+   *  eye calls `onToggleVisible`; otherwise the field manages its own visibility state. */
+  visible?: boolean;
+  onToggleVisible?: () => void;
+  /** Render the eye toggle. Default true; pass false for a follower field driven by another. */
+  showToggle?: boolean;
 };
 
 /** Password field with a show/hide eye toggle. The caller's `style` (their `styles.input`)
@@ -19,10 +25,13 @@ type Props = {
  *  box on the right. Defaults to hidden (secureTextEntry). */
 export function PasswordInput({
   value, onChangeText, placeholder, placeholderTextColor, autoCapitalize = "none", style,
+  visible, onToggleVisible, showToggle = true,
 }: Props) {
   const { palette: p } = useTheme();
   const s = useMemo(() => makeStyles(p), [p]);
-  const [visible, setVisible] = useState(false);
+  const [internalVisible, setInternalVisible] = useState(false);
+  const shown = visible ?? internalVisible;
+  const toggle = onToggleVisible ?? (() => setInternalVisible((v) => !v));
   return (
     <View style={[style, s.row]}>
       <TextInput
@@ -33,17 +42,19 @@ export function PasswordInput({
         placeholderTextColor={placeholderTextColor}
         autoCapitalize={autoCapitalize}
         autoCorrect={false}
-        secureTextEntry={!visible}
+        secureTextEntry={!shown}
       />
-      <Pressable
-        onPress={() => setVisible((v) => !v)}
-        hitSlop={10}
-        accessibilityRole="button"
-        accessibilityLabel={visible ? "Hide password" : "Show password"}
-        style={s.toggle}
-      >
-        <EyeIcon crossed={visible} color={p.textDim} />
-      </Pressable>
+      {showToggle ? (
+        <Pressable
+          onPress={toggle}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={shown ? "Hide password" : "Show password"}
+          style={s.toggle}
+        >
+          <EyeIcon crossed={shown} color={p.textDim} />
+        </Pressable>
+      ) : null}
     </View>
   );
 }
