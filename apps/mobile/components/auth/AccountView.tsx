@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Modal, View, Text, Pressable, StyleSheet, TextInput, Keyboard, Linking, Platform } from "react-native";
+import { Modal, View, Text, Pressable, StyleSheet, Keyboard, Linking, Platform } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { useAuth } from "../../lib/auth";
@@ -7,6 +7,7 @@ import { useEntitlement } from "../../hooks/useEntitlement";
 import { presentProPaywall, restorePurchases, showManageSubscriptions } from "../../lib/purchases";
 import { validatePassword, passwordsMatch } from "../../lib/password";
 import { storeUrl } from "../../lib/rateApp";
+import { PasswordInput } from "./PasswordInput";
 
 type Screen = "main" | "password";
 
@@ -180,20 +181,18 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
                   Add a password so you can sign in with your email too — not just Google.
                 </Text>
               ) : null}
-              <TextInput
+              <PasswordInput
                 style={styles.input}
                 placeholder="New password"
                 placeholderTextColor={p.textDim}
-                secureTextEntry
                 autoCapitalize="none"
                 value={newPw}
                 onChangeText={setNewPw}
               />
-              <TextInput
+              <PasswordInput
                 style={styles.input}
                 placeholder="Confirm password"
                 placeholderTextColor={p.textDim}
-                secureTextEntry
                 autoCapitalize="none"
                 value={confirmPw}
                 onChangeText={setConfirmPw}
