@@ -25,7 +25,7 @@ import { allVisible, toggleVis } from "./lib/chartModel";
 import type { Mode, TimeFormat, ThemeMode, Vis, Layer } from "./lib/chartModel";
 import { themeTForMode } from "./lib/themeMode";
 import { loadThemeMode, saveThemeMode } from "./lib/themeStorage";
-import { bigThreeLabel } from "./lib/bigThree";
+import { bigThreeLabel, bigThreeInstantMs } from "./lib/bigThree";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
 import { loadBirth, saveBirth } from "./lib/birthStore";
 import { useEntitlement } from "./hooks/useEntitlement";
@@ -200,14 +200,19 @@ function AppInner() {
   // The chart's signature for the CURRENTLY DISPLAYED moment: Now -> live sky, Birth -> natal.
   // Ascendant (needs birth time+place) only once the real birth has loaded, so the default
   // chart never shows for a signed-in user mid-load.
+  // Big-three source instant: in Range mode it freezes at the range start while playing; otherwise
+  // (paused / reset / ended, and all other modes) it follows the displayed instant. The wheel keeps
+  // animating off livePos — only the header big-three is held.
+  const bigThreeMs = bigThreeInstantMs(clock.mode, clock.playing, clock.rangeStartMs, clock.displayInstant.getTime());
+  const bigThreePos = useMemo(() => positions(new Date(bigThreeMs)), [bigThreeMs]);
   const bigThree = useMemo(() => {
-    const sun = signOf(livePos.sun);
-    const moon = signOf(livePos.moon);
+    const sun = signOf(bigThreePos.sun);
+    const moon = signOf(bigThreePos.moon);
     const asc = !anonymous && birthLoaded
-      ? signOf(ascendant(clock.displayInstant, birth.lat, birth.lon))
+      ? signOf(ascendant(new Date(bigThreeMs), birth.lat, birth.lon))
       : null;
     return bigThreeLabel(sun, moon, asc);
-  }, [anonymous, birthLoaded, livePos, clock.displayInstant, birth.lat, birth.lon]);
+  }, [anonymous, birthLoaded, bigThreePos, bigThreeMs, birth.lat, birth.lon]);
 
   // The header avatar's glyph: the current sky's Sun sign when signed out (tracks Now),
   // the user's birth Sun sign once signed in.
