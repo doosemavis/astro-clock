@@ -41,7 +41,6 @@ const strToDate = (date: string, time: string) => {
 export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12h" }: Props) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
-  const [name, setName] = useState(initial.name ?? "");
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
   const [lat, setLat] = useState<number | null>(initial.lat);
@@ -82,7 +81,6 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
   // Reset the draft each time the modal (re)opens.
   useEffect(() => {
     if (!visible) return;
-    setName(initial.name ?? "");
     setDate(initial.date);
     setTime(initial.time);
     setLat(initial.lat);
@@ -139,7 +137,7 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
   }
 
   function onSavePress() {
-    const res = validateBirth({ name, date, time, lat, lon, tzOffset, placeLabel, ianaTz: ianaTz ?? undefined });
+    const res = validateBirth({ name: initial.name, date, time, lat, lon, tzOffset, placeLabel, ianaTz: ianaTz ?? undefined });
     if (!res.ok) { setError(res.error); return; }
     onSave(res.birth);
   }
@@ -166,10 +164,6 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
         >
           <Text style={styles.title}>Your birth</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
-            <Text style={styles.label}>Name</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName}
-              placeholder="You" placeholderTextColor={p.textDim} />
-
             <Text style={styles.label}>Birth date</Text>
             <Pressable style={styles.input} onPress={() => { setShowTime(false); setShowDate((s) => !s); }}>
               <Text style={styles.inputText}>{date}</Text>
