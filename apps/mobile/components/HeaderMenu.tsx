@@ -3,12 +3,16 @@ import { Modal, View, Text, Pressable, StyleSheet } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../lib/theme";
 import type { ExportSettings, ExportToggleKey } from "../lib/exportSettings";
+import { Segmented } from "./Segmented";
+import type { ThemeMode } from "../lib/chartModel";
 
 interface Props {
   visible: boolean;
   signedIn: boolean;
   canShare: boolean;            // Pro-only: show the Share item
   canSave: boolean;             // signed-in only: show the Save-to-Photos item
+  themeMode: ThemeMode;
+  onTheme: (m: ThemeMode) => void;
   onClose: () => void;
   onAuth: () => void;
   onEditBirth: () => void;
@@ -19,11 +23,17 @@ interface Props {
   canToggleLogo: boolean;
 }
 
-/** Dropdown under the header avatar: auth (Sign in / Account) + Edit birth, plus a split
+const THEMES: { key: ThemeMode; label: string }[] = [
+  { key: "light", label: "Light" },
+  { key: "dark", label: "Dark" },
+  { key: "system", label: "System" },
+];
+
+/** Dropdown under the header ☰ button: auth (Sign in / Account) + Edit birth + Theme, plus a split
  *  "Save to Photos" button whose caret opens a floating options dropdown (overlays, with a
  *  shadow, and stays open while you flip toggles). */
 export function HeaderMenu({
-  visible, signedIn, canShare, canSave, onClose, onAuth, onEditBirth, onSave, onShare,
+  visible, signedIn, canShare, canSave, themeMode, onTheme, onClose, onAuth, onEditBirth, onSave, onShare,
   exportSettings, onToggleExport, canToggleLogo,
 }: Props) {
   const { palette: p } = useTheme();
@@ -45,6 +55,12 @@ export function HeaderMenu({
             </Pressable>
           </>
         ) : null}
+
+        <View style={styles.divider} />
+        <View style={styles.themeRow}>
+          <Text style={styles.themeLabel}>Theme</Text>
+          <Segmented options={THEMES} value={themeMode} onChange={onTheme} />
+        </View>
 
         {canSave ? (
           <>
@@ -107,6 +123,8 @@ const makeStyles = (p: Palette) => StyleSheet.create({
     paddingVertical: 4,
   },
   item: { paddingVertical: 13, paddingHorizontal: 16 },
+  themeRow: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
+  themeLabel: { color: p.textDim, fontSize: 13, fontWeight: "600" },
   itemText: { color: p.text, fontSize: 16, fontWeight: "600" },
   divider: { height: 1, backgroundColor: p.border, marginHorizontal: 8 },
   // Split button: label area (saves) + a caret area (opens the floating options dropdown).

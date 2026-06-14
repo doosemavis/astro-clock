@@ -295,8 +295,6 @@ function AppInner() {
             isPro={isPro}
             timeFormat={timeFormat}
             onTimeFormat={setTimeFormat}
-            themeMode={themeMode}
-            onTheme={setThemeMode}
             showMajor={showMajor}
             onToggleMajor={() => setShowMajor((v) => !v)}
             showMinor={showMinor}
@@ -315,6 +313,8 @@ function AppInner() {
         // share sheet (expo-sharing). Re-enable with `canShareFor(tier)` once that's fixed.
         canShare={false && canShareFor(tier)}
         canSave={canSaveFor(tier)}
+        themeMode={themeMode}
+        onTheme={onThemeChange}
         onClose={() => setMenuOpen(false)}
         onAuth={() => { setMenuOpen(false); setAuthView(session ? "account" : "login"); }}
         onEditBirth={() => { setMenuOpen(false); setEditing(true); }}

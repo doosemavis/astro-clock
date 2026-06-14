@@ -6,7 +6,7 @@ import type { DateTimePickerEvent } from "@react-native-community/datetimepicker
 import type { Palette, PlanetKey } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { PACES } from "../../lib/chartModel";
-import type { Mode, TimeFormat, CompareView, ThemeMode, Vis, Layer } from "../../lib/chartModel";
+import type { Mode, TimeFormat, CompareView, Vis, Layer } from "../../lib/chartModel";
 import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
@@ -24,8 +24,6 @@ interface Props {
   onToggleMajor: () => void;
   showMinor: boolean;
   onToggleMinor: () => void;
-  themeMode: ThemeMode;
-  onTheme: (m: ThemeMode) => void;
   vis: Vis;
   onToggleVis: (key: PlanetKey | "all", layer: Layer) => void;
 }
@@ -46,11 +44,6 @@ const CVIEWS: { key: CompareView; label: string }[] = [
   { key: "pages", label: "Page" },
   { key: "flip", label: "Flip" },
 ];
-const THEMES: { key: ThemeMode; label: string }[] = [
-  { key: "light", label: "Light" },
-  { key: "dark", label: "Dark" },
-  { key: "auto", label: "Auto" },
-];
 
 const iosPicker = Platform.OS === "ios";
 
@@ -68,7 +61,7 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 
 export function ChartControls({
   clock, isPro, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
-  themeMode, onTheme, vis, onToggleVis,
+  vis, onToggleVis,
 }: Props) {
   const { palette: pal } = useTheme();
   const styles = useMemo(() => makeStyles(pal), [pal]);
@@ -144,9 +137,6 @@ export function ChartControls({
         <Segmented options={FORMATS} value={timeFormat} onChange={onTimeFormat} />
       </Section>
 
-      <Section label="Theme">
-        <Segmented options={THEMES} value={themeMode} onChange={onTheme} />
-      </Section>
 
       <Section label="Glyphs">
         {isPro ? (
