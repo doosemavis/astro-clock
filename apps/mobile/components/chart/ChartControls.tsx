@@ -19,7 +19,6 @@ interface Props {
   clock: ChartClock;
   isPro: boolean;
   timeFormat: TimeFormat;
-  onTimeFormat: (f: TimeFormat) => void;
   showMajor: boolean;
   onToggleMajor: () => void;
   showMinor: boolean;
@@ -34,10 +33,6 @@ const MODES: { key: Mode; label: string }[] = [
   { key: "moment", label: "Date" },
   { key: "range", label: "Range" },
   { key: "compare", label: "Compare" },
-];
-const FORMATS: { key: TimeFormat; label: string }[] = [
-  { key: "12h", label: "12h" },
-  { key: "24h", label: "24h" },
 ];
 const CVIEWS: { key: CompareView; label: string }[] = [
   { key: "both", label: "Both" },
@@ -60,7 +55,7 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export function ChartControls({
-  clock, isPro, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
+  clock, isPro, timeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
   vis, onToggleVis,
 }: Props) {
   const { palette: pal } = useTheme();
@@ -132,10 +127,6 @@ export function ChartControls({
           </Text>
         </Section>
       ) : null}
-
-      <Section label="Clock">
-        <Segmented options={FORMATS} value={timeFormat} onChange={onTimeFormat} />
-      </Section>
 
 
       <Section label="Glyphs">

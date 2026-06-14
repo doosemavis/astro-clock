@@ -294,7 +294,6 @@ function AppInner() {
             clock={clock}
             isPro={isPro}
             timeFormat={timeFormat}
-            onTimeFormat={setTimeFormat}
             showMajor={showMajor}
             onToggleMajor={() => setShowMajor((v) => !v)}
             showMinor={showMinor}
@@ -305,7 +304,7 @@ function AppInner() {
         </BottomSheet>
       ) : null}
 
-      <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} timeFormat={timeFormat} />
+      <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} timeFormat={timeFormat} onTimeFormat={setTimeFormat} />
       <HeaderMenu
         visible={menuOpen}
         signedIn={!!session}
