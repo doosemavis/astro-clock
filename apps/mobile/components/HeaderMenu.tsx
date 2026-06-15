@@ -17,6 +17,7 @@ interface Props {
   onEditBirth: () => void;
   onSave: () => void;           // Save chart to Photos (always includes the full image)
   onShare: () => void;          // Share chart (Pro)
+  onReplayWalkthrough: () => void;  // replay the onboarding walkthrough
 }
 
 const THEMES: { key: ThemeMode; label: string }[] = [
@@ -27,7 +28,7 @@ const THEMES: { key: ThemeMode; label: string }[] = [
 
 /** Dropdown under the header ☰ button: auth (Sign in / Account) + Edit birth + Theme + Save to Photos. */
 export function HeaderMenu({
-  visible, signedIn, canShare, canSave, themeMode, onTheme, onClose, onAuth, onEditBirth, onSave, onShare,
+  visible, signedIn, canShare, canSave, themeMode, onTheme, onClose, onAuth, onEditBirth, onSave, onShare, onReplayWalkthrough,
 }: Props) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
@@ -52,6 +53,11 @@ export function HeaderMenu({
           <Text style={styles.themeLabel}>Theme</Text>
           <Segmented options={THEMES} value={themeMode} onChange={onTheme} />
         </View>
+
+        <View style={styles.divider} />
+        <Pressable style={styles.item} onPress={onReplayWalkthrough}>
+          <Text style={styles.itemText}>How it works</Text>
+        </Pressable>
 
         {canSave ? (
           <>
