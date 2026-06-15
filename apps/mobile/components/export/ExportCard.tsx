@@ -59,7 +59,12 @@ export function ExportCard({
         <Sky themeT={themeT} width={EXPORT_WIDTH} height={height} />
 
         <View style={styles.content}>
-          <Text style={[styles.wordmark, { color: p.text }]}>MOVESTAR</Text>
+          {/* Brand lockup: MOVESTAR is the wordmark; the tagline rides below it (the tall
+              export frame always has the vertical room for it). */}
+          <View style={styles.brand}>
+            <Text style={[styles.wordmark, { color: p.text }]}>MOVESTAR</Text>
+            <Text style={[styles.tagline, { color: p.textDim }]}>Live Birth Chart</Text>
+          </View>
 
           {compare ? (
             // Compare mode: two wheels stacked vertically, each with its sub-caption pill.
@@ -105,7 +110,9 @@ const styles = StyleSheet.create({
   // Full-bleed frame; the content cluster is centered, so the starfield fills above and below it.
   card: { overflow: "hidden", alignItems: "center", justifyContent: "center" },
   content: { alignItems: "center", justifyContent: "center", paddingHorizontal: 40 },
-  wordmark: { fontSize: 44, letterSpacing: 12, fontWeight: "700", marginBottom: 30 },
+  brand: { alignItems: "center", marginBottom: 30 },
+  wordmark: { fontSize: 44, letterSpacing: 12, fontWeight: "700" },
+  tagline: { fontSize: 22, letterSpacing: 4, fontWeight: "500", marginTop: 10 },
   caption: { fontSize: 32, letterSpacing: 1.5, marginBottom: 24, textAlign: "center" },
   date: { fontSize: 28, letterSpacing: 0.5, marginTop: 26, textAlign: "center" },
   footer: { fontSize: 22, letterSpacing: 2, opacity: 0.8, marginTop: 34 },
