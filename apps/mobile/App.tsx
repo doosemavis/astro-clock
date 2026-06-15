@@ -1,8 +1,8 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Platform, Pressable, StyleSheet, Text, ToastAndroid, useWindowDimensions, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, Text, ToastAndroid, useColorScheme, useWindowDimensions, View } from "react-native";
 import { useFonts, NotoSansSymbols_400Regular } from "@expo-google-fonts/noto-sans-symbols";
-import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, mixPalette, solarT, PLANET_KEYS, SIGN_GLYPH } from "@astro/engine";
+import { DEFAULT_BIRTH, birthInstant, positions, ascendant, signOf, mixPalette, PLANET_KEYS, SIGN_GLYPH } from "@astro/engine";
 import type { BirthData, Palette, Sign, PlanetKey } from "@astro/engine";
 import { GLYPH_FONT, CHART } from "./components/chart/palette";
 import { ChartWheel } from "./components/chart/ChartWheel";
@@ -15,7 +15,7 @@ import { BirthForm } from "./components/BirthForm";
 import { useChartClock } from "./hooks/useChartClock";
 import { ThemeProvider } from "./lib/theme";
 import { Avatar } from "./components/Avatar";
-import { CoordinatesButton } from "./components/CoordinatesButton";
+import { MenuButton } from "./components/MenuButton";
 import { CoordinatesPanel } from "./components/coordinates/CoordinatesPanel";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { LoginScreen } from "./components/auth/LoginScreen";
@@ -23,6 +23,9 @@ import { AccountView } from "./components/auth/AccountView";
 import { HeaderMenu } from "./components/HeaderMenu";
 import { allVisible, toggleVis } from "./lib/chartModel";
 import type { Mode, TimeFormat, ThemeMode, Vis, Layer } from "./lib/chartModel";
+import { themeTForMode } from "./lib/themeMode";
+import { loadThemeMode, saveThemeMode } from "./lib/themeStorage";
+import { bigThreeLabel, bigThreeInstantMs } from "./lib/bigThree";
 import { fmtDate, fmtTime, readoutTz, cmpCaption } from "./lib/readout";
 import { loadBirth, saveBirth } from "./lib/birthStore";
 import { useEntitlement } from "./hooks/useEntitlement";
@@ -30,10 +33,7 @@ import { SignInPrompt } from "./components/SignInPrompt";
 import { tierOf } from "./lib/entitlement";
 import { clampMode, coordinatesLocked } from "./lib/proMode";
 import { ExportCard, EXPORT_WIDTH, exportHeight } from "./components/export/ExportCard";
-import { canShare as canShareFor, canToggleLogo as canToggleLogoFor, showLogo as showLogoFor } from "./lib/exportPolicy";
-import { DEFAULT_EXPORT_SETTINGS, toggleSetting } from "./lib/exportSettings";
-import type { ExportSettings, ExportToggleKey } from "./lib/exportSettings";
-import { loadExportSettings, saveExportSettings } from "./lib/exportSettingsStore";
+import { canShare as canShareFor, canSave as canSaveFor } from "./lib/exportPolicy";
 import { saveChartImage, shareChartImage } from "./lib/saveChart";
 import { presentProPaywall } from "./lib/purchases";
 
@@ -45,7 +45,6 @@ const isDefaultName = (n?: string): boolean => !n || n === DEFAULT_BIRTH.name;
 
 // Quantize the Auto theme value so the palette only re-blends ~50x across a day (not every
 // frame in Auto+Range), which bounds re-renders/style recreation.
-const quantize = (x: number) => Math.round(x * 50) / 50;
 
 function AppInner() {
   // Gate on the glyph font: rendering planet glyphs before it loads would flash tofu.
@@ -72,27 +71,23 @@ function AppInner() {
   const [showMinor, setShowMinor] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
+  const [birthLoaded, setBirthLoaded] = useState(false);
   const [vis, setVis] = useState<Vis>(() => ({ natal: allVisible(PLANET_KEYS), live: allVisible(PLANET_KEYS) }));
   const onToggleVis = (key: PlanetKey | "all", layer: Layer) => setVis((v) => toggleVis(v, key, layer));
 
-  const [exportSettings, setExportSettings] = useState<ExportSettings>(DEFAULT_EXPORT_SETTINGS);
   const [exportReq, setExportReq] = useState<null | "save" | "share">(null);
   const exportRef = useRef<View | null>(null);
 
-  // Load persisted export toggles on launch.
+  // Load persisted theme on launch.
   useEffect(() => {
     let active = true;
-    loadExportSettings().then((s) => { if (active) setExportSettings(s); });
+    loadThemeMode().then((m) => { if (active) setThemeMode(m); });
     return () => { active = false; };
   }, []);
+  // Change + persist the theme. Saving in the handler (not a value-effect) avoids clobbering
+  // the just-loaded value on mount.
+  const onThemeChange = (m: ThemeMode) => { setThemeMode(m); void saveThemeMode(m); };
 
-  const onToggleExport = (key: ExportToggleKey) => {
-    setExportSettings((s) => {
-      const next = toggleSetting(s, key);
-      saveExportSettings(next).catch(() => { /* cache only */ });
-      return next;
-    });
-  };
 
   // When an export is requested, the off-screen ExportCard renders; wait two frames for
   // layout, capture it, then save or share. Clear the request when done.
@@ -122,7 +117,11 @@ function AppInner() {
   // Load the saved birth on launch (falls back to DEFAULT_BIRTH).
   useEffect(() => {
     let active = true;
-    loadBirth().then((b) => { if (active && b) setBirth({ ...b, name: isDefaultName(b.name) ? (accountNameRef.current || b.name) : b.name }); });
+    loadBirth().then((b) => {
+      if (!active) return;
+      if (b) setBirth({ ...b, name: isDefaultName(b.name) ? (accountNameRef.current || b.name) : b.name });
+      setBirthLoaded(true);
+    });
     return () => { active = false; };
   }, []);
 
@@ -189,30 +188,35 @@ function AppInner() {
     }
   }, [clock.mode, clock.displayInstant, rangeFromPos, rangeToPos, compareAPos, compareBPos, anonymous, natalPos, livePos, nowPos, birth]);
 
-  // Theme: light=1 / dark=0 / auto=Sun altitude at the displayed moment (birth location).
-  const themeT = useMemo(() => {
-    if (themeMode === "light") return 1;
-    if (themeMode === "dark") return 0;
-    const inst = clock.mode === "compare" ? new Date(clock.compareAMs) : clock.displayInstant;
-    return quantize(solarT(inst, birth.lat, birth.lon));
-  }, [themeMode, clock.mode, clock.displayInstant, clock.compareAMs, birth.lat, birth.lon]);
+  // Theme: light=1 / dark=0 / system=follow the OS scheme (live via useColorScheme).
+  const osScheme = useColorScheme();
+  const themeT = useMemo(
+    () => themeTForMode(themeMode, osScheme === "dark"),
+    [themeMode, osScheme],
+  );
   const palette = useMemo(() => mixPalette(themeT), [themeT]);
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
-  // The chart's signature: Sun / Moon / Ascendant signs (mirrors the web bigThree).
+  // The chart's signature for the CURRENTLY DISPLAYED moment: Now -> live sky, Birth -> natal.
+  // Ascendant (needs birth time+place) only once the real birth has loaded, so the default
+  // chart never shows for a signed-in user mid-load.
+  // Big-three source instant: in Range mode it freezes at the range start while playing; otherwise
+  // (paused / reset / ended, and all other modes) it follows the displayed instant. The wheel keeps
+  // animating off livePos — only the header big-three is held.
+  const bigThreeMs = bigThreeInstantMs(clock.mode, clock.playing, clock.rangeStartMs, clock.displayInstant.getTime());
+  const bigThreePos = useMemo(() => positions(new Date(bigThreeMs)), [bigThreeMs]);
   const bigThree = useMemo(() => {
-    if (anonymous) {
-      // Pre-birth placeholder: the current sky's Sun + Moon, tracking the Now moment.
-      // No Ascendant — it needs a birth time + place, which unlocks on sign-in.
-      return `☉ ${signOf(livePos.sun)}   ☽ ${signOf(livePos.moon)}`;
-    }
-    const asc = ascendant(new Date(birthMs), birth.lat, birth.lon);
-    return `☉ ${signOf(natalPos.sun)}   ☽ ${signOf(natalPos.moon)}   ↑ ${signOf(asc)}`;
-  }, [anonymous, livePos, birthMs, birth.lat, birth.lon, natalPos]);
+    const sun = signOf(bigThreePos.sun);
+    const moon = signOf(bigThreePos.moon);
+    const asc = !anonymous && birthLoaded
+      ? signOf(ascendant(new Date(bigThreeMs), birth.lat, birth.lon))
+      : null;
+    return bigThreeLabel(sun, moon, asc);
+  }, [anonymous, birthLoaded, bigThreePos, bigThreeMs, birth.lat, birth.lon]);
 
   // The header avatar's glyph: the current sky's Sun sign when signed out (tracks Now),
   // the user's birth Sun sign once signed in.
-  const sunGlyph = SIGN_GLYPH[signOf(anonymous ? livePos.sun : natalPos.sun) as Sign];
+  const sunGlyph = SIGN_GLYPH[signOf((anonymous || !birthLoaded) ? livePos.sun : natalPos.sun) as Sign];
 
   // Persistent readout of the moment on screen — which view + when (fixed vs. moveable).
   const moment =
@@ -235,10 +239,10 @@ function AppInner() {
         <View style={styles.headerRow} pointerEvents="box-none">
           <Text style={styles.brand}>MoveStar</Text>
           <View style={styles.headerRight} pointerEvents="box-none">
-            <Pressable onPress={() => setMenuOpen(true)} style={styles.editBtn} hitSlop={8}>
+            <MenuButton onPress={() => setMenuOpen(true)} />
+            <Pressable onPress={() => { if (anonymous) setAuthView("login"); else setCoordsOpen((v) => !v); }} style={styles.editBtn} hitSlop={8}>
               <Avatar glyph={sunGlyph} />
             </Pressable>
-            <CoordinatesButton onPress={() => { if (anonymous) setAuthView("login"); else setCoordsOpen((v) => !v); }} />
           </View>
         </View>
       </View>
@@ -277,9 +281,6 @@ function AppInner() {
             clock={clock}
             isPro={isPro}
             timeFormat={timeFormat}
-            onTimeFormat={setTimeFormat}
-            themeMode={themeMode}
-            onTheme={setThemeMode}
             showMajor={showMajor}
             onToggleMajor={() => setShowMajor((v) => !v)}
             showMinor={showMinor}
@@ -290,21 +291,21 @@ function AppInner() {
         </BottomSheet>
       ) : null}
 
-      <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} timeFormat={timeFormat} />
+      <BirthForm visible={editing} initial={birth} onSave={onSave} onCancel={() => setEditing(false)} timeFormat={timeFormat} onTimeFormat={setTimeFormat} />
       <HeaderMenu
         visible={menuOpen}
         signedIn={!!session}
         // Share temporarily disabled for release: it opens the camera instead of the native
         // share sheet (expo-sharing). Re-enable with `canShareFor(tier)` once that's fixed.
         canShare={false && canShareFor(tier)}
+        canSave={canSaveFor(tier)}
+        themeMode={themeMode}
+        onTheme={onThemeChange}
         onClose={() => setMenuOpen(false)}
         onAuth={() => { setMenuOpen(false); setAuthView(session ? "account" : "login"); }}
         onEditBirth={() => { setMenuOpen(false); setEditing(true); }}
         onSave={() => { setMenuOpen(false); setExportReq("save"); }}
         onShare={() => { setMenuOpen(false); setExportReq("share"); }}
-        exportSettings={exportSettings}
-        onToggleExport={onToggleExport}
-        canToggleLogo={canToggleLogoFor(tier)}
       />
       <CoordinatesPanel
         visible={coordsOpen}
@@ -324,8 +325,6 @@ function AppInner() {
       {exportReq ? (
         <View ref={exportRef} collapsable={false} style={[styles.exportHost, { width: EXPORT_WIDTH, height: exportHeight(width, height) }]}>
           <ExportCard
-            showLogo={showLogoFor(tier, exportSettings.logo)}
-            toggles={exportSettings}
             palette={palette}
             themeT={themeT}
             natalPositions={natalPos}

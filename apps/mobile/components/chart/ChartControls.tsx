@@ -6,7 +6,7 @@ import type { DateTimePickerEvent } from "@react-native-community/datetimepicker
 import type { Palette, PlanetKey } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { PACES } from "../../lib/chartModel";
-import type { Mode, TimeFormat, CompareView, ThemeMode, Vis, Layer } from "../../lib/chartModel";
+import type { Mode, TimeFormat, CompareView, Vis, Layer } from "../../lib/chartModel";
 import { padHour } from "../../lib/readout";
 import type { ChartClock } from "../../hooks/useChartClock";
 import { Segmented } from "../Segmented";
@@ -19,13 +19,10 @@ interface Props {
   clock: ChartClock;
   isPro: boolean;
   timeFormat: TimeFormat;
-  onTimeFormat: (f: TimeFormat) => void;
   showMajor: boolean;
   onToggleMajor: () => void;
   showMinor: boolean;
   onToggleMinor: () => void;
-  themeMode: ThemeMode;
-  onTheme: (m: ThemeMode) => void;
   vis: Vis;
   onToggleVis: (key: PlanetKey | "all", layer: Layer) => void;
 }
@@ -37,19 +34,10 @@ const MODES: { key: Mode; label: string }[] = [
   { key: "range", label: "Range" },
   { key: "compare", label: "Compare" },
 ];
-const FORMATS: { key: TimeFormat; label: string }[] = [
-  { key: "12h", label: "12h" },
-  { key: "24h", label: "24h" },
-];
 const CVIEWS: { key: CompareView; label: string }[] = [
   { key: "both", label: "Both" },
   { key: "pages", label: "Page" },
   { key: "flip", label: "Flip" },
-];
-const THEMES: { key: ThemeMode; label: string }[] = [
-  { key: "light", label: "Light" },
-  { key: "dark", label: "Dark" },
-  { key: "auto", label: "Auto" },
 ];
 
 const iosPicker = Platform.OS === "ios";
@@ -67,8 +55,8 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export function ChartControls({
-  clock, isPro, timeFormat, onTimeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
-  themeMode, onTheme, vis, onToggleVis,
+  clock, isPro, timeFormat, showMajor, onToggleMajor, showMinor, onToggleMinor,
+  vis, onToggleVis,
 }: Props) {
   const { palette: pal } = useTheme();
   const styles = useMemo(() => makeStyles(pal), [pal]);
@@ -140,13 +128,6 @@ export function ChartControls({
         </Section>
       ) : null}
 
-      <Section label="Clock">
-        <Segmented options={FORMATS} value={timeFormat} onChange={onTimeFormat} />
-      </Section>
-
-      <Section label="Theme">
-        <Segmented options={THEMES} value={themeMode} onChange={onTheme} />
-      </Section>
 
       <Section label="Glyphs">
         {isPro ? (

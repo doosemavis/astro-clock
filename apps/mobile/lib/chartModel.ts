@@ -7,8 +7,8 @@ import type { BirthData, PlanetKey } from "@astro/engine";
 export type Mode = "birth" | "now" | "moment" | "range" | "compare";
 export type TimeFormat = "12h" | "24h";
 
-/** App color theme: light, dark, or auto (day/night by the Sun at the displayed moment). */
-export type ThemeMode = "light" | "dark" | "auto";
+/** App color theme: light, dark, or system (follows the OS light/dark setting). */
+export type ThemeMode = "light" | "dark" | "system";
 
 /** Mobile Compare presentation: both wheels stacked ("both"), a full-size horizontal
  *  swipe pager ("pages"), or a single full-size wheel that coin-flips between charts ("flip"). */

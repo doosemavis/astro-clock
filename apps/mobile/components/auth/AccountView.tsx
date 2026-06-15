@@ -1,11 +1,13 @@
 import { useMemo, useState, useEffect } from "react";
-import { Modal, View, Text, Pressable, StyleSheet, TextInput, Keyboard, Linking } from "react-native";
+import { Modal, View, Text, Pressable, StyleSheet, Keyboard, Linking, Platform } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
 import { useAuth } from "../../lib/auth";
 import { useEntitlement } from "../../hooks/useEntitlement";
 import { presentProPaywall, restorePurchases, showManageSubscriptions } from "../../lib/purchases";
 import { validatePassword, passwordsMatch } from "../../lib/password";
+import { storeUrl } from "../../lib/rateApp";
+import { PasswordInput } from "./PasswordInput";
 
 type Screen = "main" | "password";
 
@@ -24,6 +26,7 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
   const [screen, setScreen] = useState<Screen>("main");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
+  const [pwVisible, setPwVisible] = useState(false);
   const [kbHeight, setKbHeight] = useState(0);
 
   // This is a bottom-anchored sheet, so the soft keyboard would cover its inputs. Lift the sheet
@@ -137,6 +140,16 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
               <Pressable style={styles.action} onPress={openPassword}>
                 <Text style={styles.actionText}>Change Password</Text>
               </Pressable>
+              <Pressable
+                style={styles.action}
+                onPress={() =>
+                  void Linking.openURL(storeUrl(Platform.OS)).catch(() =>
+                    setMsg("Couldn't open the Play Store. Search 'MoveStar' to leave a review."),
+                  )
+                }
+              >
+                <Text style={styles.actionText}>Rate MoveStar ⭐</Text>
+              </Pressable>
               {msg ? <Text style={styles.msg}>{msg}</Text> : null}
               <Pressable style={[styles.signout, busy && styles.signoutOff]} onPress={onSignOut} disabled={busy}>
                 <Text style={styles.signoutText}>{busy ? "…" : "Sign Out"}</Text>
@@ -169,23 +182,25 @@ export function AccountView({ visible, onClose }: { visible: boolean; onClose: (
                   Add a password so you can sign in with your email too — not just Google.
                 </Text>
               ) : null}
-              <TextInput
+              <PasswordInput
                 style={styles.input}
                 placeholder="New password"
                 placeholderTextColor={p.textDim}
-                secureTextEntry
                 autoCapitalize="none"
                 value={newPw}
                 onChangeText={setNewPw}
+                visible={pwVisible}
+                onToggleVisible={() => setPwVisible((v) => !v)}
               />
-              <TextInput
+              <PasswordInput
                 style={styles.input}
                 placeholder="Confirm password"
                 placeholderTextColor={p.textDim}
-                secureTextEntry
                 autoCapitalize="none"
                 value={confirmPw}
                 onChangeText={setConfirmPw}
+                visible={pwVisible}
+                showToggle={false}
               />
               <Pressable style={styles.action} onPress={() => void onSavePassword()} disabled={acting}>
                 <Text style={styles.actionText}>{acting ? "…" : "Save Password"}</Text>

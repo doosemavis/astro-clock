@@ -35,6 +35,9 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
   const [mounted, setMounted] = useState(visible);
   const [showNames, setShowNames] = useState(false);
   const [tab, setTab] = useState<"coordinates" | "readings">("coordinates");
+  // Readings tab temporarily hidden for release — flip to true to re-enable once the Readings
+  // UI is refined (and revisit the header layout: two tabs + the Glyph/Name toggle).
+  const SHOW_READINGS = false;
   const x = useRef(new Animated.Value(visible ? 0 : -PANEL_W)).current;
   const fade = useRef(new Animated.Value(visible ? 1 : 0)).current;
 
@@ -69,9 +72,11 @@ function CoordinatesPanelBase({ visible, onClose, fixedPos, movablePos, fixedLab
             <Pressable onPress={() => setTab("coordinates")}>
               <Text style={tab === "coordinates" ? s.tabActive : s.tabInactive}>Coordinates</Text>
             </Pressable>
-            <Pressable onPress={() => setTab("readings")}>
-              <Text style={tab === "readings" ? s.tabActive : s.tabInactive}>Readings</Text>
-            </Pressable>
+            {SHOW_READINGS ? (
+              <Pressable onPress={() => setTab("readings")}>
+                <Text style={tab === "readings" ? s.tabActive : s.tabInactive}>Readings</Text>
+              </Pressable>
+            ) : null}
           </View>
           {tab === "coordinates" && isPro ? (
             <View style={s.toggle}>
@@ -126,7 +131,7 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   tabRow: { flexDirection: "row", gap: 16 },
   tabActive: { color: p.text, fontSize: 16, fontWeight: "800" },
   tabInactive: { color: p.textDim, fontSize: 16, fontWeight: "600" },
-  toggle: { width: 150 },
+  toggle: { width: 120 },
   head: { flexDirection: "row", alignItems: "stretch", borderBottomWidth: 1, borderBottomColor: p.border },
   headGlyph: { width: 76, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingVertical: 10 },
   headLabel: { flex: 1, color: p.textDim, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", paddingHorizontal: 6, paddingVertical: 10 },

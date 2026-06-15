@@ -8,8 +8,8 @@ interface Props {
   size?: number;
 }
 
-/** Round button mirroring the Avatar's circle; a small list icon opens the coordinates panel. */
-function CoordinatesButtonBase({ onPress, size = 42 }: Props) {
+/** Round ☰ button (three lines) that opens the settings/account menu. */
+function MenuButtonBase({ onPress, size = 42 }: Props) {
   const { palette: p } = useTheme();
   const r = size / 2;
   return (
@@ -27,4 +27,4 @@ function CoordinatesButtonBase({ onPress, size = 42 }: Props) {
   );
 }
 
-export const CoordinatesButton = memo(CoordinatesButtonBase);
+export const MenuButton = memo(MenuButtonBase);

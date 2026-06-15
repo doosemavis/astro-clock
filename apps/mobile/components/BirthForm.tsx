@@ -22,6 +22,7 @@ interface Props {
   onCancel: () => void;
   /** Seeds the form's own 12h/24h toggle (independently changeable inside the form). */
   timeFormat?: TimeFormat;
+  onTimeFormat: (f: TimeFormat) => void;
 }
 
 const TIME_FORMATS: { key: TimeFormat; label: string }[] = [
@@ -38,10 +39,9 @@ const strToDate = (date: string, time: string) => {
   return new Date(Y || 2000, (M || 1) - 1, D || 1, h || 0, m || 0);
 };
 
-export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12h" }: Props) {
+export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12h", onTimeFormat }: Props) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
-  const [name, setName] = useState(initial.name ?? "");
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
   const [lat, setLat] = useState<number | null>(initial.lat);
@@ -59,7 +59,6 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
   const [showTime, setShowTime] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [birthTf, setBirthTf] = useState<TimeFormat>(timeFormat); // form's own 12h/24h, seeded from the app
 
   // Drop-from-top animation. Keep the Modal mounted through the close tween so the
   // panel slides back up instead of vanishing. translateY rides the measured panel
@@ -82,7 +81,6 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
   // Reset the draft each time the modal (re)opens.
   useEffect(() => {
     if (!visible) return;
-    setName(initial.name ?? "");
     setDate(initial.date);
     setTime(initial.time);
     setLat(initial.lat);
@@ -97,8 +95,7 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
     setShowDate(false);
     setShowTime(false);
     setAdvanced(false);
-    setBirthTf(timeFormat);
-  }, [visible, initial, timeFormat]);
+  }, [visible, initial]);
 
   // Debounced place search.
   useEffect(() => {
@@ -139,7 +136,7 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
   }
 
   function onSavePress() {
-    const res = validateBirth({ name, date, time, lat, lon, tzOffset, placeLabel, ianaTz: ianaTz ?? undefined });
+    const res = validateBirth({ name: initial.name, date, time, lat, lon, tzOffset, placeLabel, ianaTz: ianaTz ?? undefined });
     if (!res.ok) { setError(res.error); return; }
     onSave(res.birth);
   }
@@ -150,7 +147,7 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
   const showTimeStr = (hhmm: string) => {
     const [h, m] = hhmm.split(":").map(Number);
     const dd = new Date(2000, 0, 1, h || 0, m || 0);
-    const opts: Intl.DateTimeFormatOptions = birthTf === "24h"
+    const opts: Intl.DateTimeFormatOptions = timeFormat === "24h"
       ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
       : { hour: "2-digit", minute: "2-digit", hour12: true };
     return dd.toLocaleTimeString(undefined, opts).replace(/^(\d):/, "0$1:");
@@ -166,10 +163,6 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
         >
           <Text style={styles.title}>Your birth</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
-            <Text style={styles.label}>Name</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName}
-              placeholder="You" placeholderTextColor={p.textDim} />
-
             <Text style={styles.label}>Birth date</Text>
             <Pressable style={styles.input} onPress={() => { setShowTime(false); setShowDate((s) => !s); }}>
               <Text style={styles.inputText}>{date}</Text>
@@ -210,8 +203,11 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
               </View>
             )}
 
+            <Text style={styles.label}>Birth timezone</Text>
+            <OffsetSelect valueZone={ianaTz} date={date} time={time} onChange={setIanaTz} />
+
             <Text style={styles.label}>Clock</Text>
-            <Segmented options={TIME_FORMATS} value={birthTf} onChange={setBirthTf} />
+            <Segmented options={TIME_FORMATS} value={timeFormat} onChange={onTimeFormat} />
 
             <Text style={styles.label}>Place</Text>
             {placeLabel ? (
@@ -242,8 +238,6 @@ export function BirthForm({ visible, initial, onSave, onCancel, timeFormat = "12
                   value={lon === null ? "" : String(lon)}
                   onChangeText={(t) => setLon(t === "" || t === "-" ? null : Number(t))}
                   placeholder="-180 to 180" placeholderTextColor={p.textDim} />
-                <Text style={styles.label}>Birth timezone</Text>
-                <OffsetSelect valueZone={ianaTz} date={date} time={time} onChange={setIanaTz} />
               </View>
             ) : null}
 

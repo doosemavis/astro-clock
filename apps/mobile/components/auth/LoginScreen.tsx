@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
+import { PasswordInput } from "./PasswordInput";
 import { useAuth } from "../../lib/auth";
 import { validatePassword, passwordsMatch } from "../../lib/password";
 import * as AppleAuthentication from "expo-apple-authentication";
@@ -25,6 +26,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState("");
+  const [pwVisible, setPwVisible] = useState(false);
   const [showOAuthHint, setShowOAuthHint] = useState(false);
   const [appleReady, setAppleReady] = useState(false);
   const [resetStep, setResetStep] = useState<"email" | "code">("email");
@@ -167,11 +169,11 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
                       placeholder="12345678" placeholderTextColor={p.textDim}
                       keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} />
                     <Text style={styles.label}>New password</Text>
-                    <TextInput style={styles.input} value={password} onChangeText={setPassword}
-                      placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
+                    <PasswordInput style={styles.input} value={password} onChangeText={setPassword} visible={pwVisible} onToggleVisible={() => setPwVisible((v) => !v)}
+                      placeholder="••••••••" placeholderTextColor={p.textDim} />
                     <Text style={styles.label}>Confirm new password</Text>
-                    <TextInput style={styles.input} value={confirm} onChangeText={setConfirm}
-                      placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
+                    <PasswordInput style={styles.input} value={confirm} onChangeText={setConfirm} visible={pwVisible} showToggle={false}
+                      placeholder="••••••••" placeholderTextColor={p.textDim} />
                     {confirm.length > 0 && confirm !== password && (
                       <Text style={styles.hint}>Passwords don't match.</Text>
                     )}
@@ -222,14 +224,14 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
                   placeholder="you@example.com" placeholderTextColor={p.textDim}
                   keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
                 <Text style={styles.label}>Password</Text>
-                <TextInput style={styles.input} value={password} onChangeText={setPassword}
-                  placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
+                <PasswordInput style={styles.input} value={password} onChangeText={setPassword} visible={pwVisible} onToggleVisible={() => setPwVisible((v) => !v)}
+                  placeholder="••••••••" placeholderTextColor={p.textDim} />
 
                 {mode === "signup" && (
                   <>
                     <Text style={styles.label}>Confirm password</Text>
-                    <TextInput style={styles.input} value={confirm} onChangeText={setConfirm}
-                      placeholder="••••••••" placeholderTextColor={p.textDim} secureTextEntry />
+                    <PasswordInput style={styles.input} value={confirm} onChangeText={setConfirm} visible={pwVisible} showToggle={false}
+                      placeholder="••••••••" placeholderTextColor={p.textDim} />
                     {confirm.length > 0 && confirm !== password && (
                       <Text style={styles.hint}>Passwords don't match.</Text>
                     )}
