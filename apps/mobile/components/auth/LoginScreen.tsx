@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import {
   Modal, View, Text, TextInput, Pressable, ScrollView, Animated,
-  Platform, StyleSheet, useWindowDimensions,
+  Platform, StatusBar, StyleSheet, useWindowDimensions,
 } from "react-native";
 import type { Palette } from "@astro/engine";
 import { useTheme } from "../../lib/theme";
@@ -12,7 +12,7 @@ import * as AppleAuthentication from "expo-apple-authentication";
 
 type Mode = "signin" | "signup" | "reset";
 
-export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+export function LoginScreen({ visible, onClose, initialMode = "signin" }: { visible: boolean; onClose: () => void; initialMode?: Mode }) {
   const { palette: p } = useTheme();
   const styles = useMemo(() => makeStyles(p), [p]);
   const { signIn, signUp, signInWithGoogle, signInWithApple, requestPasswordReset, confirmPasswordReset } = useAuth();
@@ -39,6 +39,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
 
   useEffect(() => {
     if (visible) {
+      setMode(initialMode);   // open straight into the requested form (e.g. signup from onboarding)
       setRendered(true);
       Animated.timing(anim, { toValue: 1, duration: 260, useNativeDriver: true }).start();
     } else {
@@ -46,7 +47,7 @@ export function LoginScreen({ visible, onClose }: { visible: boolean; onClose: (
         if (finished) setRendered(false);
       });
     }
-  }, [visible, anim]);
+  }, [visible, initialMode, anim]);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
@@ -277,7 +278,8 @@ const makeStyles = (p: Palette) => StyleSheet.create({
   sheet: {
     backgroundColor: p.panel, borderBottomLeftRadius: 18, borderBottomRightRadius: 18,
     paddingHorizontal: 18, paddingBottom: 18, maxHeight: "92%", flexShrink: 1,
-    paddingTop: Platform.select({ ios: 56, default: 28 }),
+    // Clear the status bar + camera cutout (this sheet is statusBarTranslucent and slides from the top).
+    paddingTop: Platform.select({ ios: 56, default: (StatusBar.currentHeight ?? 24) + 26 }),
   },
   brand: { color: p.text, fontSize: 18, letterSpacing: 3, fontWeight: "600", textAlign: "center" },
   title: { color: p.text, fontSize: 22, fontWeight: "700", textAlign: "center", marginTop: 4, marginBottom: 10 },

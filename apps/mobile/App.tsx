@@ -36,6 +36,8 @@ import { ExportCard, EXPORT_WIDTH, exportHeight } from "./components/export/Expo
 import { canShare as canShareFor, canSave as canSaveFor } from "./lib/exportPolicy";
 import { saveChartImage, shareChartImage } from "./lib/saveChart";
 import { presentProPaywall } from "./lib/purchases";
+import { OnboardingWalkthrough } from "./components/onboarding/OnboardingWalkthrough";
+import { loadOnboardingSeen, saveOnboardingSeen } from "./lib/onboardingStorage";
 
 const MODE_LABEL: Record<Mode, string> = { birth: "Birth", now: "Now", moment: "Date", range: "Range", compare: "Compare" };
 
@@ -64,6 +66,7 @@ function AppInner() {
   const accountNameRef = useRef(accountName);
   accountNameRef.current = accountName;
   const [authView, setAuthView] = useState<null | "login" | "account">(null);
+  const [loginMode, setLoginMode] = useState<"signin" | "signup">("signin");
   const [menuOpen, setMenuOpen] = useState(false);
   const [coordsOpen, setCoordsOpen] = useState(false);
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
@@ -87,6 +90,22 @@ function AppInner() {
   // Change + persist the theme. Saving in the handler (not a value-effect) avoids clobbering
   // the just-loaded value on mount.
   const onThemeChange = (m: ThemeMode) => { setThemeMode(m); void saveThemeMode(m); };
+
+  // First launch: show the onboarding walkthrough unless it's been seen.
+  const [onboardingVisible, setOnboardingVisible] = useState(false);
+  useEffect(() => {
+    let active = true;
+    loadOnboardingSeen().then((seen) => { if (active && !seen) setOnboardingVisible(true); });
+    return () => { active = false; };
+  }, []);
+  const dismissOnboarding = () => { void saveOnboardingSeen(); setOnboardingVisible(false); };
+  const createAccountFromOnboarding = () => {
+    void saveOnboardingSeen();
+    setOnboardingVisible(false);
+    setLoginMode("signup");        // open the sign-up form directly, not sign-in
+    setAuthView("login");
+  };
+  const replayOnboarding = () => { setMenuOpen(false); setOnboardingVisible(true); };
 
 
   // When an export is requested, the off-screen ExportCard renders; wait two frames for
@@ -306,6 +325,7 @@ function AppInner() {
         onEditBirth={() => { setMenuOpen(false); setEditing(true); }}
         onSave={() => { setMenuOpen(false); setExportReq("save"); }}
         onShare={() => { setMenuOpen(false); setExportReq("share"); }}
+        onReplayWalkthrough={replayOnboarding}
       />
       <CoordinatesPanel
         visible={coordsOpen}
@@ -320,7 +340,7 @@ function AppInner() {
         coordsLocked={coordinatesLocked(clock.mode, isPro)}
         onUpgrade={() => void presentProPaywall()}
       />
-      <LoginScreen visible={authView === "login"} onClose={() => setAuthView(null)} />
+      <LoginScreen visible={authView === "login"} initialMode={loginMode} onClose={() => { setAuthView(null); setLoginMode("signin"); }} />
       <AccountView visible={authView === "account"} onClose={() => setAuthView(null)} />
       {exportReq ? (
         <View ref={exportRef} collapsable={false} style={[styles.exportHost, { width: EXPORT_WIDTH, height: exportHeight(width, height) }]}>
@@ -341,6 +361,11 @@ function AppInner() {
           />
         </View>
       ) : null}
+      <OnboardingWalkthrough
+        visible={onboardingVisible && fontsLoaded}
+        onDismiss={dismissOnboarding}
+        onCreateAccount={createAccountFromOnboarding}
+      />
       <StatusBar style="light" />
       </View>
     </ThemeProvider>
